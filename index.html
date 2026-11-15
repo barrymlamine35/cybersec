@@ -419,6 +419,9 @@ footer{font-size:10px}
   .grid-2{grid-template-columns:1fr}
 }
 
+
+/* ═══ NOUVEAUTÉS 15 nov — SIEM, MITRE, GARDE, PORTS, E-MAIL ═══ */
+.quiz-opt.seen{border-color:var(--green);background:rgba(47,214,122,.08)}
 </style>
   <meta name="description" content="Un jeu mobile en français qui entraîne les futurs analystes SOC à détecter et contrer les cyberattaques grâce à des missions, quiz et exercices pratiques hors ligne.">
   <meta name="robots" content="noindex, nofollow">
@@ -778,6 +781,79 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
   </section>
 </div>
 
+<!-- ═══ SIEM — TRI DE LOGS ═══ -->
+<div class="screen" id="screen-siem">
+  <section>
+    <div class="kicker">SIEM • +80 XP</div>
+    <h2>SIEM — Tri de logs</h2>
+    <p>8 lignes, 3 vraies menaces. Touche les lignes suspectes, puis trouve les bonnes requêtes SPL.</p>
+    <div class="buddy" id="buddySiem"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2</b><span class="buddy-text">Trie comme au SOC : le bruit d’abord, les vrais signaux ensuite.</span></div></div>
+    <div class="card"><div id="siemLogList"></div><div class="feedback" id="siemLogFeedback"></div><p class="mono" style="color:var(--muted);font-size:11px" id="siemLogScore">Suspects trouvés : 0 / 3</p></div>
+    <div id="siemSplWrap" style="display:none">
+      <div class="card">
+        <span class="tag">Requêtes SPL • style Splunk</span>
+        <h3 style="margin-top:10px">Trouve la bonne requête</h3>
+        <div class="progress-dots" id="siemSplDots"></div>
+        <p class="mono" style="color:var(--muted);font-size:11px" id="siemSplMeta">Question 1 / 3</p>
+        <h3 id="siemSplQ" style="font-size:14px"></h3>
+        <div id="siemSplOpts"></div>
+        <div class="feedback" id="siemSplFeedback"></div>
+      </div>
+    </div>
+    <div class="feedback" id="siemEndFeedback"></div>
+  </section>
+</div>
+
+<!-- ═══ CARTE MITRE ATT&CK ═══ -->
+<div class="screen" id="screen-mitre">
+  <section>
+    <div class="kicker">MITRE ATT&CK</div>
+    <h2>Carte des techniques</h2>
+    <p>12 tactiques, 24 techniques. Celles que tu as déjà croisées en mission sont allumées — touche une technique pour voir où.</p>
+    <div id="mitreList"></div>
+    <div class="feedback" id="mitreFb"></div>
+  </section>
+</div>
+
+<!-- ═══ GARDE SOC ═══ -->
+<div class="screen" id="screen-garde">
+  <section>
+    <div class="kicker">Garde SOC • +100 XP</div>
+    <h2>Garde de nuit — 22h → 06h</h2>
+    <p>Une garde complète : briefing, 6 alertes à trier, puis le rapport d’incident.</p>
+    <div class="buddy" id="buddyGarde"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2 — briefing de garde</b><span class="buddy-text">22h, c’est toi qui tiens le SOC cette nuit. On trie ensemble, et on documente tout.</span></div></div>
+    <div id="gardeView"></div>
+  </section>
+</div>
+
+<!-- ═══ DEVINE LE PORT ═══ -->
+<div class="screen" id="screen-ports">
+  <section>
+    <div class="card">
+      <span class="tag amber">Ports • +5 XP / bonne réponse</span>
+      <h3 style="margin-top:10px">Devine le port</h3>
+      <div class="buddy" id="buddyPorts"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2</b><span class="buddy-text">Les ports, c’est comme les numéros d’urgence : à connaître par cœur.</span></div></div>
+      <div class="progress-dots" id="portsDots"></div>
+      <p class="mono" style="color:var(--muted);font-size:11px" id="portsMeta">Manche 1 / 10 • Score : 0</p>
+      <div class="big" id="portsService" style="text-align:center;margin:14px 0 4px">—</div>
+      <p style="text-align:center;font-size:11px" id="portsHint">—</p>
+      <div id="portsOpts"></div>
+      <div class="feedback" id="portsFeedback"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══ ANALYSE D'E-MAILS ═══ -->
+<div class="screen" id="screen-email">
+  <section>
+    <div class="kicker">Analyse technique • +80 XP</div>
+    <h2>Analyse d’e-mails — En-têtes</h2>
+    <p>Ici on ne regarde pas que le message : on inspecte les en-têtes (From, Reply-To, SPF, DKIM, DMARC) et le vrai lien. 3 e-mails, un verdict chacun.</p>
+    <div class="buddy" id="buddyEmail"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2</b><span class="buddy-text">Les en-têtes ne mentent pas — ou presque. Vérifie qui répond vraiment, et où mène le lien.</span></div></div>
+    <div class="grid" id="emailGrid"></div>
+  </section>
+</div>
+
 <!-- ═══ MENU ═══ -->
 <div class="screen" id="screen-menu">
   <section>
@@ -820,6 +896,24 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
       <p class="menu-tool"><b>Campagne ou Duel</b> — <span>Campagne : solo, 4 missions NIGHTWATCH face à l'IA VORTEX, attaque et défense en même temps. Duel : 2 joueurs sur le même téléphone, on échange les rôles, le meilleur total RED + BLUE gagne.</span></p>
       <p class="menu-tool"><b>La salle SOC 3D</b> — <span>Une pièce sombre, des écrans, des postes d'analystes. La caméra bouge lentement toute seule. Quand tu lances une mission, les écrans s'allument et les alertes défilent. C'est un décor : il ne bloque pas le jeu, tu peux le laisser tourner ou le couper. Les écrans s'allument aussi tout seuls quand une mission commence.</span></p>
       <p class="menu-tool"><b>La règle d'or du hacker éthique</b> — <span>Tu n'attaques, ne testes et n'analyses que des systèmes qui t'appartiennent ou pour lesquels tu as une autorisation écrite. C'est ce qui sépare un pentester / analyste SOC d'un criminel. Chaque mission ici se déroule dans un lab fictif et fermé.</span></p>
+      <h3 style="margin-top:16px">MITRE ATT&CK</h3>
+      <p class="menu-tool"><b>Reconnaissance</b> — <span>T1595.002 Balayage de vulnérabilités : sonder les ports et les services d’une cible pour trouver une faille. T1598.003 Hameçonnage ciblé : collecter des informations publiques sur une cible avant de l’attaquer.</span></p>
+      <p class="menu-tool"><b>Accès initial</b> — <span>T1566.001 Hameçonnage avec pièce jointe : un mail piégé qui pousse à ouvrir un fichier. T1110.001 Brute force : tester des milliers de mots de passe jusqu’à trouver le bon.</span></p>
+      <p class="menu-tool"><b>Exécution</b> — <span>T1059.001 PowerShell : lancer des commandes via l’interpréteur Windows, souvent caché. T1204.002 Fichier malveillant : l’utilisateur ouvre lui-même le fichier piégé.</span></p>
+      <p class="menu-tool"><b>Persistance</b> — <span>T1053.005 Tâche planifiée : relancer le malware à chaque démarrage, discrètement. T1136 Création de compte : un compte caché pour revenir plus tard.</span></p>
+      <p class="menu-tool"><b>Élévation de privilèges</b> — <span>T1078 Compte valide : utiliser des identifiants volés pour se faire passer pour un légitime. T1068 Exploitation d’une faille : profiter d’un bug pour passer administrateur.</span></p>
+      <p class="menu-tool"><b>Évasion de défense</b> — <span>T1027 Fichier obfusqué : cacher le code malveillant pour tromper l’antivirus. T1070.004 Suppression de fichiers : effacer les traces (logs, sauvegardes) après l’attaque.</span></p>
+      <p class="menu-tool"><b>Accès aux identifiants</b> — <span>T1003 Vol d’identifiants : récupérer mots de passe et tickets en mémoire. T1110.004 Credential stuffing : réutiliser des identifiants volés ailleurs, sur des centaines de comptes.</span></p>
+      <p class="menu-tool"><b>Découverte</b> — <span>T1083 Découverte de fichiers : fouiller le disque pour trouver ce qui a de la valeur. T1018 Découverte de machines distantes : cartographier le réseau interne.</span></p>
+      <p class="menu-tool"><b>Mouvement latéral</b> — <span>T1021.002 SMB / PsExec : passer d’une machine à l’autre avec des outils d’administration. T1021.004 SSH : se connecter à d’autres serveurs avec des identifiants volés.</span></p>
+      <p class="menu-tool"><b>Collecte</b> — <span>T1005 Données en local : copier les fichiers intéressants sur la machine compromise. T1039 Partage réseau : aspirer les dossiers partagés du réseau.</span></p>
+      <p class="menu-tool"><b>Commande &amp; contrôle</b> — <span>T1071.001 Web : discuter avec le serveur de l’attaquant en HTTPS, comme du trafic normal. T1071.004 DNS : cacher les ordres dans des requêtes DNS, difficiles à repérer.</span></p>
+      <p class="menu-tool"><b>Exfiltration</b> — <span>T1041 Exfiltration C2 : envoyer les données volées vers le serveur de l’attaquant. T1048 Exfiltration par un autre canal : passer par un canal inhabituel (DNS, cloud) pour ne pas se faire repérer.</span></p>
+      <h3 style="margin-top:16px">Ta roadmap</h3>
+      <p class="menu-tool"><b>Le principe</b> — <span>Le jeu t’entraîne aux compétences du métier. Les certifications, elles, se passent en vrai : voici le chemin, étape par étape. Tu ne détiens aucune de ces certifications pour l’instant — ce sont des objectifs à atteindre, pas des diplômes déjà obtenus.</span></p>
+      <p class="menu-tool"><b>Security+ — la porte d’entrée</b> — <span>Réseaux, ports, logs, phishing, menaces : les bases. Tu t’y entraînes dans le Parcours, le Quiz, le SIEM et Devine le port. C’est l’objectif à viser en premier.</span></p>
+      <p class="menu-tool"><b>CySA+ — l’étape d’après</b> — <span>Analyse de logs, triage SIEM, réponse à incident. Tu t’y entraînes dans la Garde SOC, la Nuit au SOC et le rapport d’incident.</span></p>
+      <p class="menu-tool"><b>Blue Team Level 1 — l’investigation complète</b> — <span>MITRE ATT&CK, analyse réseau, analyse d’e-mails. Tu t’y entraînes dans NIGHTWATCH, la carte MITRE et l’analyse d’e-mails.</span></p>
     </details>
   </section>
   <section>
@@ -836,6 +930,11 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
       <button class="mode-tile" onclick="showScreen('screen-phishing')"><span class="tile-ico">PH</span>Phishing Lab<small>Repère les pièges</small></button>
       <button class="mode-tile" onclick="showScreen('screen-quiz')"><span class="tile-ico">QZ</span>Quiz<small>8 questions</small></button>
       <button class="mode-tile" onclick="showScreen('screen-outils')"><span class="tile-ico">DOC</span>Outils &amp; Glossaire<small>Références et mots-clés</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-siem')"><span class="tile-ico">SI</span>SIEM — Tri de logs<small>Logs + requêtes SPL</small></button>
+      <button class="mode-tile" onclick="renderMitre();showScreen('screen-mitre')"><span class="tile-ico">AT</span>MITRE ATT&CK<small>Carte des techniques</small></button>
+      <button class="mode-tile" onclick="startGarde();showScreen('screen-garde')"><span class="tile-ico">GD</span>Garde SOC<small>Une garde complète</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-ports')"><span class="tile-ico">PT</span>Devine le port<small>10 manches</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-email')"><span class="tile-ico">ML</span>Analyse e-mail<small>En-têtes &amp; verdict</small></button>
     </div>
   </section>
 </div>
@@ -2311,11 +2410,302 @@ function checkRankUp(){
 var rankupBtn=document.getElementById('rankupBtn');
 if(rankupBtn)rankupBtn.onclick=function(){document.getElementById('rankup').style.display='none';};
 
+
+/* ═══ NOUVEAUTÉS 15 nov — SIEM, MITRE, GARDE, PORTS, E-MAIL ═══ */
+
+/* --- SIEM : tri de logs + SPL --- */
+var SIEM_LOGS=[
+ {t:"08:02  AUTH OK   user=lea.martin ip=10.0.2.14 poste WS-09",bad:false,why:"Connexion normale : poste interne, horaires de bureau, MFA en place."},
+ {t:"08:15  FW-01 ALLOW src=10.0.2.14 dst=8.8.8.8:53 DNS",bad:false,why:"DNS vers un résolveur public connu : trafic normal du poste."},
+ {t:"02:31  AUTH FAIL x42 user=admin ip=185.220.101.34 pays inconnu",bad:true,why:"42 échecs à 2h31 depuis une IP externe inconnue : brute force sur le compte admin."},
+ {t:"09:40  PROXY GET intranet.pallas.local user=karim 200",bad:false,why:"Accès intranet interne, utilisateur connu, code 200 : rien d’anormal."},
+ {t:"03:05  DNS query=cdn-metrics-sync.top type=TXT 312 requêtes/h",bad:true,why:"Des centaines de requêtes TXT vers un domaine jamais vu : beacon de commande & contrôle."},
+ {t:"10:22  AUTH OK   user=sophie ip=10.0.2.31 MFA validé",bad:false,why:"Connexion interne avec MFA validé : le réflexe à garder, pas une alerte."},
+ {t:"11:47  FW-01 src=10.0.1.20 dst=45.155.204.71:443 2,3 Go envoyés",bad:true,why:"2,3 Go vers une IP externe inconnue : exfiltration de données en cours."},
+ {t:"12:10  PROXY GET update.vendor.com user=lea.martin 200",bad:false,why:"Mise à jour depuis le site officiel de l’éditeur : trafic attendu."}
+];
+var SPL_Q=[
+ {q:"Quelle requête compte les échecs de connexion par IP ?",o:["index=auth action=failure | stats count by src_ip","index=auth | table user, action","search error | head 10","index=auth | stats count by user"],a:0,x:"On filtre les échecs, puis on compte par IP source : c’est comme ça qu’on repère un brute force."},
+ {q:"Quelle requête trouve l’IP qui a téléchargé le plus de données ?",o:["index=proxy | stats sum(bytes) by src_ip | sort -sum(bytes)","index=proxy | stats count by user","index=proxy bytes>0 | table src_ip","index=proxy | head 100"],a:0,x:"sum(bytes) par IP, trié du plus gros au plus petit : l’exfiltration saute aux yeux."},
+ {q:"Quelle requête liste les domaines DNS rarement vus ?",o:["index=dns | stats count by query | where count<3","index=dns | stats count","index=dns | table query","index=dns query=* | head 5"],a:0,x:"On compte les occurrences de chaque domaine : ceux vus 1 ou 2 fois sont suspects (C2, domaines jetables)."}
+];
+var siemFound=0,siemSpl=0,siemSplIdx=0;
+function initSiem(){
+  var list=document.getElementById('siemLogList');if(!list)return;
+  list.innerHTML='';
+  SIEM_LOGS.forEach(function(l){
+    var b=document.createElement('button');b.className='logline';b.textContent=l.t;
+    b.onclick=function(){
+      if(b.dataset.done)return;b.dataset.done=1;
+      var fb=document.getElementById('siemLogFeedback');
+      if(l.bad){
+        b.classList.add('found');siemFound++;
+        document.getElementById('siemLogScore').textContent='Suspects trouvés : '+siemFound+' / 3';
+        fb.className='feedback show ok';fb.textContent='✅ Bien vu. '+l.why;
+        if(siemFound===3){
+          document.getElementById('siemSplWrap').style.display='block';
+          sayBuddy('buddySiem','Les 3 signaux sont trouvés. Maintenant, les requêtes SPL — c’est comme ça qu’on interroge un SIEM.');
+        }
+      }else{
+        b.classList.add('safe');
+        fb.className='feedback show bad';fb.textContent='❌ Celle-ci est normale. '+l.why;
+        setTimeout(function(){fb.classList.remove('show');},2600);
+      }
+    };
+    list.appendChild(b);
+  });
+}
+function renderSiemSpl(){
+  var q=SPL_Q[siemSplIdx];
+  document.getElementById('siemSplDots').innerHTML=SPL_Q.map(function(_,i){return '<i class="'+(i<=siemSplIdx?'on':'')+'"></i>';}).join('');
+  document.getElementById('siemSplMeta').textContent='Question '+(siemSplIdx+1)+' / '+SPL_Q.length;
+  document.getElementById('siemSplQ').textContent=q.q;
+  document.getElementById('siemSplFeedback').classList.remove('show');
+  var box=document.getElementById('siemSplOpts');box.innerHTML='';
+  q.o.forEach(function(opt,i){
+    var b=document.createElement('button');b.className='quiz-opt mono';b.textContent=opt;
+    b.onclick=function(){
+      var fb=document.getElementById('siemSplFeedback');
+      if(i===q.a){
+        b.classList.add('correct');siemSpl++;
+        fb.className='feedback show ok';fb.textContent='✅ Bonne requête. '+q.x;
+        box.querySelectorAll('button').forEach(function(x){x.disabled=true;});
+        setTimeout(function(){
+          if(siemSplIdx<SPL_Q.length-1){siemSplIdx++;renderSiemSpl();}
+          else{siemDone();}
+        },1600);
+      }else{
+        b.classList.add('wrong');
+        fb.className='feedback show bad';fb.textContent='❌ Pas celle-ci. '+q.x;
+        sayBuddy('buddySiem','Presque ! Relis la requête : que cherche-t-on, et comment on regroupe ?');
+      }
+    };
+    box.appendChild(b);
+  });
+}
+function siemDone(){
+  var fb=document.getElementById('siemEndFeedback');
+  fb.className='feedback show ok';
+  fb.textContent='✅ Mission SIEM terminée : 3 signaux trouvés, 3 requêtes justes. +80 XP';
+  addXP(80,'siem');
+  sayBuddy('buddySiem','Beau travail. Trier des logs et écrire des requêtes, c’est le quotidien d’un analyste SOC.');
+}
+
+/* --- CARTE MITRE ATT&CK --- */
+var MITRE=[
+ {tac:'Reconnaissance',techs:[
+  {id:'T1595.002',n:'Balayage de vulnérabilités',seen:function(){return Object.keys(nw.completed).length>0;},where:'NIGHTWATCH'},
+  {id:'T1598.003',n:'Hameçonnage ciblé (OSINT)',seen:function(){return !!state.done['m4'];},where:'Parcours — niveau 4'}]},
+ {tac:'Accès initial',techs:[
+  {id:'T1566.001',n:'Hameçonnage avec pièce jointe',seen:function(){return !!state.flags['phishing'];},where:'Phishing Lab'},
+  {id:'T1110.001',n:'Brute force',seen:function(){return !!state.flags['scenario'];},where:'Mission 02:47'}]},
+ {tac:'Exécution',techs:[
+  {id:'T1059.001',n:'PowerShell',seen:function(){return !!state.flags['scenario'];},where:'Mission 02:47'},
+  {id:'T1204.002',n:'Fichier malveillant ouvert',seen:function(){return !!state.flags['phishing'];},where:'Phishing Lab'}]},
+ {tac:'Persistance',techs:[
+  {id:'T1053.005',n:'Tâche planifiée',seen:function(){return (state.best.soc||0)>0;},where:'Nuit au SOC — Red Team'},
+  {id:'T1136',n:'Création de compte',seen:function(){return !!state.flags['scenario'];},where:'Mission 02:47'}]},
+ {tac:'Élévation de privilèges',techs:[
+  {id:'T1078',n:'Compte valide',seen:function(){return (state.best.soc||0)>0;},where:'Nuit au SOC'},
+  {id:'T1068',n:'Exploitation d’une faille',seen:function(){return Object.keys(nw.completed).length>0;},where:'NIGHTWATCH'}]},
+ {tac:'Évasion de défense',techs:[
+  {id:'T1027',n:'Fichier obfusqué',seen:function(){return !!state.flags['scenario'];},where:'Mission 02:47'},
+  {id:'T1070.004',n:'Suppression de fichiers',seen:function(){return (state.best.soc||0)>0;},where:'Nuit au SOC'}]},
+ {tac:'Accès aux identifiants',techs:[
+  {id:'T1003',n:'Vol d’identifiants',seen:function(){return Object.keys(nw.completed).length>0;},where:'NIGHTWATCH'},
+  {id:'T1110.004',n:'Credential stuffing',seen:function(){return (state.best.soc||0)>0;},where:'Nuit au SOC'}]},
+ {tac:'Découverte',techs:[
+  {id:'T1083',n:'Découverte de fichiers',seen:function(){return !!state.flags['terminal'];},where:'Terminal Linux'},
+  {id:'T1018',n:'Découverte de machines distantes',seen:function(){return Object.keys(nw.completed).length>0;},where:'NIGHTWATCH'}]},
+ {tac:'Mouvement latéral',techs:[
+  {id:'T1021.002',n:'SMB / PsExec',seen:function(){return Object.keys(nw.completed).length>0;},where:'NIGHTWATCH'},
+  {id:'T1021.004',n:'SSH',seen:function(){return Object.keys(nw.completed).length>0;},where:'NIGHTWATCH'}]},
+ {tac:'Collecte',techs:[
+  {id:'T1005',n:'Données en local',seen:function(){return !!state.flags['logs'];},where:'Chasse aux logs'},
+  {id:'T1039',n:'Partage réseau',seen:function(){return (state.best.soc||0)>0;},where:'Nuit au SOC'}]},
+ {tac:'Commande & contrôle',techs:[
+  {id:'T1071.001',n:'Web',seen:function(){return Object.keys(nw.completed).length>0;},where:'NIGHTWATCH'},
+  {id:'T1071.004',n:'DNS',seen:function(){return Object.keys(nw.completed).length>0;},where:'NIGHTWATCH'}]},
+ {tac:'Exfiltration',techs:[
+  {id:'T1041',n:'Exfiltration C2',seen:function(){return Object.keys(nw.completed).length>0;},where:'NIGHTWATCH'},
+  {id:'T1048',n:'Exfiltration par un autre canal',seen:function(){return (state.best.soc||0)>0;},where:'Nuit au SOC'}]}
+];
+function mitreSeenCount(){var n=0;MITRE.forEach(function(t){t.techs.forEach(function(x){try{if(x.seen())n++;}catch(e){}});});return n;}
+function renderMitre(){
+  var el=document.getElementById('mitreList');if(!el)return;
+  el.innerHTML='<p style="font-size:11px">Techniques déjà croisées : <b>'+mitreSeenCount()+' / 24</b></p>'+MITRE.map(function(t,ti){
+    return '<div class="card"><h3>'+t.tac+'</h3>'+t.techs.map(function(x,xi){
+      var s=false;try{s=!!x.seen();}catch(e){}
+      return '<button class="quiz-opt'+(s?' seen':'')+'" data-t="'+ti+'" data-x="'+xi+'">'+(s?'✓ ':'')+x.id+' — '+x.n+'</button>';
+    }).join('')+'</div>';
+  }).join('');
+  el.querySelectorAll('[data-t]').forEach(function(b){b.onclick=function(){
+    var x=MITRE[+b.getAttribute('data-t')].techs[+b.getAttribute('data-x')];
+    var s=false;try{s=!!x.seen();}catch(e){}
+    var fb=document.getElementById('mitreFb');
+    fb.className='feedback show '+(s?'ok':'');
+    fb.textContent=s?('✓ '+x.id+' — '+x.n+' — vue dans : '+x.where+'.'):('◌ '+x.id+' — '+x.n+' — pas encore croisée, à voir dans : '+x.where+'.');
+  };});
+}
+
+/* --- GARDE SOC : briefing, triage, rapport d’incident --- */
+var GARDE_ALERTS=[
+ {t:'E-mail de phishing signalé',sev:'Élevée',logs:'mail-gw: FROM "compta@fact0r-pay.example" SPF=fail DKIM=none\nmail-gw: lien http://185.220.101.34/login\nuser=karim : "j’ai cliqué, la page demandait mon mot de passe"',act:'escalate',why:"Phishing confirmé : domaine imité, SPF en échec, lien vers une IP externe. On escalade et on isole le poste."},
+ {t:'Mise à jour planifiée — trafic vers le CDN de l’éditeur',sev:'Faible',logs:'proxy: CONNECT update.vendor.com — 640 Mo (2 h)\nWSUS: mise à jour téléchargée, certificat valide\nIT: déploiement planifié cette nuit (ticket #4412)',act:'close',why:"Mise à jour prévue, source officielle, certificat valide : faux positif, on ferme."},
+ {t:'Connexion VPN depuis l’étranger',sev:'Moyenne',logs:'VPN: user=sophie pays=Espagne MFA=oui\nRH: déplacement déclaré, congés validés\nPremière connexion depuis ce pays',act:'watch',why:"Déplacement déclaré et MFA validé : rien d’urgent, mais on garde un œil dessus."},
+ {t:'Rafale d’échecs SSH depuis une IP externe',sev:'Élevée',logs:'sshd: 300 échecs depuis 185.220.101.34 en 10 min\nsshd: tentatives sur root, admin, backup\nfw-edge-01: source déjà vue dans le phishing de 22 h',act:'escalate',why:"Brute force depuis la même IP que le phishing : même attaquant. On escalade et on bloque l’IP."},
+ {t:'Échecs de connexion puis succès',sev:'Faible',logs:'DC-01: user=lea.martin échecs=4 puis succès\nPoste habituel, début de service 08:50\nMFA: non demandé (poste de confiance)',act:'close',why:"Un mot de passe mal tapé depuis son poste habituel : faux positif, on ferme."},
+ {t:'Connexion RDP interne hors horaires',sev:'Moyenne',logs:'DC-01: user=svc-print src=WS-12 première fois\nHoraire: 03:12, compte de service\nAucun ticket IT pour une intervention',act:'watch',why:"Compte de service sur un poste inhabituel, à 3 h du matin : pas de preuve d’attaque, mais ça mérite d’être surveillé et vérifié."}
+];
+var GARDE_REP=[
+ {q:"Remets l’incident de cette nuit dans l’ordre :",o:["Mail piégé → clic → beacon → exfiltration","Exfiltration → beacon → clic → mail piégé","Beacon → mail piégé → exfiltration → clic","Clic → exfiltration → mail piégé → beacon"],a:0,x:"La kill chain se lit dans l’ordre : hameçonnage, exécution, commande & contrôle, exfiltration."},
+ {q:"Quels sont les 2 vrais IOC de cette garde ?",o:["185.220.101.34 + cdn-metrics-sync.top","10.0.2.14 + update.vendor.com","8.8.8.8 + intranet.pallas.local","10.0.2.31 + cdn.assets-vendor.com"],a:0,x:"L’IP externe et le domaine de commande : ce sont eux qu’on bloque partout."},
+ {q:"Quelle action de confinement ?",o:["Isoler le poste + bloquer l’IP au pare-feu","Éteindre tout le réseau de l’entreprise","Ne rien faire, attendre demain","Supprimer les logs pour repartir propre"],a:0,x:"Confinement ciblé : on coupe l’accès de l’attaquant sans paralyser l’entreprise."}
+];
+var garde={i:0,tri:0,rep:0};
+var gardeRepIdx=0;
+function startGarde(){
+  garde={i:0,tri:0,rep:0};
+  var v=document.getElementById('gardeView');if(!v)return;
+  v.innerHTML='<div class="card"><span class="tag">Briefing • 22h00</span><h3 style="margin-top:10px">Ta garde commence</h3><p>6 alertes vont tomber cette nuit. Pour chacune : <b>Escalader</b> (vraie menace), <b>Fermer</b> (faux positif) ou <b>Surveiller</b> (pas d’urgence, à garder à l’œil). À 06h, tu rédiges le rapport d’incident.</p><button class="btn btn-primary btn-block" id="gardeStartBtn">Commencer la garde</button></div>';
+  document.getElementById('gardeStartBtn').onclick=function(){renderGardeAlert();};
+}
+function renderGardeAlert(){
+  var a=GARDE_ALERTS[garde.i];
+  var v=document.getElementById('gardeView');
+  v.innerHTML='<div class="card"><div style="color:var(--muted);font-size:11px">Alerte '+(garde.i+1)+' sur '+GARDE_ALERTS.length+' • Score triage : '+garde.tri+'</div><h3><span class="tag '+(a.sev==='Élevée'?'red':a.sev==='Moyenne'?'amber':'blue')+'">'+a.sev+'</span> '+a.t+'</h3><pre class="log">'+a.logs+'</pre><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><button class="mini-btn" id="gEsc" style="border-color:var(--red);color:var(--red)">⬆ Escalader</button><button class="mini-btn" id="gClose" style="border-color:var(--blue);color:var(--blue)">✕ Fermer</button><button class="mini-btn" id="gWatch">👁 Surveiller</button></div><div id="gardeFb"></div></div>';
+  function answer(act){
+    var ok=act===a.act;
+    if(ok)garde.tri+=20;
+    ['gEsc','gClose','gWatch'].forEach(function(id){document.getElementById(id).disabled=true;});
+    document.getElementById('gardeFb').innerHTML='<div class="feedback show '+(ok?'ok':'bad')+'"><b>'+(ok?'Bien trié.':'Raté.')+'</b> '+a.why+'</div><button class="btn btn-primary btn-block" id="gardeNx">'+(garde.i<GARDE_ALERTS.length-1?'Alerte suivante':'Rédiger le rapport')+'</button>';
+    document.getElementById('gardeNx').onclick=function(){garde.i++;if(garde.i<GARDE_ALERTS.length)renderGardeAlert();else renderGardeReport();};
+  }
+  document.getElementById('gEsc').onclick=function(){answer('escalate');};
+  document.getElementById('gClose').onclick=function(){answer('close');};
+  document.getElementById('gWatch').onclick=function(){answer('watch');};
+}
+function renderGardeReport(){
+  gardeRepIdx=0;renderGardeRepQ();
+}
+function renderGardeRepQ(){
+  var q=GARDE_REP[gardeRepIdx];
+  var v=document.getElementById('gardeView');
+  v.innerHTML='<div class="card"><span class="tag">Rapport d’incident • 06h00</span><h3 style="margin-top:10px">Rapport de fin de garde</h3><p class="mono" style="color:var(--muted);font-size:11px">Question '+(gardeRepIdx+1)+' / '+GARDE_REP.length+' • Score rapport : '+garde.rep+'</p><h3 style="font-size:14px">'+q.q+'</h3><div>'+q.o.map(function(opt,i){return '<button class="quiz-opt" data-o="'+i+'">'+opt+'</button>';}).join('')+'</div><div id="gardeRepFb"></div></div>';
+  v.querySelectorAll('[data-o]').forEach(function(b){b.onclick=function(){
+    var i=+b.getAttribute('data-o');
+    var ok=i===q.a;
+    if(ok){garde.rep+=20;b.classList.add('correct');}else{b.classList.add('wrong');}
+    v.querySelectorAll('[data-o]').forEach(function(x){x.disabled=true;});
+    document.getElementById('gardeRepFb').innerHTML='<div class="feedback show '+(ok?'ok':'bad')+'"><b>'+(ok?'Exact.':'Pas tout à fait.')+'</b> '+q.x+'</div><button class="btn btn-primary btn-block" id="gardeRepNx">'+(gardeRepIdx<GARDE_REP.length-1?'Question suivante':'Terminer la garde')+'</button>';
+    document.getElementById('gardeRepNx').onclick=function(){
+      if(gardeRepIdx<GARDE_REP.length-1){gardeRepIdx++;renderGardeRepQ();}
+      else finishGarde();
+    };
+  };});
+}
+function finishGarde(){
+  var total=garde.tri+garde.rep;
+  var gained=addXP(100,'garde');
+  var v=document.getElementById('gardeView');
+  v.innerHTML='<div class="card"><div style="color:var(--muted);font-size:11px">Rapport de fin de garde</div><h3>'+(total>=150?'Garde maîtrisée':total>=100?'Garde correcte':'Garde difficile')+'</h3><div class="big">'+total+' / 180</div><p>Triage : '+garde.tri+' / 120 • Rapport : '+garde.rep+' / 60</p>'+endRankHtml()+'<p style="color:var(--muted);font-size:11px">'+(gained>0?'+100 XP ajoutés à ton total.':'Déjà validée : pas de nouvel XP, mais le score compte.')+'</p><button class="btn btn-primary btn-block" id="gardeAgain">↺ Rejouer la garde</button><button class="btn btn-ghost btn-block" id="gardeHomeBtn">Accueil</button></div>';
+  document.getElementById('gardeAgain').onclick=function(){startGarde();};
+  document.getElementById('gardeHomeBtn').onclick=function(){showScreen('screen-home');};
+}
+
+/* --- DEVINE LE PORT : 10 manches --- */
+var PORTS=[
+ ['SSH','Connexion à distance sécurisée',22],
+ ['HTTP','Sites web non chiffrés',80],
+ ['HTTPS','Sites web chiffrés',443],
+ ['DNS','Traduction noms → IP',53],
+ ['FTP','Transfert de fichiers',21],
+ ['SMTP','Envoi d’e-mails',25],
+ ['RDP','Bureau à distance Windows',3389],
+ ['MySQL','Base de données MySQL',3306],
+ ['LDAP','Annuaire d’entreprise',389],
+ ['SNMP','Supervision réseau',161],
+ ['Telnet','Connexion à distance non chiffrée',23],
+ ['POP3','Réception d’e-mails',110],
+ ['IMAP','Réception d’e-mails sur le serveur',143],
+ ['SMB','Partage de fichiers Windows',445],
+ ['PostgreSQL','Base de données PostgreSQL',5432],
+ ['LDAPS','Annuaire chiffré',636]
+];
+var portsRound=[],portsIdx=0,portsScore=0;
+function initPorts(){portsRound=shuf(PORTS).slice(0,10);portsIdx=0;portsScore=0;renderPortsRound();}
+function renderPortsRound(){
+  var p=portsRound[portsIdx];
+  document.getElementById('portsDots').innerHTML=portsRound.map(function(_,i){return '<i class="'+(i<=portsIdx?'on':'')+'"></i>';}).join('');
+  document.getElementById('portsMeta').textContent='Manche '+(portsIdx+1)+' / 10 • Score : '+portsScore;
+  document.getElementById('portsService').textContent=p[0];
+  document.getElementById('portsHint').textContent=p[1];
+  document.getElementById('portsFeedback').classList.remove('show');
+  var opts=[p[2]];
+  while(opts.length<4){var r=PORTS[RN(PORTS.length)][2];if(opts.indexOf(r)<0)opts.push(r);}
+  opts=shuf(opts);
+  var box=document.getElementById('portsOpts');box.innerHTML='';
+  opts.forEach(function(port){
+    var b=document.createElement('button');b.className='quiz-opt';b.textContent=port;
+    b.onclick=function(){
+      var fb=document.getElementById('portsFeedback');
+      if(port===p[2]){
+        b.classList.add('correct');portsScore++;addXP(5);
+        fb.className='feedback show ok';fb.textContent='✅ '+port+' — c’est bien '+p[0]+'. +5 XP';
+      }else{
+        b.classList.add('wrong');
+        fb.className='feedback show bad';fb.textContent='❌ Non — '+p[0]+', c’est le port '+p[2]+'.';
+        sayBuddy('buddyPorts','Pas grave, on retient : '+p[0]+' = '+p[2]+'.');
+      }
+      box.querySelectorAll('button').forEach(function(x){x.disabled=true;});
+      setTimeout(function(){
+        if(portsIdx<9){portsIdx++;renderPortsRound();}
+        else{portsEnd();}
+      },1500);
+    };
+    box.appendChild(b);
+  });
+}
+function portsEnd(){
+  document.getElementById('portsMeta').textContent='Partie terminée';
+  document.getElementById('portsService').textContent=portsScore+' / 10';
+  document.getElementById('portsHint').textContent=portsScore>=8?'Excellent — les ports n’ont plus de secret pour toi.':portsScore>=5?'Bien — encore quelques ports à revoir.':'Rejoue : les ports s’apprennent par la répétition.';
+  document.getElementById('portsOpts').innerHTML='<button class="mini-btn primary" id="portsReplay">↺ Rejouer (10 nouvelles manches)</button>';
+  document.getElementById('portsReplay').onclick=function(){initPorts();};
+}
+
+/* --- ANALYSE D’E-MAILS : les en-têtes parlent --- */
+var EMAILS=[
+ {from:'"Support PayPal" &lt;support@paypal-securite.com&gt;',reply:'support@paypal-securite.com',spf:'fail',dkim:'none',dmarc:'fail',subj:'URGENT : votre compte sera suspendu',shown:'paypal.com/verify',real:'http://185.220.101.34/login',body:'Cher client, confirmez vos identifiants sous 1 h sinon votre compte sera fermé.',bad:true,why:'SPF, DKIM et DMARC en échec, domaine imité, et le vrai lien mène vers une IP inconnue : phishing.'},
+ {from:'"RH Pallas" &lt;rh@entreprise-pallas.fr&gt;',reply:'rh@entreprise-pallas.fr',spf:'pass',dkim:'pass',dmarc:'pass',subj:'Planning de la semaine prochaine',shown:'intranet.pallas.local/planning',real:'https://intranet.pallas.local/planning',body:'Bonjour, voici le planning mis à jour, aussi disponible sur l’intranet. Bonne journée.',bad:false,why:'Expéditeur interne cohérent, SPF/DKIM/DMARC validés, lien interne : légitime.'},
+ {from:'"Facturation Pro" &lt;facturation@fournisseur-pro.fr&gt;',reply:'remboursement@facture-rapide.net',spf:'pass',dkim:'pass',dmarc:'pass',subj:'Remboursement en attente — répondez vite',shown:'fournisseur-pro.fr/remboursement',real:'https://facture-rapide.net/paiement',body:'Votre remboursement de 189 € est prêt. Répondez à ce mail avec vos coordonnées bancaires.',bad:true,why:'Les contrôles passent, mais la réponse part vers un autre domaine et le vrai lien ne correspond pas : phishing, malgré les apparences.'}
+];
+var emailDone=0;
+function initEmail(){
+  var g=document.getElementById('emailGrid');if(!g)return;
+  g.innerHTML='';emailDone=0;
+  EMAILS.forEach(function(m,idx){
+    var d=document.createElement('div');d.className='card';
+    d.innerHTML='<span class="tag">E-mail '+(idx+1)+'</span><pre class="log">De : '+m.from+'\nRépondre à : '+m.reply+'\nSPF : '+m.spf+' • DKIM : '+m.dkim+' • DMARC : '+m.dmarc+'\nObjet : '+m.subj+'\nLien affiché : '+m.shown+'\nLien réel : '+m.real+'</pre><p style="font-size:12px">« '+m.body+' »</p><div style="display:flex;gap:8px"><button class="mini-btn em-legit" style="flex:1">✓ Légitime</button><button class="mini-btn em-bad" style="flex:1">⚠ Phishing</button></div><div class="feedback"></div>';
+    var fb=d.querySelector('.feedback');
+    function answer(guessBad){
+      if(d.dataset.done)return;d.dataset.done=1;
+      var ok=guessBad===m.bad;fb.className='feedback show '+(ok?'ok':'bad');fb.textContent=(ok?'✅ Bien vu. ':'❌ Raté. ')+m.why;
+      if(ok){emailDone++;if(emailDone===3){addXP(80,'email');sayBuddy('buddyEmail','3 sur 3. Les en-têtes, c’est ta meilleure arme contre le phishing.');}}
+      else sayBuddy('buddyEmail','Bien essayé ! Regarde le Reply-To et le vrai lien : c’est souvent là que ça se joue.');
+    }
+    d.querySelector('.em-legit').onclick=function(){answer(false);};
+    d.querySelector('.em-bad').onclick=function(){answer(true);};
+    g.appendChild(d);
+  });
+}
+
 /* ═══ INIT ═══ */
 renderScenario();
 renderQuiz();
 renderGloss('');
 renderStats();
+initSiem();renderMitre();startGarde();initPorts();initEmail();
 updateNwHud();
 updateNwMap();
 showNwMenu();
