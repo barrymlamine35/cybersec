@@ -854,6 +854,33 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
   </section>
 </div>
 
+<!-- ═══ ANALYSE RÉSEAU — WIRESHARK ═══ -->
+<div class="screen" id="screen-reseau">
+  <section>
+    <div class="kicker">Analyse réseau • +90 XP</div>
+    <h2>Analyse réseau — Wireshark</h2>
+    <p>3 captures à analyser, façon Wireshark. Touche les paquets suspects, puis réponds à la question d'analyse.</p>
+    <div class="buddy" id="buddyReseau"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2</b><span class="buddy-text">En capture, tout ressemble à du trafic normal — sauf 2 paquets. Trouve-les.</span></div></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px" id="reseauTabs"></div>
+    <div class="card">
+      <span class="tag" id="reseauCapTag">Capture 1 / 3 • +30 XP</span>
+      <h3 style="margin-top:10px" id="reseauCapName">—</h3>
+      <div id="reseauPackets"></div>
+      <div class="feedback" id="reseauFb"></div>
+      <p class="mono" style="color:var(--muted);font-size:11px" id="reseauScore">Suspects trouvés : 0 / 2</p>
+    </div>
+    <div id="reseauQWrap" style="display:none">
+      <div class="card">
+        <span class="tag">Question d'analyse</span>
+        <h3 id="reseauQ" style="font-size:14px"></h3>
+        <div id="reseauQOpts"></div>
+        <div class="feedback" id="reseauQFb"></div>
+      </div>
+    </div>
+    <div class="feedback" id="reseauEndFb"></div>
+  </section>
+</div>
+
 <!-- ═══ MENU ═══ -->
 <div class="screen" id="screen-menu">
   <section>
@@ -935,6 +962,7 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
       <button class="mode-tile" onclick="startGarde();showScreen('screen-garde')"><span class="tile-ico">GD</span>Garde SOC<small>Une garde complète</small></button>
       <button class="mode-tile" onclick="showScreen('screen-ports')"><span class="tile-ico">PT</span>Devine le port<small>10 manches</small></button>
       <button class="mode-tile" onclick="showScreen('screen-email')"><span class="tile-ico">ML</span>Analyse e-mail<small>En-têtes &amp; verdict</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-reseau')"><span class="tile-ico">WR</span>Analyse réseau<small>3 captures Wireshark</small></button>
     </div>
   </section>
 </div>
@@ -2773,12 +2801,115 @@ function initEmail(){
   });
 }
 
+/* --- ANALYSE RÉSEAU : 3 captures façon Wireshark --- */
+var RESEAU=[
+ {name:"Exfiltration DNS",packets:[
+  {t:"08:02  10.0.2.14 → 8.8.8.8  DNS  A www.google.com",bad:false,why:"Requête DNS normale vers un domaine connu."},
+  {t:"08:03  10.0.2.14 → 10.0.2.1  TCP  443  intranet.pallas.local",bad:false,why:"Trafic interne HTTPS vers l'intranet : normal."},
+  {t:"02:31  10.0.2.31 → 185.220.101.34  TCP  443  2,3 Go envoyés",bad:true,why:"2,3 Go vers une IP externe inconnue à 2h31 : exfiltration de données."},
+  {t:"08:15  10.0.2.14 → 8.8.8.8  DNS  TXT  cdn-metrics-sync.top (312 req/h)",bad:true,why:"Des centaines de requêtes TXT vers un domaine jamais vu : beacon C2 déguisé en DNS."},
+  {t:"09:40  10.0.2.14 → 93.184.216.34  TCP  443  update.vendor.com",bad:false,why:"Mise à jour depuis le site officiel de l'éditeur : trafic attendu."},
+  {t:"10:22  10.0.2.31 → 10.0.2.1  TCP  445  SMB  \\\\SRV-FIC-01\\partage",bad:false,why:"Partage de fichiers interne, utilisateur connu : normal."},
+  {t:"11:47  10.0.2.14 → 8.8.8.8  DNS  A outlook.office365.com",bad:false,why:"DNS vers un service Microsoft connu : trafic bureautique normal."},
+  {t:"12:10  10.0.2.31 → 10.0.2.1  UDP  53  DNS  intranet.pallas.local",bad:false,why:"DNS interne vers le serveur local : normal."}
+ ],q:{q:"Que faut-il faire en premier face à cette capture ?",o:["Bloquer l'IP 185.220.101.34 et le domaine cdn-metrics-sync.top, puis isoler le poste 10.0.2.31","Éteindre tout le réseau de l'entreprise","Supprimer les logs pour repartir propre","Ne rien faire, attendre demain"],a:0,x:"On bloque les IOC (IP + domaine) partout, on isole le poste source, puis on enquête : c'est le confinement ciblé."}},
+ {name:"Scan de ports",packets:[
+  {t:"14:02  10.0.2.14 → 10.0.2.1  TCP  443  SYN",bad:false,why:"Connexion HTTPS normale vers la passerelle."},
+  {t:"14:02  203.0.113.77 → 10.0.1.20  TCP  22  SYN",bad:true,why:"Premier SYN depuis une IP externe inconnue : le scan commence."},
+  {t:"14:03  10.0.2.14 → 8.8.8.8  DNS  A www.wikipedia.org",bad:false,why:"DNS normal vers un site connu."},
+  {t:"14:03  10.0.2.31 → 10.0.2.1  TCP  445  SMB  \\\\SRV-FIC-01\\partage",bad:false,why:"Partage de fichiers interne : normal."},
+  {t:"14:03  203.0.113.77 → 10.0.1.20  TCP  3389  SYN",bad:true,why:"La même IP sonde le RDP (3389) : elle cherche une porte d'entrée."},
+  {t:"14:04  10.0.2.14 → 93.184.216.34  TCP  443  update.vendor.com",bad:false,why:"Mise à jour depuis le site officiel : trafic attendu."},
+  {t:"14:05  10.0.2.31 → 10.0.2.1  TCP  25  SMTP  mail.pallas.local",bad:false,why:"E-mail interne vers le serveur de messagerie : normal."},
+  {t:"14:06  10.0.2.14 → 10.0.2.1  UDP  123  NTP  time.pallas.local",bad:false,why:"Synchronisation de l'heure en interne : normal."}
+ ],q:{q:"Que révèle ce scan ?",o:["Un attaquant cartographie le réseau : on bloque l'IP au pare-feu et on vérifie les ports exposés","Un utilisateur qui navigue normalement","Une mise à jour Windows","Un problème de DNS"],a:0,x:"Un scan, c'est la reconnaissance : l'attaquant cherche les ports ouverts avant d'attaquer. On bloque la source et on ferme ce qui ne doit pas être exposé."}},
+ {name:"Beacon C2",packets:[
+  {t:"09:00  10.0.2.14 → 8.8.8.8  DNS  A www.google.com",bad:false,why:"Requête DNS normale vers un domaine connu."},
+  {t:"09:01  10.0.2.14 → 10.0.2.1  TCP  443  intranet.pallas.local",bad:false,why:"Trafic interne HTTPS vers l'intranet : normal."},
+  {t:"09:00  10.0.2.31 → 45.155.204.71  TCP  443  POST api-stats-update.net",bad:true,why:"Un POST toutes les 60 secondes exactement vers un domaine inconnu : un beacon régulier, la signature d'un C2."},
+  {t:"09:02  10.0.2.31 → 10.0.2.1  TCP  25  SMTP  mail.pallas.local",bad:false,why:"E-mail interne vers le serveur de messagerie : normal."},
+  {t:"09:03  10.0.2.31 → 185.220.101.34  TCP  80  GET /login",bad:true,why:"Une requête HTTP directe vers une IP, sans nom de domaine : typique d'un serveur de commande et contrôle."},
+  {t:"09:04  10.0.2.14 → 8.8.8.8  DNS  A outlook.office365.com",bad:false,why:"DNS vers un service Microsoft connu : trafic bureautique normal."},
+  {t:"09:05  10.0.2.31 → 10.0.2.1  TCP  445  SMB  \\\\SRV-FIC-01\\partage",bad:false,why:"Partage de fichiers interne : normal."},
+  {t:"09:06  10.0.2.14 → 10.0.2.1  UDP  53  DNS  intranet.pallas.local",bad:false,why:"DNS interne vers le serveur local : normal."}
+ ],q:{q:"Comment s'appelle ce trafic régulier vers le serveur de l'attaquant ?",o:["Un beacon (commande & contrôle)","Un streaming vidéo","Une sauvegarde cloud","Une mise à jour"],a:0,x:"Le beacon, c'est le « téléphone » du malware : il contacte son serveur à intervalles réguliers pour recevoir des ordres."}}
+];
+var reseauIdx=0,reseauFound=0;
+function initReseau(){renderReseauTabs();renderReseau(0);}
+function renderReseauTabs(){
+  var t=document.getElementById('reseauTabs');if(!t)return;
+  t.innerHTML='';
+  RESEAU.forEach(function(c,i){
+    var b=document.createElement('button');b.className='mini-btn'+(i===reseauIdx?' primary':'');b.style.flex='1';b.textContent='Capture '+(i+1);
+    b.onclick=function(){renderReseau(i);};
+    t.appendChild(b);
+  });
+}
+function renderReseau(i){
+  reseauIdx=i;reseauFound=0;
+  renderReseauTabs();
+  var c=RESEAU[i];
+  document.getElementById('reseauCapTag').textContent='Capture '+(i+1)+' / '+RESEAU.length+' • +30 XP';
+  document.getElementById('reseauCapName').textContent=c.name;
+  document.getElementById('reseauScore').textContent='Suspects trouvés : 0 / 2';
+  document.getElementById('reseauFb').classList.remove('show');
+  document.getElementById('reseauQWrap').style.display='none';
+  document.getElementById('reseauEndFb').classList.remove('show');
+  var list=document.getElementById('reseauPackets');list.innerHTML='';
+  c.packets.forEach(function(p){
+    var b=document.createElement('button');b.className='logline';b.textContent=p.t;
+    b.onclick=function(){
+      if(b.dataset.done)return;b.dataset.done=1;
+      var fb=document.getElementById('reseauFb');
+      if(p.bad){
+        b.classList.add('found');reseauFound++;
+        document.getElementById('reseauScore').textContent='Suspects trouvés : '+reseauFound+' / 2';
+        fb.className='feedback show ok';fb.textContent='✅ Bien vu. '+p.why;
+        if(reseauFound===2){renderReseauQ();}
+      }else{
+        b.classList.add('safe');
+        fb.className='feedback show bad';fb.textContent='❌ Celui-ci est normal. '+p.why;
+        setTimeout(function(){fb.classList.remove('show');},2600);
+      }
+    };
+    list.appendChild(b);
+  });
+}
+function renderReseauQ(){
+  var q=RESEAU[reseauIdx].q;
+  document.getElementById('reseauQWrap').style.display='block';
+  document.getElementById('reseauQ').textContent=q.q;
+  document.getElementById('reseauQFb').classList.remove('show');
+  var box=document.getElementById('reseauQOpts');box.innerHTML='';
+  q.o.forEach(function(opt,i){
+    var b=document.createElement('button');b.className='quiz-opt';b.textContent=opt;
+    b.onclick=function(){
+      var fb=document.getElementById('reseauQFb');
+      if(i===q.a){
+        b.classList.add('correct');
+        var gained=addXP(30,'reseau-'+reseauIdx);
+        fb.className='feedback show ok';fb.textContent='✅ Bonne analyse. '+q.x;
+        box.querySelectorAll('button').forEach(function(x){x.disabled=true;});
+        var end=document.getElementById('reseauEndFb');
+        end.className='feedback show ok';
+        end.textContent=(gained>0?'✅ Capture analysée : +30 XP. ':'✅ Capture déjà validée : pas de nouvel XP, mais l’analyse compte.')+(reseauIdx<RESEAU.length-1?' Passe à la capture suivante.':' Les 3 captures sont analysées. Beau travail d’analyste.');
+        sayBuddy('buddyReseau','Lire une capture, c’est le quotidien d’un analyste : le bruit d’abord, les signaux ensuite.');
+      }else{
+        b.classList.add('wrong');
+        fb.className='feedback show bad';fb.textContent='❌ Pas tout à fait. '+q.x;
+        sayBuddy('buddyReseau','Relis les paquets suspects : qu’est-ce qui ne colle pas avec le trafic normal ?');
+      }
+    };
+    box.appendChild(b);
+  });
+}
+
 /* ═══ INIT ═══ */
 renderScenario();
 renderQuiz();
 renderGloss('');
 renderStats();
-initSiem();renderMitre();startGarde();initPorts();initEmail();
+initSiem();renderMitre();startGarde();initPorts();initEmail();initReseau();
 updateNwHud();
 updateNwMap();
 showNwMenu();
