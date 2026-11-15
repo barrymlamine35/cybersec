@@ -752,6 +752,7 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
     <div class="streak-row" id="streakLine"> Série : 0 jour</div>
     <h3 style="margin-top:14px">Tes badges</h3>
     <div class="badge-grid" id="badgeGrid"></div>
+    <button class="mini-btn" style="margin-top:10px" onclick="renderStatsScreen();showScreen('screen-stats')">📊 Voir mes statistiques</button>
     <button class="mini-btn" id="resetBtn">Effacer ma progression</button>
     <div id="resetConfirm" style="display:none;margin-top:10px;border:1px solid var(--red);border-radius:12px;padding:12px"><p style="margin:0 0 10px"><b>Effacer toute ta progression ?</b><br><span style="color:var(--muted)">XP, niveaux, badges et scores seront remis à zéro. Cette action est définitive.</span></p><button class="mini-btn primary" id="resetYes">Oui, tout effacer</button> <button class="mini-btn" id="resetNo">Non, annuler</button></div>
   </div>
@@ -892,6 +893,16 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
   </section>
 </div>
 
+<!-- ═══ STATISTIQUES ═══ -->
+<div class="screen" id="screen-stats">
+  <section>
+    <div class="kicker">Statistiques</div>
+    <h2>Mes statistiques</h2>
+    <p>Ta précision par activité, d'où viennent tes XP, et tes totaux.</p>
+    <div id="statsView"></div>
+  </section>
+</div>
+
 <!-- ═══ MENU ═══ -->
 <div class="screen" id="screen-menu">
   <section>
@@ -975,6 +986,7 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
       <button class="mode-tile" onclick="showScreen('screen-email')"><span class="tile-ico">ML</span>Analyse e-mail<small>En-têtes &amp; verdict</small></button>
       <button class="mode-tile" onclick="showScreen('screen-reseau')"><span class="tile-ico">WR</span>Analyse réseau<small>3 captures Wireshark</small></button>
       <button class="mode-tile" onclick="startOsint();showScreen('screen-osint')"><span class="tile-ico">OS</span>Enquête OSINT<small>Qui est shadow_fox92 ?</small></button>
+      <button class="mode-tile" onclick="renderStatsScreen();showScreen('screen-stats')"><span class="tile-ico">ST</span>Statistiques<small>Précision &amp; XP par activité</small></button>
     </div>
   </section>
 </div>
@@ -997,8 +1009,11 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
 <script>
 /* ═══ ÉTAT UNIFIÉ — un seul système d'XP, sauvegarde localStorage ═══ */
 var KEY='jeu-combine-v1';
-var state={xp:0,role:0,games:0,done:{},flags:{},best:{soc:0,nw:0,duel:0},badges:{}};
+var state={xp:0,role:0,games:0,done:{},flags:{},best:{soc:0,nw:0,duel:0},badges:{},stats:{},xpBy:{}};
 try{var s=JSON.parse(localStorage.getItem(KEY)||'{}');for(var k in s){state[k]=s[k];}}catch(e){}
+if(!state.stats)state.stats={};
+if(!state.xpBy)state.xpBy={};
+if(!state.xpByBf){var _bm={quiz:10,port:5,reseau:30,osint:20,daily:50,scenario:100,logs:80,terminal:60,phishing:70,pwd:30,siem:80,garde:100,email:80};for(var _k in (state.flags||{})){var _a=_k.split('-')[0];if(_bm[_a])state.xpBy[_a]=(state.xpBy[_a]||0)+_bm[_a];}state.xpByBf=true;save();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
 var ROLES=[{name:'Recrue',mult:1,fp:1,det:10},{name:'Analyste',mult:1.5,fp:3,det:8},{name:'Expert',mult:2,fp:5,det:6}];
 function rankName(x){return x>=3000?'Chasseur de menaces':x>=1500?'Analyste confirmé':x>=500?'Analyste':'Recrue';}
@@ -1007,10 +1022,13 @@ function addXP(n,key){
   if(key&&state.flags[key])return 0;
   if(key)state.flags[key]=true;
   var g=Math.round(n*ROLES[state.role].mult);
-  state.xp+=g;save();renderStats();checkDaily(key);
+  state.xp+=g;
+  if(key){if(!state.xpBy)state.xpBy={};var act=key.split('-')[0];state.xpBy[act]=(state.xpBy[act]||0)+g;}
+  save();renderStats();checkDaily(key);
   if(g>0){toast('+'+g+' XP');floatXP(g);}
   return g;
 }
+function stat(mode,ok){if(!state.stats)state.stats={};var s=state.stats[mode]||(state.stats[mode]={good:0,total:0});s.total++;if(ok)s.good++;save();}
 function renderStats(){
   var xp=state.xp;
   document.getElementById('hudXp').textContent=xp+' XP';
@@ -1062,7 +1080,7 @@ document.getElementById('resetBtn').onclick=function(){
   var c=document.getElementById('resetConfirm');if(c)c.style.display='block';
 };
 document.getElementById('resetYes').onclick=function(){
-  state={xp:0,role:0,games:0,done:{},flags:{},best:{soc:0,nw:0,duel:0},badges:{}};save();try{localStorage.removeItem(STREAK_KEY);}catch(e){}renderStats();renderQuiz();
+  state={xp:0,role:0,games:0,done:{},flags:{},best:{soc:0,nw:0,duel:0},badges:{},stats:{},xpBy:{}};save();try{localStorage.removeItem(STREAK_KEY);}catch(e){}renderStats();renderQuiz();
   var c=document.getElementById('resetConfirm');if(c)c.style.display='none';
   toast('Progression effacée.');
 };
@@ -1190,7 +1208,7 @@ var phish=[
     var fb=d.querySelector('.feedback');
     function answer(guessBad){
       if(d.dataset.done)return;d.dataset.done=1;
-      var ok=guessBad===p.bad;fb.className='feedback show '+(ok?'ok':'bad');fb.textContent=(ok?'✅ Bien vu. ':'❌ Raté. ')+p.why;
+      var ok=guessBad===p.bad;stat('phishing',ok);fb.className='feedback show '+(ok?'ok':'bad');fb.textContent=(ok?'✅ Bien vu. ':'❌ Raté. ')+p.why;
       if(ok){done++;if(done===3)addXP(70,'phishing');}else sayBuddy('buddyPhish','Bien essayé ! Regarde l’expéditeur et le domaine : c’est souvent là que ça se joue.');
     }
     d.querySelector('.ph-legit').onclick=function(){answer(false);};
@@ -1300,6 +1318,7 @@ function renderQuiz(){
   document.getElementById('quizFeedback').classList.remove('show');
   var box=document.getElementById('quizOpts');box.innerHTML='';
   q.o.forEach(function(opt,i){var b=document.createElement('button');b.className='quiz-opt';b.textContent=opt;b.onclick=function(){
+    stat('quiz',i===q.a);
     var fb=document.getElementById('quizFeedback');
     if(i===q.a){b.classList.add('correct');qScore++;addXP(10,'quiz-q'+q.id);fb.className='feedback show ok';fb.textContent='✅ Bonne réponse. '+q.x;}
     else{b.classList.add('wrong');fb.className='feedback show bad';fb.textContent='❌ Pas tout à fait. '+q.x;sayBuddy('buddyQuiz','Pas de souci, on retient et on continue. La prochaine sera la bonne.');}
@@ -2549,6 +2568,7 @@ function initSiem(){
     var b=document.createElement('button');b.className='logline';b.textContent=l.t;
     b.onclick=function(){
       if(b.dataset.done)return;b.dataset.done=1;
+      stat('siem',l.bad);
       var fb=document.getElementById('siemLogFeedback');
       if(l.bad){
         b.classList.add('found');siemFound++;
@@ -2578,6 +2598,7 @@ function renderSiemSpl(){
   q.o.forEach(function(opt,i){
     var b=document.createElement('button');b.className='quiz-opt mono';b.textContent=opt;
     b.onclick=function(){
+      stat('siem',i===q.a);
       var fb=document.getElementById('siemSplFeedback');
       if(i===q.a){
         b.classList.add('correct');siemSpl++;
@@ -2689,6 +2710,7 @@ function renderGardeAlert(){
   v.innerHTML='<div class="card"><div style="color:var(--muted);font-size:11px">Alerte '+(garde.i+1)+' sur '+GARDE_ALERTS.length+' • Score triage : '+garde.tri+'</div><h3><span class="tag '+(a.sev==='Élevée'?'red':a.sev==='Moyenne'?'amber':'blue')+'">'+a.sev+'</span> '+a.t+'</h3><pre class="log">'+a.logs+'</pre><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><button class="mini-btn" id="gEsc" style="border-color:var(--red);color:var(--red)">⬆ Escalader</button><button class="mini-btn" id="gClose" style="border-color:var(--blue);color:var(--blue)">✕ Fermer</button><button class="mini-btn" id="gWatch">👁 Surveiller</button></div><div id="gardeFb"></div></div>';
   function answer(act){
     var ok=act===a.act;
+    stat('garde',ok);
     if(ok)garde.tri+=20;
     ['gEsc','gClose','gWatch'].forEach(function(id){document.getElementById(id).disabled=true;});
     document.getElementById('gardeFb').innerHTML='<div class="feedback show '+(ok?'ok':'bad')+'"><b>'+(ok?'Bien trié.':'Raté.')+'</b> '+a.why+'</div><button class="btn btn-primary btn-block" id="gardeNx">'+(garde.i<GARDE_ALERTS.length-1?'Alerte suivante':'Rédiger le rapport')+'</button>';
@@ -2708,6 +2730,7 @@ function renderGardeRepQ(){
   v.querySelectorAll('[data-o]').forEach(function(b){b.onclick=function(){
     var i=+b.getAttribute('data-o');
     var ok=i===q.a;
+    stat('garde',ok);
     if(ok){garde.rep+=20;b.classList.add('correct');}else{b.classList.add('wrong');}
     v.querySelectorAll('[data-o]').forEach(function(x){x.disabled=true;});
     document.getElementById('gardeRepFb').innerHTML='<div class="feedback show '+(ok?'ok':'bad')+'"><b>'+(ok?'Exact.':'Pas tout à fait.')+'</b> '+q.x+'</div><button class="btn btn-primary btn-block" id="gardeRepNx">'+(gardeRepIdx<GARDE_REP.length-1?'Question suivante':'Terminer la garde')+'</button>';
@@ -2761,6 +2784,7 @@ function renderPortsRound(){
   opts.forEach(function(port){
     var b=document.createElement('button');b.className='quiz-opt';b.textContent=port;
     b.onclick=function(){
+      stat('ports',port===p[2]);
       var fb=document.getElementById('portsFeedback');
       if(port===p[2]){
         b.classList.add('correct');portsScore++;addXP(5,'port-'+p[0]);
@@ -2803,7 +2827,7 @@ function initEmail(){
     var fb=d.querySelector('.feedback');
     function answer(guessBad){
       if(d.dataset.done)return;d.dataset.done=1;
-      var ok=guessBad===m.bad;fb.className='feedback show '+(ok?'ok':'bad');fb.textContent=(ok?'✅ Bien vu. ':'❌ Raté. ')+m.why;
+      var ok=guessBad===m.bad;stat('email',ok);fb.className='feedback show '+(ok?'ok':'bad');fb.textContent=(ok?'✅ Bien vu. ':'❌ Raté. ')+m.why;
       if(ok){emailDone++;if(emailDone===3){addXP(80,'email');sayBuddy('buddyEmail','3 sur 3. Les en-têtes, c’est ta meilleure arme contre le phishing.');}}
       else sayBuddy('buddyEmail','Bien essayé ! Regarde le Reply-To et le vrai lien : c’est souvent là que ça se joue.');
     }
@@ -2872,6 +2896,7 @@ function renderReseau(i){
     var b=document.createElement('button');b.className='logline';b.textContent=p.t;
     b.onclick=function(){
       if(b.dataset.done)return;b.dataset.done=1;
+      stat('reseau',p.bad);
       var fb=document.getElementById('reseauFb');
       if(p.bad){
         b.classList.add('found');reseauFound++;
@@ -2896,6 +2921,7 @@ function renderReseauQ(){
   q.o.forEach(function(opt,i){
     var b=document.createElement('button');b.className='quiz-opt';b.textContent=opt;
     b.onclick=function(){
+      stat('reseau',i===q.a);
       var fb=document.getElementById('reseauQFb');
       if(i===q.a){
         b.classList.add('correct');
@@ -2933,6 +2959,7 @@ function renderOsintStep(){
   v.querySelectorAll('[data-o]').forEach(function(b){b.onclick=function(){
     var i=+b.getAttribute('data-o');
     var ok=i===s.a;
+    stat('osint',ok);
     if(ok){osintScore+=20;b.classList.add('correct');addXP(20,'osint-s'+osintIdx);}else{b.classList.add('wrong');}
     v.querySelectorAll('[data-o]').forEach(function(x){x.disabled=true;});
     document.getElementById('osintFb').innerHTML='<div class="feedback show '+(ok?'ok':'bad')+'"><b>'+(ok?'Bien vu.':'Pas tout à fait.')+'</b> '+s.x+'</div><button class="btn btn-primary btn-block" id="osintNx">'+(osintIdx<OSINT_STEPS.length-1?'Indice suivant':'Voir le verdict')+'</button>';
@@ -2947,6 +2974,31 @@ function finishOsint(){
   v.innerHTML='<div class="card"><div style="color:var(--muted);font-size:11px">Verdict de l’enquête</div><h3>'+(osintScore>=80?'Enquêteur confirmé':osintScore>=60?'Bonne enquête':'Enquête à revoir')+'</h3><div class="big">'+osintScore+' / 100</div><p>Tu as réuni les indices : pseudo réutilisé, adresse jetable, métadonnées, domaine récent. C’est exactement comme ça qu’on enquête en OSINT.</p><p style="color:var(--muted);font-size:11px">+20 XP par bonne réponse (une seule fois par étape).</p><button class="btn btn-primary btn-block" id="osintAgain">↺ Rejouer l’enquête</button><button class="btn btn-ghost btn-block" id="osintHomeBtn">Accueil</button></div>';
   document.getElementById('osintAgain').onclick=function(){startOsint();};
   document.getElementById('osintHomeBtn').onclick=function(){showScreen('screen-home');};
+}
+
+/* --- STATISTIQUES : précision + XP par activité --- */
+var STATS_MODES=[['quiz','Quiz'],['ports','Devine le port'],['siem','SIEM'],['garde','Garde SOC'],['email','Analyse e-mail'],['phishing','Phishing Lab'],['osint','Enquête OSINT'],['reseau','Analyse réseau']];
+var STATS_XP=[['quiz','Quiz'],['ports','Devine le port'],['siem','SIEM'],['garde','Garde SOC'],['email','Analyse e-mail'],['phishing','Phishing Lab'],['osint','OSINT'],['reseau','Analyse réseau'],['scenario','Mission 02:47'],['logs','Chasse aux logs'],['terminal','Terminal'],['pwd','Mot de passe'],['daily','Défi du jour']];
+function renderStatsScreen(){
+  var el=document.getElementById('statsView');if(!el)return;
+  var st=state.stats||{};
+  var html='<div class="card"><span class="tag">Précision</span><h3 style="margin-top:10px">Précision par activité</h3>';
+  var any=false;
+  STATS_MODES.forEach(function(m){
+    var s=st[m[0]];
+    if(s&&s.total>0){any=true;var pct=Math.round(s.good/s.total*100);
+      html+='<p style="margin:8px 0 2px"><b>'+m[1]+'</b> — '+s.good+' / '+s.total+' ('+pct+' %)</p><div style="height:8px;background:var(--panel2);border-radius:99px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:var(--green)"></div></div>';}
+  });
+  if(!any)html+='<p style="color:var(--muted)">Joue à une activité pour voir ta précision ici.</p>';
+  html+='</div>';
+  html+='<div class="card"><span class="tag">XP par activité</span><h3 style="margin-top:10px">D’où viennent tes XP</h3>';
+  var xb=state.xpBy||{};
+  var rows=STATS_XP.filter(function(m){return (xb[m[0]]||0)>0;}).sort(function(a,b){return xb[b[0]]-xb[a[0]];});
+  if(!rows.length)html+='<p style="color:var(--muted)">Aucun XP gagné pour l’instant.</p>';
+  rows.forEach(function(m){html+='<p style="margin:6px 0"><b>'+m[1]+'</b> — '+xb[m[0]]+' XP</p>';});
+  html+='</div>';
+  html+='<div class="card"><span class="tag">Totaux</span><h3 style="margin-top:10px">En résumé</h3><p>'+state.xp+' XP • '+state.games+' partie(s) jouée(s) • '+Object.keys(state.done).length+' mission(s) terminée(s) • '+Object.keys(state.badges).length+' badge(s) débloqué(s)</p></div>';
+  el.innerHTML=html;
 }
 
 /* ═══ INIT ═══ */
