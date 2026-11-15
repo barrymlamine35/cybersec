@@ -881,6 +881,17 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
   </section>
 </div>
 
+<!-- ═══ ENQUÊTE OSINT ═══ -->
+<div class="screen" id="screen-osint">
+  <section>
+    <div class="kicker">Enquête OSINT • +100 XP</div>
+    <h2>Enquête OSINT — Qui est shadow_fox92 ?</h2>
+    <p>Un compte suspect a tenté de se connecter au réseau. Retrouve qui se cache derrière, indice par indice.</p>
+    <div class="buddy" id="buddyOsint"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2</b><span class="buddy-text">L'OSINT, c'est enquêter avec ce qui est public : un pseudo, un e-mail, une photo, un domaine.</span></div></div>
+    <div id="osintView"></div>
+  </section>
+</div>
+
 <!-- ═══ MENU ═══ -->
 <div class="screen" id="screen-menu">
   <section>
@@ -963,6 +974,7 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
       <button class="mode-tile" onclick="showScreen('screen-ports')"><span class="tile-ico">PT</span>Devine le port<small>10 manches</small></button>
       <button class="mode-tile" onclick="showScreen('screen-email')"><span class="tile-ico">ML</span>Analyse e-mail<small>En-têtes &amp; verdict</small></button>
       <button class="mode-tile" onclick="showScreen('screen-reseau')"><span class="tile-ico">WR</span>Analyse réseau<small>3 captures Wireshark</small></button>
+      <button class="mode-tile" onclick="startOsint();showScreen('screen-osint')"><span class="tile-ico">OS</span>Enquête OSINT<small>Qui est shadow_fox92 ?</small></button>
     </div>
   </section>
 </div>
@@ -2902,6 +2914,39 @@ function renderReseauQ(){
     };
     box.appendChild(b);
   });
+}
+
+/* --- ENQUÊTE OSINT : 5 étapes, retrouver l'attaquant --- */
+var OSINT_STEPS=[
+ {clue:"Étape 1 — Le pseudo. Le compte suspect s'appelle « shadow_fox92 ». Tu le cherches sur un moteur de recherche : il apparaît sur un forum de hacking et sur un site de jeux, toujours avec la même photo de profil.",q:"Que révèle la réutilisation du même pseudo partout ?",o:["Que c'est probablement la même personne : on peut croiser ses traces","Que c'est un faux positif, les pseudos se répètent","Qu'il faut bloquer le forum","Rien, les pseudos ne servent à rien"],a:0,x:"Un pseudo réutilisé, c'est une piste en or : chaque plateforme où il apparaît donne un morceau du puzzle."},
+ {clue:"Étape 2 — L'e-mail. L'adresse associée est « s.fox92@mail-temporaire.net ». Le domaine « mail-temporaire.net » propose des adresses jetables qui s'autodétruisent.",q:"Que conclure de cette adresse jetable ?",o:["Qu'il veut cacher son identité : signal de dissimulation","Que c'est un e-mail professionnel","Que le compte est légitime","Qu'il faut lui écrire"],a:0,x:"Les adresses jetables servent à ne pas être retrouvé : un vrai employé utilise son adresse pro, pas une boîte jetable."},
+ {clue:"Étape 3 — La photo. La photo de profil montre un paysage de montagne. Les métadonnées EXIF de l'image indiquent : prise avec un téléphone, GPS 46.5° N, 9.8° E (Suisse), il y a 3 jours.",q:"Que faire de ces métadonnées ?",o:["Les noter comme indice de localisation, sans en faire une preuve à elles seules","Les ignorer, les métadonnées sont toujours fausses","Publier la localisation sur les réseaux","Bloquer la Suisse entière"],a:0,x:"Les métadonnées donnent des pistes (lieu, appareil, date), mais elles peuvent être modifiées : on les croise avec d'autres indices."},
+ {clue:"Étape 4 — Le domaine. L'attaquant a envoyé un lien « pallas-support.net ». Le domaine a été enregistré il y a 2 jours, chez un registrar bon marché, avec un WHOIS masqué.",q:"Que révèle un domaine vieux de 2 jours avec WHOIS masqué ?",o:["Un domaine probablement créé pour l'attaque (typosquatting)","Un site officiel de l'entreprise","Un domaine ancien et fiable","Rien du tout"],a:0,x:"Domaine récent + nom proche de l'entreprise + WHOIS caché = les trois signaux d'un domaine de phishing."},
+ {clue:"Étape 5 — Le verdict. Tu as : un pseudo réutilisé, une adresse jetable, une localisation en Suisse, un domaine de phishing vieux de 2 jours. Le tout pointe vers une campagne ciblée contre Pallas Corp.",q:"Quelle est la bonne conclusion de l'enquête ?",o:["Escalader avec tous les IOC réunis (pseudo, e-mail, domaine, IP) pour bloquer et surveiller","Fermer l'alerte, ce n'est pas assez","Supprimer toutes les preuves","Attendre que l'attaquant frappe à nouveau"],a:0,x:"Une enquête OSINT se termine par un rapport : tous les IOC réunis, on bloque, on surveille, et on partage avec l'équipe."}
+];
+var osintIdx=0,osintScore=0;
+function startOsint(){osintIdx=0;osintScore=0;renderOsintStep();}
+function renderOsintStep(){
+  var s=OSINT_STEPS[osintIdx];
+  var v=document.getElementById('osintView');
+  v.innerHTML='<div class="card"><span class="tag">Étape '+(osintIdx+1)+' / '+OSINT_STEPS.length+' • Score : '+osintScore+'</span><p style="margin-top:10px">'+s.clue+'</p><h3 style="font-size:14px">'+s.q+'</h3><div>'+s.o.map(function(opt,i){return '<button class="quiz-opt" data-o="'+i+'">'+opt+'</button>';}).join('')+'</div><div id="osintFb"></div></div>';
+  v.querySelectorAll('[data-o]').forEach(function(b){b.onclick=function(){
+    var i=+b.getAttribute('data-o');
+    var ok=i===s.a;
+    if(ok){osintScore+=20;b.classList.add('correct');addXP(20,'osint-s'+osintIdx);}else{b.classList.add('wrong');}
+    v.querySelectorAll('[data-o]').forEach(function(x){x.disabled=true;});
+    document.getElementById('osintFb').innerHTML='<div class="feedback show '+(ok?'ok':'bad')+'"><b>'+(ok?'Bien vu.':'Pas tout à fait.')+'</b> '+s.x+'</div><button class="btn btn-primary btn-block" id="osintNx">'+(osintIdx<OSINT_STEPS.length-1?'Indice suivant':'Voir le verdict')+'</button>';
+    document.getElementById('osintNx').onclick=function(){
+      if(osintIdx<OSINT_STEPS.length-1){osintIdx++;renderOsintStep();}
+      else finishOsint();
+    };
+  };});
+}
+function finishOsint(){
+  var v=document.getElementById('osintView');
+  v.innerHTML='<div class="card"><div style="color:var(--muted);font-size:11px">Verdict de l’enquête</div><h3>'+(osintScore>=80?'Enquêteur confirmé':osintScore>=60?'Bonne enquête':'Enquête à revoir')+'</h3><div class="big">'+osintScore+' / 100</div><p>Tu as réuni les indices : pseudo réutilisé, adresse jetable, métadonnées, domaine récent. C’est exactement comme ça qu’on enquête en OSINT.</p><p style="color:var(--muted);font-size:11px">+20 XP par bonne réponse (une seule fois par étape).</p><button class="btn btn-primary btn-block" id="osintAgain">↺ Rejouer l’enquête</button><button class="btn btn-ghost btn-block" id="osintHomeBtn">Accueil</button></div>';
+  document.getElementById('osintAgain').onclick=function(){startOsint();};
+  document.getElementById('osintHomeBtn').onclick=function(){showScreen('screen-home');};
 }
 
 /* ═══ INIT ═══ */
