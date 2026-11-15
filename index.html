@@ -455,10 +455,8 @@ footer{font-size:10px}
     <div class="hero-top"><div><div class="greet" id="greet">Bonsoir, Darkman</div><div class="greet-sub" id="greetSub">Bienvenue au SOC. Ta première mission t’attend.</div></div><div class="streak-chip" id="streakChip"> 1 jour</div></div>
     <div class="kicker">// Pour Darkman • Samsung S21 • 100% hors-ligne</div>
     <h1>Apprends le hacking <em>éthique</em>, comme dans la vraie vie.</h1>
-    <p>Un seul jeu qui combine le meilleur des trois : le parcours débutant → intermédiaire, les nuits au SOC avec leurs kill-chains, et NIGHTWATCH — Opération PALLAS, où tu attaques et tu défends en même temps. Tout est simulé, rien n'est réel : aucun scan, aucune commande ne sort de ton téléphone.</p>
     <p class="hero-tagline">Une mission par jour, un réflexe de plus — Léa reste à tes côtés.</p>
     <button class="btn btn-primary btn-cta" id="ctaResume" onclick="resumeGame()">▶ Commencer</button>
-    <div class="buddy" id="buddyHome"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · analyste SOC N2</b><span class="buddy-text">Salut ! On fait équipe : je te briefe, je te conseille, et on apprend ensemble. Prêt ?</span></div></div>
     <div class="stats">
       <div class="stat"><small>Progression</small><strong id="statProgress">0%</strong><div class="xpbar"><i id="xpFill"></i></div></div>
       <div class="stat"><small>XP gagnés</small><strong id="statXp">0</strong><span style="color:var(--muted);font-size:11px"> / 3000 XP pour Chasseur de menaces</span><div class="nextrank" id="statNextRank">Encore 500 XP pour devenir Analyste.</div></div>
@@ -471,7 +469,6 @@ footer{font-size:10px}
   <div class="card hero-soc">
     <span class="tag cyan">Salle SOC — 3D</span>
     <h3 style="margin-top:10px">Ta salle SOC en 3D</h3>
-    <p>Une pièce sombre, des écrans, des postes d'analystes. La caméra bouge lentement toute seule. Quand tu lances une mission, les écrans s'allument et les alertes défilent. C'est un décor : il ne bloque pas le jeu, tu peux le laisser tourner ou le couper.</p>
     <canvas id="socRoom" width="560" height="240" aria-label="Salle SOC en 3D"></canvas>
     <p id="socRoomOff" style="display:none;font-size:11px;color:var(--muted)">3D désactivée — la salle SOC est en pause. Réactive la 3D avec le bouton « 3D » en haut de page.</p>
     <div class="soc3d-bar">
@@ -479,7 +476,6 @@ footer{font-size:10px}
       <button class="mini-btn" onclick="showScreen('screen-nightwatch');goNightwatch()">▶ Lancer NIGHTWATCH</button>
       <button class="mini-btn" onclick="showScreen('screen-nuit')">☾ Nuit au SOC</button>
     </div>
-    <p class="map3d-hint" id="socRoomHint">Décor uniquement — les écrans s'allument aussi tout seuls quand une mission commence.</p>
   </div>
 
   <div class="card daily-card" id="dailyCard">
@@ -493,19 +489,16 @@ footer{font-size:10px}
   <div class="card">
     <span class="tag amber">1 — Choisis ton rôle</span>
     <h3 style="margin-top:10px">Recrue, Analyste ou Expert ?</h3>
-    <p>Le rôle change la difficulté et le multiplicateur de score. Recrue : moins de fausses alertes, score ×1. Analyste : ×1,5. Expert : ×2, mais beaucoup plus de bruit à trier.</p>
     <div class="seg" id="roleSeg">
       <button data-role="0">Recrue<div style="font-size:11px;color:var(--muted)">score ×1</div></button>
       <button data-role="1">Analyste<div style="font-size:11px;color:var(--muted)">score ×1,5</div></button>
       <button data-role="2">Expert<div style="font-size:11px;color:var(--muted)">score ×2</div></button>
     </div>
-    <p style="font-size:11px">Rangs : Analyste dès 500 XP • Analyste confirmé dès 1500 XP • Chasseur de menaces dès 3000 XP.</p>
   </div>
 
   <div class="card">
     <span class="tag amber">2 — Choisis ton mode</span>
     <h3 style="margin-top:10px">Campagne ou Duel ?</h3>
-    <p><b>Campagne :</b> solo, 4 missions NIGHTWATCH face à l'IA VORTEX, attaque et défense en même temps. <b>Duel :</b> 2 joueurs sur le même téléphone, on échange les rôles, le meilleur total RED + BLUE gagne.</p>
     <div class="mode-grid">
       <button class="btn btn-primary" onclick="goNightwatch()">▶ Campagne NIGHTWATCH</button>
       <button class="btn btn-ghost" onclick="startDuel()">⚔ Duel à 2 joueurs</button>
@@ -515,7 +508,6 @@ footer{font-size:10px}
   <div class="card">
     <span class="tag cyan">Par où commencer ?</span>
     <h3 style="margin-top:10px">Le parcours, puis la nuit au SOC</h3>
-    <p>Débutant ? Commence par le <b>Parcours</b> (6 niveaux, de débutant à intermédiaire), puis la <b>Mission SOC à 02:47</b>, puis une <b>Nuit au SOC</b>. Quand tu es à l'aise, lance une mission NIGHTWATCH.</p>
     <div class="mode-grid">
       <button class="mode-tile" onclick="showScreen('screen-parcours')"><span class="tile-ico">01</span>Parcours<small>6 niveaux, débutant → intermédiaire</small></button>
       <button class="mode-tile" onclick="showScreen('screen-mission')"><span class="tile-ico">02</span>Mission SOC 02:47<small>Une alerte, trois décisions</small></button>
@@ -541,7 +533,6 @@ footer{font-size:10px}
     <div id="resetConfirm" style="display:none;margin-top:10px;border:1px solid var(--red);border-radius:12px;padding:12px"><p style="margin:0 0 10px"><b>Effacer toute ta progression ?</b><br><span style="color:var(--muted)">XP, niveaux, badges et scores seront remis à zéro. Cette action est définitive.</span></p><button class="mini-btn primary" id="resetYes">Oui, tout effacer</button> <button class="mini-btn" id="resetNo">Non, annuler</button></div>
   </div>
 
-  <div class="ethic"><div style="font-size:20px">SOC</div><div><strong>La règle d'or du hacker éthique</strong><p>Tu n'attaques, ne testes et n'analyses que des systèmes qui t'appartiennent ou pour lesquels tu as une autorisation écrite. C'est ce qui sépare un pentester / analyste SOC d'un criminel. Chaque mission ici se déroule dans un lab fictif et fermé.</p></div></div>
 </div>
 
 <!-- ═══ PARCOURS ═══ -->
@@ -804,6 +795,16 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
       <details><summary>C’est quoi exactement, un analyste SOC ?</summary><p style="color:var(--muted)">SOC = Security Operations Center. L’analyste surveille les alertes d’un SIEM, trie les vrais incidents des faux positifs, enquête (logs, IP, processus) et escalade si besoin. C’est un des métiers d’entrée les plus accessibles en cybersécurité.</p></details>
       <details><summary>Par quoi commencer dans la vraie vie après ce jeu ?</summary><p style="color:var(--muted)">1) Les bases réseau (IP, DNS, ports, modèle OSI). 2) Linux en machine virtuelle. 3) Un parcours guidé type TryHackMe « Pre Security » puis « SOC Level 1 ». 4) Beaucoup de labs, jamais de tests sur des systèmes sans autorisation.</p></details>
       <details><summary>Quelle est la différence entre hacker éthique et pirate ?</summary><p style="color:var(--muted)">Les techniques peuvent se ressembler, l’intention et le cadre changent tout : autorisation écrite, périmètre défini, objectif de défense et compte-rendu. Sans autorisation, c’est illégal — en France, l’accès frauduleux à un système est puni par l’article 323-1 du Code pénal.</p></details>
+    </details>
+    <details class="folder">
+      <summary>📁 Fonctionnement du jeu</summary>
+      <h3 style="margin-top:12px">Comment ça marche</h3>
+      <p class="menu-tool"><b>Le jeu en bref</b> — <span>Un seul jeu qui combine le meilleur des trois : le parcours débutant → intermédiaire, les nuits au SOC avec leurs kill-chains, et NIGHTWATCH — Opération PALLAS, où tu attaques et tu défends en même temps. Tout est simulé, rien n'est réel : aucun scan, aucune commande ne sort de ton téléphone.</span></p>
+      <p class="menu-tool"><b>Par où commencer</b> — <span>Débutant ? Commence par le Parcours (6 niveaux, de débutant à intermédiaire), puis la Mission SOC à 02:47, puis une Nuit au SOC. Quand tu es à l'aise, lance une mission NIGHTWATCH.</span></p>
+      <p class="menu-tool"><b>Rôles et rangs</b> — <span>Le rôle change la difficulté et le multiplicateur de score. Recrue : moins de fausses alertes, score ×1. Analyste : ×1,5. Expert : ×2, mais beaucoup plus de bruit à trier. Rangs : Analyste dès 500 XP • Analyste confirmé dès 1500 XP • Chasseur de menaces dès 3000 XP.</span></p>
+      <p class="menu-tool"><b>Campagne ou Duel</b> — <span>Campagne : solo, 4 missions NIGHTWATCH face à l'IA VORTEX, attaque et défense en même temps. Duel : 2 joueurs sur le même téléphone, on échange les rôles, le meilleur total RED + BLUE gagne.</span></p>
+      <p class="menu-tool"><b>La salle SOC 3D</b> — <span>Une pièce sombre, des écrans, des postes d'analystes. La caméra bouge lentement toute seule. Quand tu lances une mission, les écrans s'allument et les alertes défilent. C'est un décor : il ne bloque pas le jeu, tu peux le laisser tourner ou le couper. Les écrans s'allument aussi tout seuls quand une mission commence.</span></p>
+      <p class="menu-tool"><b>La règle d'or du hacker éthique</b> — <span>Tu n'attaques, ne testes et n'analyses que des systèmes qui t'appartiennent ou pour lesquels tu as une autorisation écrite. C'est ce qui sépare un pentester / analyste SOC d'un criminel. Chaque mission ici se déroule dans un lab fictif et fermé.</span></p>
     </details>
   </section>
   <section>
