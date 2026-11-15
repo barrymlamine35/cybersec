@@ -453,7 +453,6 @@ footer{font-size:10px}
 <div class="screen active" id="screen-home">
   <div class="hero">
     <div class="hero-top"><div><div class="greet" id="greet">Bonsoir, Darkman</div><div class="greet-sub" id="greetSub">Bienvenue au SOC. Ta première mission t’attend.</div></div><div class="streak-chip" id="streakChip"> 1 jour</div></div>
-    <div class="kicker">// Pour Darkman • Samsung S21 • 100% hors-ligne</div>
     <h1>Apprends le hacking <em>éthique</em>, comme dans la vraie vie.</h1>
     <p class="hero-tagline">Une mission par jour, un réflexe de plus — Léa reste à tes côtés.</p>
     <button class="btn btn-primary btn-cta" id="ctaResume" onclick="resumeGame()">▶ Commencer</button>
@@ -505,33 +504,7 @@ footer{font-size:10px}
     </div>
   </div>
 
-  <div class="card">
-    <span class="tag cyan">Par où commencer ?</span>
-    <h3 style="margin-top:10px">Le parcours, puis la nuit au SOC</h3>
-    <div class="mode-grid">
-      <button class="mode-tile" onclick="showScreen('screen-parcours')"><span class="tile-ico">01</span>Parcours<small>6 niveaux, débutant → intermédiaire</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-mission')"><span class="tile-ico">02</span>Mission SOC 02:47<small>Une alerte, trois décisions</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-nuit')"><span class="tile-ico">☾</span>Nuit au SOC<small>Scénarios kill-chain</small></button>
-    </div>
-    <div class="mode-grid">
-      <button class="mode-tile" onclick="showScreen('screen-terminal')"><span class="tile-ico">CLI</span>Terminal Linux<small>Commandes de base</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-phishing')"><span class="tile-ico">PH</span>Phishing Lab<small>Repère les pièges</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-quiz')"><span class="tile-ico">QZ</span>Quiz<small>8 questions</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-outils')"><span class="tile-ico">DOC</span>Outils &amp; Glossaire<small>Références et mots-clés</small></button>
-    </div>
-  </div>
 
-  <div class="card">
-    <span class="tag">Ton profil</span>
-    <h3 style="margin-top:10px" id="profTitle">Recrue</h3>
-    <p id="profText">0 XP, 0 partie jouée.</p>
-    <p style="font-size:11px" id="profBest">Meilleurs scores : Nuit au SOC 0 • NIGHTWATCH 0 • Duel 0.</p>
-    <div class="streak-row" id="streakLine"> Série : 0 jour</div>
-    <h3 style="margin-top:14px">Tes badges</h3>
-    <div class="badge-grid" id="badgeGrid"></div>
-    <button class="mini-btn" id="resetBtn">Effacer ma progression</button>
-    <div id="resetConfirm" style="display:none;margin-top:10px;border:1px solid var(--red);border-radius:12px;padding:12px"><p style="margin:0 0 10px"><b>Effacer toute ta progression ?</b><br><span style="color:var(--muted)">XP, niveaux, badges et scores seront remis à zéro. Cette action est définitive.</span></p><button class="mini-btn primary" id="resetYes">Oui, tout effacer</button> <button class="mini-btn" id="resetNo">Non, annuler</button></div>
-  </div>
 
 </div>
 
@@ -763,6 +736,48 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
   </section>
 </div>
 
+<!-- ═══ PROFIL ═══ -->
+<div class="screen" id="screen-profil">
+  <section>
+    <div class="kicker">Ton profil</div>
+    <h2>Profil</h2>
+  <div class="card">
+    <span class="tag">Ton profil</span>
+    <h3 style="margin-top:10px" id="profTitle">Recrue</h3>
+    <p id="profText">0 XP, 0 partie jouée.</p>
+    <p style="font-size:11px" id="profBest">Meilleurs scores : Nuit au SOC 0 • NIGHTWATCH 0 • Duel 0.</p>
+    <div class="streak-row" id="streakLine"> Série : 0 jour</div>
+    <h3 style="margin-top:14px">Tes badges</h3>
+    <div class="badge-grid" id="badgeGrid"></div>
+    <button class="mini-btn" id="resetBtn">Effacer ma progression</button>
+    <div id="resetConfirm" style="display:none;margin-top:10px;border:1px solid var(--red);border-radius:12px;padding:12px"><p style="margin:0 0 10px"><b>Effacer toute ta progression ?</b><br><span style="color:var(--muted)">XP, niveaux, badges et scores seront remis à zéro. Cette action est définitive.</span></p><button class="mini-btn primary" id="resetYes">Oui, tout effacer</button> <button class="mini-btn" id="resetNo">Non, annuler</button></div>
+  </div>
+  </section>
+</div>
+
+<!-- ═══ PAR OÙ COMMENCER ═══ -->
+<div class="screen" id="screen-debut">
+  <section>
+    <div class="kicker">Par où commencer</div>
+    <h2>Par où commencer ?</h2>
+  <div class="card">
+    <span class="tag cyan">Par où commencer ?</span>
+    <h3 style="margin-top:10px">Le parcours, puis la nuit au SOC</h3>
+    <div class="mode-grid">
+      <button class="mode-tile" onclick="showScreen('screen-parcours')"><span class="tile-ico">01</span>Parcours<small>6 niveaux, débutant → intermédiaire</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-mission')"><span class="tile-ico">02</span>Mission SOC 02:47<small>Une alerte, trois décisions</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-nuit')"><span class="tile-ico">☾</span>Nuit au SOC<small>Scénarios kill-chain</small></button>
+    </div>
+    <div class="mode-grid">
+      <button class="mode-tile" onclick="showScreen('screen-terminal')"><span class="tile-ico">CLI</span>Terminal Linux<small>Commandes de base</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-phishing')"><span class="tile-ico">PH</span>Phishing Lab<small>Repère les pièges</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-quiz')"><span class="tile-ico">QZ</span>Quiz<small>8 questions</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-outils')"><span class="tile-ico">DOC</span>Outils &amp; Glossaire<small>Références et mots-clés</small></button>
+    </div>
+  </div>
+  </section>
+</div>
+
 <!-- ═══ MENU ═══ -->
 <div class="screen" id="screen-menu">
   <section>
@@ -811,6 +826,8 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
     <div class="kicker">Raccourcis</div>
     <h2>Aller vite</h2>
     <div class="mode-grid">
+      <button class="mode-tile" onclick="showScreen('screen-profil')"><span class="tile-ico">👤</span>Profil<small>XP, rangs, badges</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-debut')"><span class="tile-ico">🧭</span>Par où commencer<small>Parcours, missions, labs</small></button>
       <button class="mode-tile" onclick="showScreen('screen-parcours')"><span class="tile-ico">▤</span>Parcours<small>6 niveaux</small></button>
       <button class="mode-tile" onclick="showScreen('screen-mission')"><span class="tile-ico">◈</span>Mission SOC<small>Alerte à 02:47</small></button>
       <button class="mode-tile" onclick="showScreen('screen-nuit')"><span class="tile-ico">☾</span>Nuit au SOC<small>Scénarios kill-chain</small></button>
