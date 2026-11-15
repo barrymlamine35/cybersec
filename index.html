@@ -1190,7 +1190,7 @@ function renderQuiz(){
   var box=document.getElementById('quizOpts');box.innerHTML='';
   q.o.forEach(function(opt,i){var b=document.createElement('button');b.className='quiz-opt';b.textContent=opt;b.onclick=function(){
     var fb=document.getElementById('quizFeedback');
-    if(i===q.a){b.classList.add('correct');qScore++;addXP(10);fb.className='feedback show ok';fb.textContent='✅ Bonne réponse. '+q.x;}
+    if(i===q.a){b.classList.add('correct');qScore++;addXP(10,'quiz-q'+qi);fb.className='feedback show ok';fb.textContent='✅ Bonne réponse. '+q.x;}
     else{b.classList.add('wrong');fb.className='feedback show bad';fb.textContent='❌ Pas tout à fait. '+q.x;sayBuddy('buddyQuiz','Pas de souci, on retient et on continue. La prochaine sera la bonne.');}
     box.querySelectorAll('button').forEach(function(x){x.disabled=true;});
     setTimeout(function(){qi++;renderQuiz();},1700);
@@ -2444,6 +2444,7 @@ function initSiem(){
         fb.className='feedback show ok';fb.textContent='✅ Bien vu. '+l.why;
         if(siemFound===3){
           document.getElementById('siemSplWrap').style.display='block';
+          renderSiemSpl();
           sayBuddy('buddySiem','Les 3 signaux sont trouvés. Maintenant, les requêtes SPL — c’est comme ça qu’on interroge un SIEM.');
         }
       }else{
@@ -2650,7 +2651,7 @@ function renderPortsRound(){
     b.onclick=function(){
       var fb=document.getElementById('portsFeedback');
       if(port===p[2]){
-        b.classList.add('correct');portsScore++;addXP(5);
+        b.classList.add('correct');portsScore++;addXP(5,'port-'+p[0]);
         fb.className='feedback show ok';fb.textContent='✅ '+port+' — c’est bien '+p[0]+'. +5 XP';
       }else{
         b.classList.add('wrong');
