@@ -1,0 +1,2243 @@
+<!doctype html>
+<!-- Cybersec — REBUILD (15 nov 2026). Même contenu que cybersec-redesign.html (redesign Figma Make), reconstruit proprement.
+Règles de stabilité : 0 backdrop-filter · 0 couche fixe plein écran (scanlines dans le fond du body, elles défilent avec la page) · 0 confirm()/alert()/prompt() (confirmation en page) · 3D coupée par défaut, boucles rAF gardées (pause si caché / hors écran) · timer NIGHTWATCH uniquement en partie, sur son écran, onglet visible · 100 % hors-ligne, un seul fichier. Mêmes clés localStorage : 'jeu-combine-v1' (progression) et 'jeu-3d-prefs-v2' (3D). -->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#070a09">
+<title>Cybersec — SOC, Nuit au SOC &amp; NIGHTWATCH 3D</title>
+<style>
+/* ═══ CYBERSEC — SYSTÈME DE DESIGN ═══
+   Palette : bleu nuit profond + ambre chaud (accent) + vert réservé aux succès.
+   Police : système pour le texte, mono seulement pour les logs et terminaux.
+   Cibles tactiles ≥ 44 px, texte jamais sous 13 px, reduced-motion respecté. */
+:root{--bg:#0b1220;--bg2:#0e1729;--panel:#141d31;--panel2:#1a2540;--line:#263453;--text:#eef2f8;--muted:#a7b4cc;--dim:#7d8aa5;--green:#2fd67a;--green2:#1fae62;--amber:#ffb020;--amber-soft:#ffd98a;--red:#ff5a6e;--blue:#7aa7ff;--cyan:#5fd6c9;--radius:18px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:12px;line-height:1.4}
+a{color:var(--blue)}button,input,select{font:inherit}button{min-height:40px}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+.wrap{max-width:600px;margin:0 auto;padding:0 12px 96px}
+.topbar{position:sticky;top:0;z-index:20;background:#0b1220;border-bottom:1px solid var(--line)}
+.topbar-in{max-width:600px;margin:0 auto;padding:7px 12px}
+.hudrow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.logo{font-weight:900;letter-spacing:-.02em;font-size:12px}
+.logo b{color:var(--amber)}
+.pill{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 12px;font-size:11px;font-weight:700;color:var(--muted);white-space:nowrap}
+.pill b{color:var(--text)}
+.hud2{display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;font-size:11px;color:var(--muted);font-weight:700}
+body:not(.in-mission) #hudMission{display:none}
+.hud2 .red{color:var(--red)}.hud2 .blue{color:var(--blue)}
+.detbar{flex:1;min-width:90px;height:8px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.detbar i{display:block;height:100%;background:var(--blue);width:0}
+.detbar i.warn{background:var(--amber)}.detbar i.danger{background:var(--red)}
+.dots{display:flex;gap:3px}.dots i{width:9px;height:9px;border-radius:50%;background:var(--line);display:block}
+.dots i.on{background:var(--red)}
+.mutebtn{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;min-height:38px;padding:4px 10px;font-size:11px;cursor:pointer}
+.kicker{color:var(--amber);font-size:11px;font-weight:700}
+h1{font-size:clamp(16.5px,4.5vw,21px);line-height:1.1;margin:8px 0 8px;letter-spacing:-.02em}
+h1 em{font-style:normal;color:var(--amber)}
+h2{font-size:clamp(13.5px,3.75vw,16.5px);letter-spacing:-.02em;line-height:1.15;margin:6px 0 6px}
+h3{margin:0 0 6px;font-size:13px;line-height:1.25}
+p{color:var(--muted)}p b,p strong{color:var(--text)}
+.hero{padding:18px 0 4px}
+.hero p{font-size:12px;max-width:560px}
+.hero-tagline{font-size:13px;color:var(--amber-soft);font-weight:700;margin:0 0 4px}
+.btn{border:0;border-radius:999px;padding:9px 12px;font-weight:800;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;font-size:12px}
+.btn-primary{background:var(--amber);color:#1a1200}
+.btn-ghost{background:var(--panel);color:var(--text);border:1px solid var(--line)}
+.btn-red{background:var(--red);color:#fff}
+.btn-blue{background:var(--blue);color:#0b1220}
+.btn-block{width:100%;justify-content:center;margin-top:10px}
+.btn-cta{width:100%;padding:10px 14px;font-size:13px;margin-top:12px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px}
+.stat small{color:var(--muted);font-weight:700;font-size:11px}
+.stat strong{display:block;font-size:14px;line-height:1;margin-top:6px}
+.xpbar{height:10px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;overflow:hidden;margin-top:8px}
+.xpbar i{display:block;height:100%;background:var(--amber);width:4%;transition:width .5s ease}
+section{padding:18px 0 4px}
+.screen{display:none}.screen.active{display:block;animation:fadeUp .3s ease}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-top:12px}
+.grid{display:grid;gap:12px}.grid-2{grid-template-columns:1fr 1fr}
+.tag{display:inline-flex;padding:5px 10px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);font-size:11px;font-weight:800;color:var(--muted)}
+.tag.green{color:var(--green);border-color:#1e5c38}.tag.amber{color:var(--amber)}.tag.red{color:var(--red)}.tag.blue{color:var(--blue)}.tag.cyan{color:var(--cyan)}
+.module{position:relative;display:grid;grid-template-columns:40px 1fr;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;margin-top:10px}
+.module::before{content:"";position:absolute;left:38px;top:-14px;width:2px;height:14px;background:var(--line)}
+.module:first-child::before{display:none}
+.module.done{border-color:#1e5c38}.module.done::before{background:var(--green)}
+.module.locked{opacity:.6}
+.num{width:40px;height:40px;border-radius:12px;background:#0d1a12;border:1px solid var(--line);display:grid;place-items:center;font-weight:700;color:var(--amber);font-size:13px}
+.module.done .num{background:var(--green);color:#04150b}
+.module ul{margin:8px 0 0;padding-left:18px;color:var(--muted);font-size:12px}
+.mini-btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:999px;padding:7px 10px;font-weight:800;cursor:pointer;white-space:nowrap;min-height:38px;font-size:11px}
+.mini-btn.primary{background:var(--amber);color:#1a1200;border-color:transparent}
+.mini-btn:disabled{opacity:.45}
+.terminal{background:#050807;border:1px solid #1f3529;border-radius:18px;overflow:hidden;color:#d6ffe6;margin-top:12px}
+.term-head{display:flex;justify-content:space-between;padding:10px 12px;border-bottom:1px solid #1f3529;font-family:ui-monospace,monospace;font-size:11px;color:#7ee2a8}
+.term-body{padding:13px;font-family:ui-monospace,monospace;font-size:11px;line-height:1.6;min-height:220px;max-height:360px;overflow:auto;white-space:pre-wrap;word-break:break-word}
+.term-input{display:flex;gap:8px;border-top:1px solid #1f3529;padding:10px;background:#08100b}
+.term-input span{color:#2fd67a;font-family:ui-monospace,monospace;padding-top:12px}
+.term-input input{flex:1;background:transparent;border:0;color:#fff;outline:none;font-family:ui-monospace,monospace;min-height:40px;font-size:12px}
+.term-input button{background:var(--amber);border:0;border-radius:10px;padding:0 14px;font-weight:800;cursor:pointer;color:#1a1200;min-height:40px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.chip{font-family:ui-monospace,monospace;font-size:11px;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:7px 10px;cursor:pointer;min-height:38px}
+.logline{width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:10px;margin:6px 0;font-family:ui-monospace,monospace;font-size:11px;cursor:pointer;line-height:1.5;min-height:40px}
+.logline.found{border-color:var(--red);background:rgba(255,90,110,.12)}
+.logline.safe{opacity:.55}
+.feedback{border-radius:14px;padding:12px;margin-top:12px;display:none}
+.feedback.show{display:block;animation:popIn .25s ease}
+.feedback.ok{background:#0d2b1a;border:1px solid #1e5c38;color:#c9ffe0}
+.feedback.bad{background:#2b1216;border:1px solid #6b2430;color:#ffd7dc}
+.quiz-opt{width:100%;text-align:left;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);cursor:pointer;margin:6px 0;font-weight:600;font-size:12px;min-height:42px}
+.quiz-opt.correct{border-color:var(--green);animation:popIn .25s ease}
+.quiz-opt.wrong{border-color:var(--red)}
+.progress-dots{display:flex;gap:6px;margin:10px 0}.progress-dots i{height:6px;flex:1;border-radius:999px;background:var(--line)}.progress-dots i.on{background:var(--amber)}
+input[type=text],input[type=password]{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);min-height:42px;font-size:12px}
+.meter{height:10px;border-radius:999px;background:var(--line);overflow:hidden;margin:12px 0}.meter i{display:block;height:100%;width:0;background:var(--red);transition:width .3s ease}
+.search{margin-bottom:12px}
+.glossary dt{font-weight:800;margin-top:14px}.glossary dd{margin:2px 0 0;color:var(--muted)}
+details{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:6px 16px;margin:8px 0}
+summary{cursor:pointer;font-weight:800;padding:10px 0;min-height:40px}
+.ethic{display:flex;gap:12px;background:#171207;border:1px solid #4a3810;border-radius:18px;padding:14px;color:#ffe9b0;margin-top:14px}
+.ethic p{margin:4px 0;color:#ffe9b0;opacity:.85}
+.chain{display:flex;gap:6px;margin-top:12px}
+.chain .st{flex:1;font-size:11px;color:var(--muted);border-top:3px solid var(--line);padding-top:6px}
+.chain .st.on{border-color:var(--red);color:var(--red);font-weight:700}
+pre.log{background:#0b121b;border:1px solid var(--line);border-radius:10px;padding:12px;font:11px/1.52 ui-monospace,Menlo,Consolas,monospace;overflow-x:auto;white-space:pre;margin:12px 0;color:#c9ffe0}
+.mapgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+.maphost{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px;cursor:pointer;text-align:left;color:var(--text);min-height:40px}
+.maphost b{display:block;font-size:12px}
+.maphost span{font-size:11px;color:var(--muted);display:block}
+.maphost .st-ok{color:var(--green)}.maphost .st-scan{color:var(--amber)}.maphost .st-own{color:var(--red)}
+.maphost.def{cursor:default}
+.alert{border:1px solid var(--line);border-left:4px solid var(--amber);background:var(--panel);border-radius:12px;padding:12px;margin-top:12px}
+.alert.sev-high{border-left-color:var(--red)}.alert.sev-low{border-left-color:var(--green2)}
+.alert.resolved{opacity:.75}
+.alert h4{margin:0 0 4px;font-size:13px}
+.alert .alog{font-family:ui-monospace,monospace;font-size:11px;color:var(--muted);white-space:pre-wrap;word-break:break-word;background:var(--panel2);border-radius:8px;padding:10px;margin:8px 0}
+.alert .acts{display:flex;gap:8px;flex-wrap:wrap}
+.mission-card{width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;margin-top:10px;color:var(--text);cursor:pointer;min-height:40px}
+.mission-card.done{border-color:#1e5c38}
+.mission-card b{font-size:13px}
+.mission-card p{margin:4px 0 0;font-size:12px}
+.mission-meta{color:var(--muted);font-size:11px;margin:6px 0 0}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.seg button{min-height:40px}
+.seg button.on{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}
+.big{font-size:21px;font-weight:800;margin:4px 0}
+ul.rec{padding-left:0;list-style:none;margin:12px 0 0}
+ul.rec li{padding:6px 0;border-top:1px solid var(--line);font-size:12px}
+footer{color:var(--dim);font-size:11px;padding:22px 0 8px;border-top:1px solid var(--line);margin-top:28px}
+.bottomnav{position:fixed;left:10px;right:10px;bottom:10px;z-index:30;background:#141d31;border:1px solid var(--line);border-radius:999px;display:flex;justify-content:space-around;padding:5px}
+.bottomnav button{background:none;border:0;color:var(--muted);font-size:11px;font-weight:800;text-align:center;padding:5px 6px;border-radius:999px;cursor:pointer;min-height:40px;min-width:52px}
+.bottomnav button span{font-size:14px;line-height:1;display:block}
+.bottomnav button.on{color:var(--amber)}
+.toast{position:fixed;left:50%;transform:translate(-50%,20px);bottom:88px;background:#102018;color:#d9ffe8;border:1px solid #1e5c38;padding:11px 15px;border-radius:999px;font-weight:800;font-size:12px;opacity:0;pointer-events:none;transition:opacity .3s ease,transform .3s ease;z-index:50;max-width:92vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+/* ═══ 3D LÉGÈRE (Canvas 2D, hors-ligne, sans CDN) ═══ */
+.map3d-wrap{margin-top:12px}
+#nwMap3d{width:100%;height:300px;display:block;background:#050807;border:1px solid var(--line);border-radius:14px;touch-action:none;cursor:grab}
+#nwMap3d:active{cursor:grabbing}
+.map3d-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.map3d-bar .mini-btn.on{border-color:var(--amber);color:var(--amber)}
+.map3d-hint{font-size:11px;color:var(--muted)}
+#socRoom{width:100%;height:240px;display:block;background:#050807;border:1px solid var(--line);border-radius:14px}
+.soc3d-bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+/* ═══ COÉQUIPIER SOC : LÉA ═══ */
+.buddy{display:flex;gap:10px;align-items:flex-start;background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:13px;margin-top:12px}
+.buddy-avatar{width:36px;height:36px;border-radius:50%;background:#2a3a5c;display:grid;place-items:center;font-size:17px;flex:none}
+.buddy-bubble{font-size:12px;line-height:1.5}
+.buddy-bubble b{color:var(--amber);display:block;font-size:11px;margin-bottom:2px}
+.buddy.pop .buddy-bubble{animation:popIn .25s ease}
+/* ═══ ACCUEIL : GRILLE DE MODES, DÉFI DU JOUR, SÉRIE, BADGES ═══ */
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mode-tile{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:12px;min-height:56px;cursor:pointer;color:var(--text);font-size:12px;font-weight:800;display:flex;flex-direction:column;gap:2px}
+.mode-tile small{color:var(--muted);font-weight:600;font-size:11px}
+.mode-tile .tile-ico{font-size:17px}
+.daily-card{background:linear-gradient(135deg,#1c1607,#141d31);border:1px solid #4a3810}
+.daily-bonus{color:var(--amber);font-weight:800;font-size:12px}
+.streak-row{font-weight:800;color:var(--amber);font-size:13px;margin-top:10px}
+.badge-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.badge{text-align:center;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:10px 6px}
+.badge span{font-size:19px;display:block}
+.badge b{display:block;font-size:11px;margin-top:2px}
+.badge small{color:var(--muted);font-size:11px;display:block;line-height:1.3}
+.badge.locked{opacity:.45;filter:grayscale(1)}
+.hero-soc{border-color:#2a3a5c;overflow:hidden}
+/* ═══ DUEL : PASSAGE DE RELAIS ═══ */
+.handover{background:#1c1607;border:1px solid #4a3810;color:var(--amber-soft);border-radius:12px;padding:13px;font-weight:800;text-align:center;margin-bottom:12px;font-size:13px}
+/* ═══ FIN DE PARTIE ═══ */
+.rank-progress{height:10px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;overflow:hidden;margin:10px 0}
+.rank-progress i{display:block;height:100%;background:var(--amber);transition:width .6s ease}
+.rank-next{color:var(--muted);font-size:12px}
+.end-xp{font-size:13px;font-weight:800;color:var(--amber)}
+/* ═══ ANIMATIONS LÉGÈRES ═══ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes popIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}
+@media(max-width:420px){.grid-2{grid-template-columns:1fr}.mapgrid{grid-template-columns:1fr 1fr}.badge-grid{grid-template-columns:repeat(4,1fr)}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* ═══ POLISH VERT NÉON (couche par-dessus la refonte, CSS pur) ═══
+   Halos verts, titre en dégradé, transitions 320 ms, lueur CRT, pilule verte.
+   Appliqué en décoratif sur la base bleu nuit + ambre, sans casser la hiérarchie. */
+body{background:repeating-linear-gradient(0deg,rgba(255,255,255,.022) 0 1px,transparent 1px 3px),radial-gradient(600px 300px at 15% -5%,rgba(47,255,143,.12),transparent 60%),radial-gradient(500px 260px at 85% 10%,rgba(56,217,197,.10),transparent 60%),radial-gradient(700px 400px at 50% 110%,rgba(47,255,143,.07),transparent 60%),var(--bg)}
+/* scanlines déplacées dans le fond du body : elles défilent avec la page, plus de couche fixe */
+.hero h1,.hero h1 em{background:linear-gradient(90deg,#2dff8f,#38d9c5);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
+.screen.active{animation:fadeUp .32s ease}
+.card{transition:transform .2s ease,box-shadow .2s ease}
+@media (hover:hover){.card:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(0,0,0,.4)}}
+.btn:active,.mini-btn:active,.quiz-opt:active,.mode-tile:active{transform:scale(.97)}
+.terminal{box-shadow:0 0 28px rgba(47,255,143,.14),inset 0 0 46px rgba(47,255,143,.05)}
+.term-body{background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px)}
+.alert.sev-high{box-shadow:0 4px 20px rgba(255,90,110,.28)}
+.alert.sev-medium{box-shadow:0 4px 20px rgba(255,176,32,.22)}
+.alert.sev-low{box-shadow:0 4px 20px rgba(47,214,122,.18)}
+.bottomnav button.on{background:var(--green);color:#04150b}
+.btn:focus-visible,.mini-btn:focus-visible,.quiz-opt:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+/* ═══ SALUTATION, SÉRIE, PROCHAINE ÉTAPE, RANG ═══ */
+.hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.greet{font-size:15px;font-weight:800;line-height:1.2}
+.greet-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.streak-chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:7px 12px;font-size:11px;font-weight:800;white-space:nowrap;flex:none}
+.nextstep{border-color:#4a3810}
+.ns-kicker{color:var(--amber);font-size:11px;font-weight:800}
+.nextrank{font-size:12px;color:var(--muted);margin-top:6px}
+/* ═══ MODALE DE MONTÉE DE RANG ═══ */
+.rankup-overlay{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,340px);z-index:90}
+.rankup-card{background:var(--panel);border:1px solid var(--amber);border-radius:20px;padding:22px 16px;text-align:center;max-width:340px;width:100%;animation:popIn .3s ease}
+.rankup-emoji{font-size:39px;line-height:1}
+.rankup-title{font-size:18px;margin:8px 0 4px}
+.rankup-text{color:var(--muted);font-size:13px}
+/* ═══ +XP FLOTTANTS (ajoutés directement au body, pas de couche fixe) ═══ */
+.xpfloat{position:fixed;right:18px;top:64px;color:var(--green);font-weight:900;font-size:15px;pointer-events:none;animation:floatUp 1.2s ease forwards;text-shadow:0 0 12px rgba(47,255,143,.5)}
+@keyframes floatUp{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-44px)}}
+@media(prefers-reduced-motion:reduce){.screen.active{animation:none!important}.xpfloat{animation:none!important}.card{transition:none!important}}
+
+
+/* ═══ COMPACT S21 + PAGES FIXES (ajout demandé par Darkman) ═══ */
+html,body{overflow-x:hidden;width:100%;overscroll-behavior:none}
+html{-webkit-text-size-adjust:100%}
+body{position:relative;touch-action:manipulation}
+.wrap{width:100%}
+img,canvas,svg,video,pre{max-width:100%}
+.screen{width:100%;min-height:0}
+section{width:100%}
+/* Plus aucun glissement latéral : les écrans apparaissent en fondu seulement, sans translation */
+.screen{animation:fadeInOnly .25s ease}
+@keyframes fadeInOnly{from{opacity:0}to{opacity:1}}
+/* Les cartes ne bougent plus au toucher : ombre seulement, pas de soulèvement */
+@media (hover:hover){.card:hover{transform:none;box-shadow:0 6px 18px rgba(0,0,0,.35)}}
+/* Canvas 3D plus petits pour ne pas pousser la page */
+#nwMap3d{height:240px}
+#socRoom{height:200px}
+/* La nav du bas ne recouvre plus rien et ne bouge plus */
+.bottomnav{position:fixed;left:8px;right:8px;bottom:8px}
+.wrap{padding-bottom:96px}
+
+/* ═══ REDESIGN CYBERSEC — MOBILE SOC CONSOLE ═══ */
+:root{
+  --bg:#0b1220;
+  --bg2:#101a2e;
+  --panel:#121d32;
+  --panel2:#17243c;
+  --line:#263652;
+  --text:#f3f6fb;
+  --muted:#a8b4c9;
+  --dim:#71809b;
+  --amber:#ffb020;
+  --amber-soft:#ffd27a;
+  --green:#2fd67a;
+  --green2:#2fd67a;
+  --red:#ff6376;
+  --blue:#82aefb;
+  --cyan:#82aefb;
+  --radius:14px;
+}
+html{background:var(--bg)}
+body{
+  min-width:280px;
+  padding-top:58px;
+  background:
+    repeating-linear-gradient(0deg,rgba(255,255,255,.022) 0 1px,transparent 1px 3px),
+    radial-gradient(520px 320px at 20% -10%,rgba(77,118,188,.16),transparent 65%),
+    linear-gradient(180deg,#0b1220 0%,#0d1627 58%,#0b1220 100%);
+  color:var(--text);
+  font-size:12px;
+  line-height:1.45;
+}
+body.in-mission{padding-top:96px}
+.wrap{max-width:480px;padding:0 12px 92px}
+.topbar{
+  position:fixed;
+  inset:0 0 auto 0;
+  z-index:70;
+  background:#0b1220;
+  border-bottom:1px solid rgba(130,174,251,.18);
+  box-shadow:0 10px 30px rgba(0,0,0,.22);
+}
+.topbar-in{max-width:480px;padding:8px 10px;margin:auto}
+.hudrow{display:grid;grid-template-columns:minmax(68px,1fr) auto auto;gap:5px}
+.logo{font-size:13px;letter-spacing:.01em;text-transform:uppercase}
+.logo::before{content:"";display:inline-block;width:6px;height:6px;margin:0 7px 1px 0;border-radius:50%;background:var(--amber);box-shadow:0 0 10px rgba(255,176,32,.5)}
+.logo span{display:none}
+.pill{padding:5px 8px;min-height:30px;display:flex;align-items:center;font-size:10px;background:#0f192b;border-color:#293956}
+.mutebtn{min-height:30px;padding:3px 7px;font-size:10px;background:#0f192b}
+.hud2{margin-top:7px;gap:6px;font-size:10px;flex-wrap:nowrap}
+.hud2>span:nth-of-type(4),.hud2 .dots{display:none}
+.detbar{min-width:48px}
+h1{font-size:21px;line-height:1.08;margin:8px 0 10px;max-width:320px}
+.hero h1,.hero h1 em{background:none;color:var(--text);-webkit-text-fill-color:initial}
+.hero h1 em{color:var(--amber)}
+h2{font-size:16px}
+h3{font-size:13px}
+p{margin:7px 0;color:var(--muted)}
+section{padding:14px 0 2px}
+.hero{padding:14px 0 2px}
+.kicker{font-size:10px;letter-spacing:.09em;text-transform:uppercase}
+.hero-tagline{color:var(--amber-soft);font-size:12px}
+.greet{font-size:16px}
+.greet-sub{font-size:11px}
+.streak-chip{padding:5px 8px;font-size:10px;background:#171c2a;border-color:#4c3a19;color:var(--amber)}
+.card{
+  padding:12px;
+  margin-top:10px;
+  border-radius:14px;
+  background:linear-gradient(145deg,rgba(23,36,60,.94),rgba(16,26,46,.94));
+  border-color:#293956;
+  box-shadow:0 12px 32px rgba(0,0,0,.16);
+}
+@media (hover:hover){.card:hover{transform:none;box-shadow:0 12px 32px rgba(0,0,0,.16)}}
+.nextstep{border-color:#6a4b16;background:linear-gradient(145deg,#211b14,#121d32)}
+.ns-kicker{letter-spacing:.08em;text-transform:uppercase;font-size:10px}
+.btn,.mini-btn,.chip{border-radius:10px;min-height:38px}
+.btn{padding:8px 12px;font-size:11px}
+.btn-cta{min-height:43px;font-size:12px;box-shadow:0 8px 20px rgba(255,176,32,.16)}
+.btn-primary,.mini-btn.primary{background:var(--amber);color:#211600}
+.btn-blue{background:var(--amber);color:#211600}
+.btn-red{background:#45202a;border:1px solid #793241}
+.btn-ghost,.mini-btn{background:#18253d;border-color:#31415f}
+.tag{padding:4px 8px;font-size:10px;border-radius:7px}
+.tag.cyan,.tag.blue{color:var(--blue)}
+.tag.green{color:var(--green);border-color:rgba(47,214,122,.38);background:rgba(47,214,122,.08)}
+.stats{gap:8px;margin:12px 0}
+.stat{padding:10px;border-radius:12px;background:#111c30}
+.stat small{font-size:10px}
+.stat strong{font-size:13px}
+.xpbar,.rank-progress,.meter{height:7px}
+.mode-grid{gap:8px}
+.mode-tile{
+  min-height:76px;
+  padding:10px;
+  border-radius:13px;
+  background:linear-gradient(145deg,#17243c,#101a2e);
+  border-color:#2a3a57;
+  justify-content:flex-end;
+}
+.mode-tile:hover,.mode-tile:focus-visible{border-color:var(--amber)}
+.mode-tile .tile-ico{
+  display:grid;
+  place-items:center;
+  width:25px;
+  height:25px;
+  margin-bottom:auto;
+  border:1px solid #3a4965;
+  border-radius:8px;
+  color:var(--amber);
+  font:700 9px/1 ui-monospace,monospace;
+}
+.buddy{padding:10px;background:#101c30;border-color:#2b3c5a;border-radius:13px}
+.buddy-avatar{
+  width:34px;
+  height:34px;
+  color:#171000;
+  background:linear-gradient(145deg,#ffd27a,#ffb020);
+  border:2px solid rgba(255,255,255,.15);
+  font-size:0;
+  box-shadow:0 0 0 4px rgba(255,176,32,.08);
+}
+.buddy-avatar::before{content:"L";font:800 13px/1 system-ui}
+.buddy-bubble{font-size:11px}
+.buddy-bubble b{color:var(--amber);font-size:10px;text-transform:uppercase;letter-spacing:.05em}
+.module{grid-template-columns:34px 1fr;padding:11px;border-radius:13px}
+.module::before{left:28px}
+.num{width:34px;height:34px;border-radius:9px;background:#111c30}
+.module.done .num{background:var(--green)}
+.terminal{border-radius:13px;border-color:#334563;box-shadow:0 14px 35px rgba(0,0,0,.28);color:#dce6f7}
+.term-head{color:var(--amber);border-color:#273956}
+.term-body{background:#080e19;color:#dce6f7;min-height:200px;max-height:330px}
+.term-input{background:#0b1321;border-color:#273956}
+.term-input span{color:var(--amber)}
+.feedback.ok{background:rgba(47,214,122,.1);border-color:rgba(47,214,122,.4);color:#caffe0}
+.quiz-opt,.logline,.maphost{border-radius:10px;background:#16233a}
+.quiz-opt.correct{border-color:var(--green);background:rgba(47,214,122,.08)}
+.alert{background:#121e33;border-radius:10px}
+.alert.sev-low{border-left-color:var(--blue);box-shadow:0 4px 20px rgba(130,174,251,.12)}
+.maphost .st-ok{color:var(--muted)}
+.ethic{border-radius:13px}
+#nwMap3d,#socRoom{border-radius:12px;border-color:#2b3d5c}
+#socRoom{height:178px}
+#nwMap3d{height:220px}
+.bottomnav{
+  max-width:464px;
+  margin:auto;
+  bottom:8px;
+  padding:4px;
+  border-radius:14px;
+  background:#101a2e;
+  border-color:#30415f;
+  box-shadow:0 12px 38px rgba(0,0,0,.45);
+}
+.bottomnav button{min-width:0;min-height:42px;padding:4px 5px;font-size:9px;border-radius:10px}
+.bottomnav button span{font-size:12px;margin-bottom:2px}
+.bottomnav button.on{background:var(--amber);color:#211600}
+.toast{bottom:67px;border-radius:10px;background:#15253a;border-color:#3c526f;color:var(--text)}
+.xpfloat{color:var(--amber);text-shadow:0 0 12px rgba(255,176,32,.45)}
+.rankup-card{background:#121d32;border-radius:16px}
+.rankup-emoji{font-size:0}
+.rankup-emoji::before{content:"RANG +";font:800 12px/1 ui-monospace,monospace;color:var(--amber);letter-spacing:.14em}
+.progress-dots i.on{background:var(--amber)}
+pre.log{overflow-x:auto;color:#dce6f7}
+footer{font-size:10px}
+@media(max-width:370px){
+  .wrap{padding-left:10px;padding-right:10px}
+  .topbar-in{padding-left:8px;padding-right:8px}
+  .pill{padding-inline:6px}
+  .mutebtn{padding-inline:5px}
+  .bottomnav{left:6px;right:6px}
+  .grid-2{grid-template-columns:1fr}
+}
+
+</style>
+  <meta name="description" content="Un jeu mobile en français qui entraîne les futurs analystes SOC à détecter et contrer les cyberattaques grâce à des missions, quiz et exercices pratiques hors ligne.">
+  <meta name="robots" content="noindex, nofollow">
+  <meta property="og:title" content="Cybersec">
+  <meta property="og:description" content="Un jeu mobile en français qui entraîne les futurs analystes SOC à détecter et contrer les cyberattaques grâce à des missions, quiz et exercices pratiques hors ligne.">
+</head>
+<body>
+<header class="topbar"><div class="topbar-in">
+  <div class="hudrow">
+    <div class="logo">Cybersec <span style="color:var(--muted);font-weight:600;font-size:11px">• NIGHTWATCH × Nuit au SOC</span></div>
+    <div style="display:flex;gap:6px;align-items:center">
+      <div class="pill"><b id="hudRank">Recrue</b> • <b id="hudXp">0 XP</b></div>
+      <button class="mutebtn" id="toggle3dBtn" title="Activer ou couper la 3D"> 3D : Non</button>
+      <button class="mutebtn" id="muteBtn" title="Son : simple, sans musique"> Son</button>
+    </div>
+  </div>
+  <div class="hud2" id="hudMission">
+    <span>⏱ <b id="hudTimer">--:--</b></span>
+    <span class="red">RED <b id="hudRed">0</b></span>
+    <span class="blue">BLUE <b id="hudBlue">0</b></span>
+    <span>Détection</span>
+    <div class="detbar"><i id="hudDet"></i></div>
+    <span id="hudDetPct">0%</span>
+    <span title="Niveau de menace VORTEX">Menace</span>
+    <div class="dots" id="hudThreat"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  </div>
+</div></header>
+
+<div class="wrap">
+
+<!-- ═══ ACCUEIL ═══ -->
+<div class="screen active" id="screen-home">
+  <div class="hero">
+    <div class="hero-top"><div><div class="greet" id="greet">Bonsoir, Darkman</div><div class="greet-sub" id="greetSub">Bienvenue au SOC. Ta première mission t’attend.</div></div><div class="streak-chip" id="streakChip"> 1 jour</div></div>
+    <div class="kicker">// Pour Darkman • Samsung S21 • 100% hors-ligne</div>
+    <h1>Apprends le hacking <em>éthique</em>, comme dans la vraie vie.</h1>
+    <p>Un seul jeu qui combine le meilleur des trois : le parcours débutant → intermédiaire, les nuits au SOC avec leurs kill-chains, et NIGHTWATCH — Opération PALLAS, où tu attaques et tu défends en même temps. Tout est simulé, rien n'est réel : aucun scan, aucune commande ne sort de ton téléphone.</p>
+    <p class="hero-tagline">Une mission par jour, un réflexe de plus — Léa reste à tes côtés.</p>
+    <button class="btn btn-primary btn-cta" id="ctaResume" onclick="resumeGame()">▶ Commencer</button>
+    <div class="buddy" id="buddyHome"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · analyste SOC N2</b><span class="buddy-text">Salut ! On fait équipe : je te briefe, je te conseille, et on apprend ensemble. Prêt ?</span></div></div>
+    <div class="stats">
+      <div class="stat"><small>Progression</small><strong id="statProgress">0%</strong><div class="xpbar"><i id="xpFill"></i></div></div>
+      <div class="stat"><small>XP gagnés</small><strong id="statXp">0</strong><span style="color:var(--muted);font-size:11px"> / 3000 XP pour Chasseur de menaces</span><div class="nextrank" id="statNextRank">Encore 500 XP pour devenir Analyste.</div></div>
+      <div class="stat"><small>Défis réussis</small><strong id="statMissions">0</strong></div>
+      <div class="stat"><small>Rang actuel</small><strong id="statRank" style="font-size:15px;padding-top:4px">Recrue</strong></div>
+    </div>
+  </div>
+
+<div class="card nextstep" id="nextStepCard"><span class="ns-kicker">À toi de jouer</span><h3 style="margin-top:10px" id="nextStepTitle">Prochain niveau du parcours</h3><p id="nextStepText">Du binaire au SQL, chaque niveau te rend meilleur analyste. +100 XP à la clé.</p><button class="mini-btn primary" id="nextStepBtn">Y aller →</button></div>
+  <div class="card hero-soc">
+    <span class="tag cyan">Salle SOC — 3D</span>
+    <h3 style="margin-top:10px">Ta salle SOC en 3D</h3>
+    <p>Une pièce sombre, des écrans, des postes d'analystes. La caméra bouge lentement toute seule. Quand tu lances une mission, les écrans s'allument et les alertes défilent. C'est un décor : il ne bloque pas le jeu, tu peux le laisser tourner ou le couper.</p>
+    <canvas id="socRoom" width="560" height="240" aria-label="Salle SOC en 3D"></canvas>
+    <p id="socRoomOff" style="display:none;font-size:11px;color:var(--muted)">3D désactivée — la salle SOC est en pause. Réactive la 3D avec le bouton « 3D » en haut de page.</p>
+    <div class="soc3d-bar">
+      <button class="mini-btn primary" id="socLightBtn"> Allumer les écrans</button>
+      <button class="mini-btn" onclick="showScreen('screen-nightwatch');goNightwatch()">▶ Lancer NIGHTWATCH</button>
+      <button class="mini-btn" onclick="showScreen('screen-nuit')">☾ Nuit au SOC</button>
+    </div>
+    <p class="map3d-hint" id="socRoomHint">Décor uniquement — les écrans s'allument aussi tout seuls quand une mission commence.</p>
+  </div>
+
+  <div class="card daily-card" id="dailyCard">
+    <span class="tag amber">Défi du jour</span>
+    <h3 style="margin-top:10px" id="dailyTitle">Défi du jour</h3>
+    <p id="dailyDesc">Reviens chaque jour pour un nouveau défi.</p>
+    <p class="daily-bonus" id="dailyBonus">Bonus : +50 XP</p>
+    <button class="mini-btn primary" id="dailyBtn">C’est parti</button>
+  </div>
+
+  <div class="card">
+    <span class="tag amber">1 — Choisis ton rôle</span>
+    <h3 style="margin-top:10px">Recrue, Analyste ou Expert ?</h3>
+    <p>Le rôle change la difficulté et le multiplicateur de score. Recrue : moins de fausses alertes, score ×1. Analyste : ×1,5. Expert : ×2, mais beaucoup plus de bruit à trier.</p>
+    <div class="seg" id="roleSeg">
+      <button data-role="0">Recrue<div style="font-size:11px;color:var(--muted)">score ×1</div></button>
+      <button data-role="1">Analyste<div style="font-size:11px;color:var(--muted)">score ×1,5</div></button>
+      <button data-role="2">Expert<div style="font-size:11px;color:var(--muted)">score ×2</div></button>
+    </div>
+    <p style="font-size:11px">Rangs : Analyste dès 500 XP • Analyste confirmé dès 1500 XP • Chasseur de menaces dès 3000 XP.</p>
+  </div>
+
+  <div class="card">
+    <span class="tag amber">2 — Choisis ton mode</span>
+    <h3 style="margin-top:10px">Campagne ou Duel ?</h3>
+    <p><b>Campagne :</b> solo, 4 missions NIGHTWATCH face à l'IA VORTEX, attaque et défense en même temps. <b>Duel :</b> 2 joueurs sur le même téléphone, on échange les rôles, le meilleur total RED + BLUE gagne.</p>
+    <div class="mode-grid">
+      <button class="btn btn-primary" onclick="goNightwatch()">▶ Campagne NIGHTWATCH</button>
+      <button class="btn btn-ghost" onclick="startDuel()">⚔ Duel à 2 joueurs</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="tag cyan">Par où commencer ?</span>
+    <h3 style="margin-top:10px">Le parcours, puis la nuit au SOC</h3>
+    <p>Débutant ? Commence par le <b>Parcours</b> (6 niveaux, de débutant à intermédiaire), puis la <b>Mission SOC à 02:47</b>, puis une <b>Nuit au SOC</b>. Quand tu es à l'aise, lance une mission NIGHTWATCH.</p>
+    <div class="mode-grid">
+      <button class="mode-tile" onclick="showScreen('screen-parcours')"><span class="tile-ico">01</span>Parcours<small>6 niveaux, débutant → intermédiaire</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-mission')"><span class="tile-ico">02</span>Mission SOC 02:47<small>Une alerte, trois décisions</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-nuit')"><span class="tile-ico">☾</span>Nuit au SOC<small>Scénarios kill-chain</small></button>
+    </div>
+    <div class="mode-grid">
+      <button class="mode-tile" onclick="showScreen('screen-terminal')"><span class="tile-ico">CLI</span>Terminal Linux<small>Commandes de base</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-phishing')"><span class="tile-ico">PH</span>Phishing Lab<small>Repère les pièges</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-quiz')"><span class="tile-ico">QZ</span>Quiz<small>8 questions</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-outils')"><span class="tile-ico">DOC</span>Outils &amp; Glossaire<small>Références et mots-clés</small></button>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="tag">Ton profil</span>
+    <h3 style="margin-top:10px" id="profTitle">Recrue</h3>
+    <p id="profText">0 XP, 0 partie jouée.</p>
+    <p style="font-size:11px" id="profBest">Meilleurs scores : Nuit au SOC 0 • NIGHTWATCH 0 • Duel 0.</p>
+    <div class="streak-row" id="streakLine"> Série : 0 jour</div>
+    <h3 style="margin-top:14px">Tes badges</h3>
+    <div class="badge-grid" id="badgeGrid"></div>
+    <button class="mini-btn" id="resetBtn">Effacer ma progression</button>
+    <div id="resetConfirm" style="display:none;margin-top:10px;border:1px solid var(--red);border-radius:12px;padding:12px"><p style="margin:0 0 10px"><b>Effacer toute ta progression ?</b><br><span style="color:var(--muted)">XP, niveaux, badges et scores seront remis à zéro. Cette action est définitive.</span></p><button class="mini-btn primary" id="resetYes">Oui, tout effacer</button> <button class="mini-btn" id="resetNo">Non, annuler</button></div>
+  </div>
+
+  <div class="ethic"><div style="font-size:20px">SOC</div><div><strong>La règle d'or du hacker éthique</strong><p>Tu n'attaques, ne testes et n'analyses que des systèmes qui t'appartiennent ou pour lesquels tu as une autorisation écrite. C'est ce qui sépare un pentester / analyste SOC d'un criminel. Chaque mission ici se déroule dans un lab fictif et fermé.</p></div></div>
+</div>
+
+<!-- ═══ PARCOURS ═══ -->
+<div class="screen" id="screen-parcours">
+  <section>
+    <div class="kicker">Étape par étape</div>
+    <h2>Parcours : débutant → intermédiaire</h2>
+    <p>Valide un niveau pour débloquer le suivant. Chaque niveau mélange théorie courte, pratique et mini-défi. +100 XP par niveau.</p>
+    <div class="buddy" id="buddyPath"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2</b><span class="buddy-text">On y va doucement, un niveau à la fois. Chaque niveau débloque le suivant — et te rapproche du rang Analyste.</span></div></div>
+    <div id="pathList"></div>
+  </section>
+</div>
+
+<!-- ═══ MISSION SOC 02:47 ═══ -->
+<div class="screen" id="screen-mission">
+  <section>
+    <div class="kicker">Scénario interactif • +100 XP</div>
+    <h2>Mission 1 — Alerte SOC à 02:47</h2>
+    <p>Tu es analyste SOC junior, de nuit. Une alerte tombe. À toi de prendre les bonnes décisions, dans le bon ordre.</p>
+    <div class="buddy" id="buddyMission"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2 — message d’équipe, 02:47</b><span class="buddy-text">02:47, un vendredi soir. Quelqu’un essaie d’entrer pendant que 200 collègues dorment — leurs données sont sur ce serveur. On s’en occupe ensemble, étape par étape.</span></div></div>
+    <div class="card">
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><span class="tag red">Alerte SIEM</span><span class="tag">Sévérité : Élevée</span><span class="tag">02:47 • Serveur SRV-WEB-01</span></div>
+      <div class="mono" style="background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0;font-size:11px;line-height:1.7">
+        [02:47:13] AUTH FAIL — user=admin ip=185.220.14.9 (tentative 47)<br>
+        [02:47:31] AUTH FAIL — user=admin ip=185.220.14.9 (tentative 48)<br>
+        [02:48:02] AUTH <span style="color:var(--red);font-weight:700">SUCCESS</span> — user=admin ip=185.220.14.9<br>
+        [02:48:19] NEW PROCESS — /tmp/.hidden/update.sh exécuté
+      </div>
+      <h3 id="scenarioQ">Que fais-tu en premier ?</h3>
+      <div id="scenarioOpts"></div>
+      <div class="feedback" id="scenarioFeedback"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px"><span class="mono" style="color:var(--muted);font-size:11px" id="scenarioStep">Étape 1 / 3</span><button class="mini-btn" id="scenarioReset">↺ Recommencer</button></div>
+    </div>
+  </section>
+  <section>
+    <div class="kicker">Défi pratique • +80 XP</div>
+    <h2>Chasse l'intrus dans les logs</h2>
+    <p>Voici 6 lignes de logs. Touche les <b>2 lignes vraiment suspectes</b>. Les connexions internes habituelles ne comptent pas.</p>
+    <div class="card"><div id="logList"></div><div class="feedback" id="logFeedback"></div><p class="mono" style="color:var(--muted);font-size:11px" id="logScore">Suspects trouvés : 0 / 2</p></div>
+  </section>
+</div>
+
+<!-- ═══ NUIT AU SOC ═══ -->
+<div class="screen" id="screen-nuit">
+  <section>
+    <div class="kicker">Nuit au SOC • Scénarios kill-chain</div>
+    <h2>Nuit au SOC</h2>
+    <p>Chaque partie génère un nouveau scénario en 3 phases : tu tries les alertes (vraies menaces ou faux positifs), tu réagis, puis tu rédiges le rapport. Ton rôle change le nombre de fausses alertes et le multiplicateur.</p>
+    <div class="buddy" id="buddyNuit"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2 — message d’équipe</b><span class="buddy-text">Une nuit au SOC, c’est trier le vrai du bruit. Prends ton temps : un faux positif fermé trop vite, c’est une vraie menace qui passe.</span></div></div>
+    <div id="nuitHud"></div>
+    <div id="nuitView"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+      <button class="btn btn-primary" onclick="startNuitSoc()">SOC Défendre, côté SOC</button>
+      <button class="btn btn-red" onclick="startNuitRed()">⚔ Attaquer, côté Red Team</button>
+    </div>
+    <p style="font-size:11px">Côté Red Team : 5 phases (Reconnaissance → Accès initial → Persistance → Mouvement latéral → Exfiltration). Chaque action fait du bruit : si la détection atteint le seuil de ton rôle, tu es repéré.</p>
+  </section>
+</div>
+
+<!-- ═══ NIGHTWATCH ═══ -->
+<div class="screen" id="screen-nightwatch">
+  <section>
+    <div class="kicker">NIGHTWATCH — Opération PALLAS</div>
+    <h2>Red Team / Blue Team</h2>
+    <p>Attaque le réseau PALLAS CORP avec le terminal (à gauche) pendant que l'IA VORTEX attaque <b>ton</b> réseau en suivant sa kill-chain (à droite, dans le SIEM). Bloque les vraies menaces, ferme les faux positifs — bloquer un utilisateur légitime coûte cher.</p>
+    <div class="buddy" id="buddyNw"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2</b><span class="buddy-text">Deux fronts en même temps, c’est le vrai métier. Attaque d’un côté, défends de l’autre — et respire entre deux alertes.</span></div></div>
+    <div id="nwMenu">
+      <div class="card">
+        <span class="tag red">Campagne • Solo • 4 missions</span>
+        <h3 style="margin-top:10px">Sélection de mission</h3>
+        <div id="nwMissionList"></div>
+      </div>
+      <div class="card">
+        <span class="tag blue">Duel • 2 joueurs, même téléphone</span>
+        <h3 style="margin-top:10px">Duel RED vs BLUE</h3>
+        <p>Manche 1 : le Joueur 1 attaque, le Joueur 2 défend le SIEM. Puis on échange les rôles. Le meilleur total RED + BLUE gagne. 4 minutes par manche.</p>
+        <button class="btn btn-blue" onclick="startDuel()">⚔ Lancer le duel</button>
+      </div>
+    </div>
+    <div id="nwBrief" style="display:none">
+      <div class="card">
+        <span class="tag" id="nwBriefTag">Briefing</span>
+        <h3 style="margin-top:10px" id="nwBriefTitle">—</h3>
+        <p id="nwBriefText">—</p>
+        <div class="buddy" id="buddyBrief"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2 — briefing</b><span class="buddy-text">Lis bien les deux côtés avant de lancer : côté RED, ton objectif ; côté BLUE, ce que VORTEX prépare. On y va ensemble.</span></div></div>
+        <div class="grid grid-2">
+          <div><span class="tag red">Côté RED</span><ul id="nwBriefRed" style="color:var(--muted);font-size:12px;padding-left:18px"></ul></div>
+          <div><span class="tag blue">Côté BLUE</span><ul id="nwBriefBlue" style="color:var(--muted);font-size:12px;padding-left:18px"></ul></div>
+        </div>
+        <p class="mono" style="font-size:11px">Commandes : help • scan • exploit • hydra • ssh • ping • cat • exfiltrate</p>
+        <button class="btn btn-primary btn-block" id="nwStartBtn">Lancer</button>
+        <button class="btn btn-ghost btn-block" onclick="showNwMenu()">← Retour</button>
+      </div>
+    </div>
+    <div id="nwPlay" style="display:none">
+      <p class="mono" style="font-size:11px;color:var(--muted)" id="nwStatus">Menace VORTEX : phase 1/6 — Reconnaissance</p>
+      <div class="terminal">
+        <div class="term-head"><span>▸ TERMINAL — RED TEAM</span><span id="nwTermTarget">cible : réseau PALLAS CORP</span></div>
+        <div class="term-body" id="nwTermOut"></div>
+        <form class="term-input" id="nwTermForm"><span>$</span><input id="nwTermInput" autocomplete="off" autocapitalize="none" placeholder="tape 'help'… ex : scan 10.10.1.10" aria-label="Commande NIGHTWATCH"><button type="submit">Entrer</button></form>
+      </div>
+      <div class="chips" id="nwChips"></div>
+      <div class="card">
+        <span class="tag">Carte réseau</span>
+        <h3 style="margin-top:10px">PALLAS CORP — cible en haut, ta défense en bas</h3>
+        <div class="map3d-wrap">
+          <canvas id="nwMap3d" width="560" height="300" aria-label="Carte réseau 3D — glisse pour tourner, touche un nœud pour scanner"></canvas>
+          <div class="map3d-bar">
+            <button class="mini-btn on" id="map3dBtn">3D Vue 3D</button>
+            <button class="mini-btn" id="map2dBtn">▦ Vue 2D</button>
+            <button class="mini-btn" id="mapZoomOut" aria-label="Zoom arrière">−</button>
+            <button class="mini-btn" id="mapZoomIn" aria-label="Zoom avant">＋</button>
+            <span class="map3d-hint">Glisse pour tourner • pince pour zoomer • touche un serveur pour le scanner.</span>
+          </div>
+          <div id="map3dSel" class="mono" style="font-size:11px;color:var(--muted);margin-top:8px">Aucun nœud sélectionné.</div>
+        </div>
+        <div class="mapgrid" id="nwMap" style="display:none"></div>
+
+        <p style="font-size:11px;margin-bottom:0">Touche une machine cible pour la scanner. <span id="nwThreatText">Adversaire : GROUPE VORTEX — phase Reconnaissance passive.</span></p>
+      </div>
+      <div class="card">
+        <span class="tag blue">SIEM — SOC N1</span>
+        <h3 style="margin-top:10px">Flux d'alertes <span style="color:var(--muted);font-size:11px">(<span id="nwSiemOpen">0</span> ouverte(s))</span></h3>
+        <p style="font-size:11px">Touche une alerte pour voir ses logs, puis <b>Bloquer l'IP</b> (vraie menace) ou <b>Fermer</b> (faux positif).</p>
+        <div id="nwSiem"></div>
+      </div>
+      <div id="nwEnd" style="display:none" class="card">
+        <span class="tag" id="nwEndTag">Rapport</span>
+        <h3 style="margin-top:10px" id="nwEndTitle">—</h3>
+        <p id="nwEndText">—</p>
+        <p><span class="red" style="font-weight:800">RED <b id="nwEndRed">0</b></span> • <span class="blue" style="font-weight:800">BLUE <b id="nwEndBlue">0</b></span> • Grade <b id="nwEndGrade">—</b> • Temps <b id="nwEndTime">—</b></p>
+        <div id="nwEndBreak" style="font-size:12px"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+          <button class="mini-btn primary" id="nwReplayBtn">↺ Encore une partie</button>
+          <button class="mini-btn" id="nwNextBtn">Mission suivante →</button>
+          <button class="mini-btn" onclick="showNwMenu()">Menu NIGHTWATCH</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══ TERMINAL LINUX ═══ -->
+<div class="screen" id="screen-terminal">
+  <section>
+    <div class="kicker">Linux • Pratique réelle</div>
+    <h2>Terminal d'entraînement</h2>
+    <p>Le terminal est l'outil n°1 en cybersécurité. Essaie les vraies commandes de base, en toute sécurité dans ce faux environnement. Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)</p>
+    <div class="buddy" id="buddyTerm"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2</b><span class="buddy-text">Commence par « help », puis « ls » pour voir où tu es. Le flag est tout près — tu vas y arriver.</span></div></div>
+    <div class="terminal">
+      <div class="term-head"><span>● ● ● &nbsp; darkman@kali-lab: ~/mission</span><span>bash</span></div>
+      <div class="term-body" id="labTermOut">Bienvenue dans ton lab Linux, Darkman.
+Tape "help" pour voir les commandes disponibles.
+Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
+</div>
+      <form class="term-input" id="labTermForm"><span>$</span><input id="labTermInput" autocomplete="off" autocapitalize="none" placeholder="tape une commande… ex : help" aria-label="Commande terminal Linux"><button type="submit">Entrer</button></form>
+    </div>
+    <div class="chips" id="labChips"></div>
+  </section>
+</div>
+
+<!-- ═══ PHISHING + MOT DE PASSE ═══ -->
+<div class="screen" id="screen-phishing">
+  <section>
+    <div class="kicker">SOC &amp; vigilance • +70 XP</div>
+    <h2>Phishing Lab — Vrai ou piège ?</h2>
+    <p>Un analyste doit savoir repérer un e-mail piégé : expéditeur, domaine, urgence, lien. Classe ces 3 messages.</p>
+    <div class="buddy" id="buddyPhish"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2</b><span class="buddy-text">Mon réflexe : je regarde l’expéditeur d’abord, le lien ensuite. Si ça presse, c’est souvent un piège.</span></div></div>
+    <div class="grid" id="phishGrid"></div>
+  </section>
+  <section>
+    <div class="card">
+      <span class="tag amber">Labo mot de passe • +30 XP si Excellent</span>
+      <h3 style="margin-top:10px">Teste la solidité d'un mot de passe</h3>
+      <p>Teste ici un mot de passe <b>fictif</b> (n'utilise jamais un vrai). Longueur + diversité = résistance au brute force.</p>
+      <input type="password" id="pwdInput" placeholder="Ex : Cheval!Batterie#2026">
+      <div class="meter"><i id="pwdMeter"></i></div>
+      <p id="pwdResult" class="mono" style="font-size:11px">En attente…</p>
+      <p style="font-size:11px">Bon réflexe réel : 14+ caractères, phrase de passe, unicité par site, gestionnaire de mots de passe + double authentification (MFA).</p>
+    </div>
+  </section>
+</div>
+
+<!-- ═══ QUIZ ═══ -->
+<div class="screen" id="screen-quiz">
+  <section>
+    <div class="card">
+      <span class="tag amber">Quiz • +10 XP / bonne réponse</span>
+      <h3 style="margin-top:10px">Quiz cybersécurité</h3>
+      <div class="buddy" id="buddyQuiz"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2</b><span class="buddy-text">Pas de pression, chaque question est un entraînement. Une mauvaise réponse, c’est juste une notion à revoir.</span></div></div>
+      <div class="progress-dots" id="quizDots"></div>
+      <p class="mono" style="color:var(--muted);font-size:11px" id="quizMeta">Question 1 / 8</p>
+      <h3 id="quizQ" style="font-size:14px"></h3>
+      <div id="quizOpts"></div>
+      <div class="feedback" id="quizFeedback"></div>
+    </div>
+  </section>
+</div>
+
+<!-- ═══ OUTILS & GLOSSAIRE ═══ -->
+<div class="screen" id="screen-outils">
+  <section>
+    <div class="kicker">La vraie vie</div>
+    <h2>Outils &amp; plateformes à connaître</h2>
+    <p>Ce que les pros utilisent vraiment — et où continuer après ce jeu.</p>
+    <div class="buddy" id="buddyTools"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2</b><span class="buddy-text">Ces outils, c’est la vraie vie du métier. TryHackMe, c’est par là que beaucoup d’analystes ont commencé — comme toi.</span></div></div>
+    <div class="grid">
+      <div class="card"><span class="tag blue">Plateforme</span><h3 style="margin-top:10px">TryHackMe</h3><p>Parcours guidés débutant → SOC Analyst, rooms pratiques dans le navigateur. La référence pour débuter.</p><a href="https://tryhackme.com" target="_blank" rel="noopener">tryhackme.com →</a></div>
+      <div class="card"><span class="tag">Outil réseau</span><h3 style="margin-top:10px">Nmap</h3><p>Scanner de ports et de services. Il répond à : « qu'est-ce qui est ouvert sur cette machine ? »</p><p class="mono" style="font-size:11px">nmap -sV 192.168.1.10</p></div>
+      <div class="card"><span class="tag">Outil réseau</span><h3 style="margin-top:10px">Wireshark</h3><p>Capture et analyse le trafic réseau paquet par paquet. Indispensable pour comprendre ce qui circule.</p></div>
+      <div class="card"><span class="tag">Système</span><h3 style="margin-top:10px">Kali Linux</h3><p>Distribution Linux avec les outils de test d'intrusion préinstallés. À utiliser uniquement dans ton lab / tes VM.</p></div>
+      <div class="card"><span class="tag">SOC</span><h3 style="margin-top:10px">SIEM (Splunk, Wazuh…)</h3><p>Centralise les logs, corrèle les événements et déclenche les alertes qu'un analyste SOC traite au quotidien.</p></div>
+      <div class="card"><span class="tag">Référence FR</span><h3 style="margin-top:10px">ANSSI &amp; Cybermalveillance</h3><p>Guides officiels français : hygiène informatique, mots de passe, réponse à incident.</p><a href="https://cyber.gouv.fr" target="_blank" rel="noopener">cyber.gouv.fr →</a> &nbsp; <a href="https://www.cybermalveillance.gouv.fr" target="_blank" rel="noopener">cybermalveillance.gouv.fr →</a></div>
+    </div>
+  </section>
+  <section>
+    <div class="kicker">À réviser</div>
+    <h2>Glossaire express</h2>
+    <p>Les mots que tu croiseras partout en cybersécurité.</p>
+    <input class="search" type="text" id="glossSearch" placeholder=" Chercher un terme… ex : port, SIEM, phishing">
+    <div class="card"><dl class="glossary" id="glossList"></dl></div>
+  </section>
+  <section>
+    <h2>Questions fréquentes</h2>
+    <details><summary>C'est quoi exactement, un analyste SOC ?</summary><p style="color:var(--muted)">SOC = Security Operations Center. L'analyste surveille les alertes d'un SIEM, trie les vrais incidents des faux positifs, enquête (logs, IP, processus) et escalade si besoin. C'est un des métiers d'entrée les plus accessibles en cybersécurité.</p></details>
+    <details><summary>Par quoi commencer dans la vraie vie après ce jeu ?</summary><p style="color:var(--muted)">1) Les bases réseau (IP, DNS, ports, modèle OSI). 2) Linux en machine virtuelle. 3) Un parcours guidé type TryHackMe « Pre Security » puis « SOC Level 1 ». 4) Beaucoup de labs, jamais de tests sur des systèmes sans autorisation.</p></details>
+    <details><summary>Quelle est la différence entre hacker éthique et pirate ?</summary><p style="color:var(--muted)">Les techniques peuvent se ressembler, l'intention et le cadre changent tout : autorisation écrite, périmètre défini, objectif de défense et compte-rendu. Sans autorisation, c'est illégal — en France, l'accès frauduleux à un système est puni par l'article 323-1 du Code pénal.</p></details>
+  </section>
+</div>
+
+<footer>Cybersec — Jeu combiné : Parcours SOC + Nuit au SOC + NIGHTWATCH Opération PALLAS. Un seul fichier, hors-ligne, mobile-first. Sources d'inspiration pédagogique : TryHackMe, ANSSI, Cybermalveillance.gouv.fr. Tout est simulé : aucune attaque réelle.</footer>
+</div>
+
+<nav class="bottomnav">
+  <button data-nav="screen-home" class="on" onclick="showScreen('screen-home')"><span>◈</span>Accueil</button>
+  <button data-nav="screen-parcours" onclick="showScreen('screen-parcours')"><span>▤</span>Parcours</button>
+  <button data-nav="screen-nuit" onclick="showScreen('screen-nuit')"><span>☾</span>Nuit SOC</button>
+  <button data-nav="screen-nightwatch" onclick="showScreen('screen-nightwatch')"><span>◎</span>NIGHTWATCH</button>
+  <button data-nav="screen-quiz" onclick="showScreen('screen-quiz')"><span>?</span>Quiz</button>
+</nav>
+<div class="toast" id="toast"></div>
+<div class="rankup-overlay" id="rankup" style="display:none"><div class="rankup-card"><div class="rankup-emoji"></div><h2 class="rankup-title" id="rankupTitle">Rang supérieur !</h2><p class="rankup-text" id="rankupText">Tu progresses vite, Darkman.</p><button class="btn btn-primary btn-block" id="rankupBtn">Continuer</button></div></div>
+
+<script>
+/* ═══ ÉTAT UNIFIÉ — un seul système d'XP, sauvegarde localStorage ═══ */
+var KEY='jeu-combine-v1';
+var state={xp:0,role:0,games:0,done:{},flags:{},best:{soc:0,nw:0,duel:0},badges:{}};
+try{var s=JSON.parse(localStorage.getItem(KEY)||'{}');for(var k in s){state[k]=s[k];}}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+var ROLES=[{name:'Recrue',mult:1,fp:1,det:10},{name:'Analyste',mult:1.5,fp:3,det:8},{name:'Expert',mult:2,fp:5,det:6}];
+function rankName(x){return x>=3000?'Chasseur de menaces':x>=1500?'Analyste confirmé':x>=500?'Analyste':'Recrue';}
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2600);}
+function addXP(n,key){
+  if(key&&state.flags[key])return 0;
+  if(key)state.flags[key]=true;
+  var g=Math.round(n*ROLES[state.role].mult);
+  state.xp+=g;save();renderStats();checkDaily(key);
+  if(g>0){toast('+'+g+' XP');floatXP(g);}
+  return g;
+}
+function renderStats(){
+  var xp=state.xp;
+  document.getElementById('hudXp').textContent=xp+' XP';
+  document.getElementById('hudRank').textContent=rankName(xp);
+  document.getElementById('statXp').textContent=xp;
+  document.getElementById('statRank').textContent=rankName(xp);
+  var pct=Math.min(100,Math.round(xp/3000*100));
+  document.getElementById('statProgress').textContent=pct+'%';
+  document.getElementById('xpFill').style.width=Math.max(4,pct)+'%';
+  document.getElementById('statMissions').textContent=Object.keys(state.done).length;
+  document.getElementById('profTitle').textContent=rankName(xp)+' — '+ROLES[state.role].name;
+  document.getElementById('profText').textContent=xp+' XP, '+state.games+' partie(s) jouée(s). Rôle : '+ROLES[state.role].name+' (score ×'+String(ROLES[state.role].mult).replace('.',',')+').';
+  document.getElementById('profBest').textContent='Meilleurs scores : Nuit au SOC '+(state.best.soc||0)+' • NIGHTWATCH '+(state.best.nw||0)+' • Duel '+(state.best.duel||0)+'.';
+  var seg=document.getElementById('roleSeg');
+  if(seg){var bs=seg.querySelectorAll('button');for(var i=0;i<bs.length;i++){bs[i].classList.toggle('on',+bs[i].getAttribute('data-role')===state.role);}}
+  renderPath();
+  renderDaily();renderBadges();touchStreak();updateGreeting();renderNextStep();updateNextRank();renderStreakChip();checkRankUp();
+  var cta=document.getElementById('ctaResume');if(cta)cta.textContent=state.xp>0?'▶ Reprendre la mission':'▶ Commencer';
+}
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  var el=document.getElementById(id);if(el)el.classList.add('active');
+  document.querySelectorAll('.bottomnav button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-nav')===id);});
+  syncTopbar();
+  window.scrollTo(0,0);
+  /* REBUILD : le timer NIGHTWATCH ne tourne que sur l'écran NIGHTWATCH */
+  try{
+    if(typeof nw!=='undefined'&&nw.phase==='playing'){
+      if(id==='screen-nightwatch'){if(!tickHandle)tickHandle=setInterval(tick,1000);}
+      else{clearInterval(tickHandle);tickHandle=null;}
+    }
+  }catch(e){}
+}
+/* REBUILD : le timer ne tourne que si la mission joue, sur l'écran NIGHTWATCH, onglet visible */
+document.addEventListener('visibilitychange',function(){
+  if(typeof nw==='undefined')return;
+  if(document.hidden){clearInterval(tickHandle);tickHandle=null;}
+  else if(nw.phase==='playing'){
+    var ns=document.getElementById('screen-nightwatch');
+    if(ns&&ns.classList.contains('active')&&!tickHandle)tickHandle=setInterval(tick,1000);
+  }
+});
+document.getElementById('roleSeg').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  state.role=+b.getAttribute('data-role');save();renderStats();
+  toast('Rôle : '+ROLES[state.role].name+' (×'+String(ROLES[state.role].mult).replace('.',',')+')');
+});
+document.getElementById('resetBtn').onclick=function(){
+  var c=document.getElementById('resetConfirm');if(c)c.style.display='block';
+};
+document.getElementById('resetYes').onclick=function(){
+  state={xp:0,role:0,games:0,done:{},flags:{},best:{soc:0,nw:0,duel:0},badges:{}};save();try{localStorage.removeItem(STREAK_KEY);}catch(e){}renderStats();renderQuiz();
+  var c=document.getElementById('resetConfirm');if(c)c.style.display='none';
+  toast('Progression effacée.');
+};
+document.getElementById('resetNo').onclick=function(){
+  var c=document.getElementById('resetConfirm');if(c)c.style.display='none';
+};
+var muted=false;
+document.getElementById('muteBtn').onclick=function(){
+  muted=!muted;this.textContent=muted?' Muet':' Son';
+  toast(muted?'Son coupé.':'Son activé (aucune musique, juste le bouton).');
+};
+/* ═══ PARCOURS 6 NIVEAUX ═══ */
+var modules=[
+ {id:'m1',title:'Fondamentaux & Réseaux',desc:'Comment les machines se parlent : adresses IP, DNS, ports, protocoles.',items:['Adresse IP & réseau local','Ports 22, 80, 443, 3389…','HTTP vs HTTPS, DNS, TCP/UDP'],xp:100},
+ {id:'m2',title:'Linux & Ligne de commande',desc:'Prendre en main un terminal Linux, naviguer, lire et chercher dans les fichiers.',items:['ls, cd, cat, grep, find','Permissions & utilisateurs','Processus : ps, top, kill'],xp:100},
+ {id:'m3',title:'Analyste SOC — Logs & SIEM',desc:'Le cœur du métier : lire des logs, trier des alertes, repérer une compromission.',items:['Logs d’authentification','Brute force & IOC','Triage d’alertes SIEM'],xp:100},
+ {id:'m4',title:'Phishing, OSINT & Ingénierie sociale',desc:'Comprendre l’attaque la plus fréquente : celle qui vise l’humain.',items:['Anatomie d’un e-mail piégé','Vérifier un domaine / un lien','OSINT éthique & public uniquement'],xp:100},
+ {id:'m5',title:'Web & Vulnérabilités (bases)',desc:'Ce qu’un défenseur doit connaître des failles web les plus courantes (OWASP).',items:['Injection SQL : le principe','XSS : le principe','Correctifs & bonnes pratiques'],xp:100},
+ {id:'m6',title:'Réponse à incident',desc:'Quand ça brûle : contenir, éradiquer, restaurer, documenter. Méthode réelle d’un SOC.',items:['Confinement & isolement','Analyse post-incident','Rapport & traçabilité'],xp:100}
+];
+function renderPath(){
+  var el=document.getElementById('pathList');if(!el)return;
+  el.innerHTML=modules.map(function(m,i){
+    var done=!!state.done[m.id];
+    var unlocked=i===0||!!state.done[modules[i-1].id];
+    return '<article class="module '+(done?'done':'')+' '+(unlocked?'':'locked')+'"><div class="num">'+(done?'✓':(i+1))+'</div><div><div><span class="tag '+(done?'green':'')+'">'+(done?'Terminé':unlocked?'En cours':'Verrouillé')+'</span> <span class="tag">+'+m.xp+' XP</span></div><h3 style="margin:8px 0 4px">'+m.title+'</h3><p style="margin:0;color:var(--muted)">'+m.desc+'</p><ul>'+m.items.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul><div style="margin-top:10px"><button class="mini-btn '+(unlocked&&!done?'primary':'')+'" data-mod="'+m.id+'" '+(unlocked?'':'disabled')+'>'+(done?'Revoir':unlocked?'Valider le niveau':' Verrouillé')+'</button></div></div></article>';
+  }).join('');
+  el.querySelectorAll('[data-mod]').forEach(function(b){b.addEventListener('click',function(){
+    var id=b.getAttribute('data-mod');var m=modules.find(function(x){return x.id===id;});
+    if(!state.done[id]){state.done[id]=true;addXP(m.xp,'mod-'+id);}
+    else toast('Niveau déjà validé — continue avec les défis ci-dessous');
+    renderStats();
+  });});
+}
+/* ═══ MISSION SOC 02:47 ═══ */
+var scenario=[
+ {q:"Que fais-tu en premier ?",opts:[
+   {t:"Supprimer le serveur pour stopper l'attaque",ok:false,fb:"Trop radical et destructeur : tu perdrais les preuves et couperais un service critique. Un SOC contient d'abord, il ne détruit pas."},
+   {t:"Isoler la machine du réseau et préserver les logs",ok:true,fb:"Exact. Confinement + préservation des preuves : c'est le réflexe SOC. La machine est isolée, l'enquête peut commencer."},
+   {t:"Ignorer : c'est peut-être juste un admin qui a oublié son mot de passe",ok:false,fb:"47 échecs puis un succès depuis une IP externe inconnue, à 2h47 : c'est la signature d'un brute force réussi. On n'ignore jamais ça."},
+   {t:"Répondre à l'attaquant en te connectant à son IP",ok:false,fb:"Jamais. « Hack back » = illégal et dangereux. Tu restes dans ton périmètre autorisé."}]},
+ {q:"Machine isolée. Quelle est ta prochaine étape d'enquête ?",opts:[
+   {t:"Vérifier l'IP 185.220.14.9 : pays, réputation, autres alertes liées",ok:true,fb:"Bien vu. Enrichir l'IOC (indicateur de compromission) permet de savoir si d'autres machines sont touchées."},
+   {t:"Redémarrer le serveur et passer à autre chose",ok:false,fb:"Un redémarrage efface la mémoire et les traces du processus malveillant. On analyse avant de nettoyer."},
+   {t:"Changer uniquement le mot de passe admin",ok:false,fb:"Insuffisant : un script a été exécuté (/tmp/.hidden/update.sh). Il faut comprendre ce qu'il a fait avant de nettoyer."}]},
+ {q:"L'analyse montre que le script a créé un compte caché. Comment clôtures-tu l'incident ?",opts:[
+   {t:"Supprimer le compte, corriger la faille, réactiver avec surveillance renforcée et documenter",ok:true,fb:"Parfait : éradication, durcissement (MFA, blocage IP, mot de passe fort), retour en service surveillé et rapport complet. Mission réussie !"},
+   {t:"Tout réinstaller sans rien noter",ok:false,fb:"Sans documentation, impossible d'apprendre ni de prouver ce qui s'est passé. Le rapport fait partie du métier."},
+   {t:"Ne rien dire, l'incident est réglé",ok:false,fb:"Un incident se déclare et se trace, toujours. La transparence protège l'équipe et l'organisation."}]}
+];
+var sStep=0,sDone=false;
+function renderScenario(){
+  var s=scenario[sStep];if(!s)return;
+  document.getElementById('scenarioQ').textContent=s.q;
+  document.getElementById('scenarioStep').textContent='Étape '+(sStep+1)+' / '+scenario.length;
+  var box=document.getElementById('scenarioOpts');box.innerHTML='';
+  s.opts.forEach(function(o){
+    var b=document.createElement('button');b.className='quiz-opt';b.textContent=o.t;
+    b.onclick=function(){
+      var fb=document.getElementById('scenarioFeedback');fb.className='feedback show '+(o.ok?'ok':'bad');fb.textContent=(o.ok?'✅ ':'❌ ')+o.fb;
+      if(!o.ok)sayBuddy('buddyMission','Pas grave — c’est en se trompant qu’on apprend. Relis l’alerte : que ferait un vrai SOC en premier ?');
+      if(o.ok){setTimeout(function(){fb.classList.remove('show');if(sStep<scenario.length-1){sStep++;renderScenario();}else if(!sDone){sDone=true;addXP(100,'scenario');document.getElementById('scenarioStep').textContent='Mission terminée ✓';box.innerHTML='<p style="color:var(--muted)">Bilan : brute force détecté → confinement → enquête IOC → éradication → documentation. C\u2019est exactement la chaîne d\u2019un vrai SOC.</p>';}},1400);}
+    };box.appendChild(b);
+  });
+}
+document.getElementById('scenarioReset').onclick=function(){sStep=0;sDone=false;document.getElementById('scenarioFeedback').classList.remove('show');renderScenario();};
+/* ═══ CHASSE AUX LOGS ═══ */
+var logs=[
+ {t:"08:12  LOGIN OK   user=sophie  ip=192.168.1.24  poste bureau",bad:false},
+ {t:"08:15  LOGIN OK   user=karim   ip=192.168.1.31  poste bureau",bad:false},
+ {t:"09:03  DOWNLOAD  fichier=rapport.pdf user=sophie ip=192.168.1.24",bad:false},
+ {t:"03:22  LOGIN OK   user=admin   ip=91.203.67.18  pays inhabituel • 214 fichiers téléchargés en 4 min",bad:true},
+ {t:"10:41  UPDATE    antivirus signatures à jour — poste RH-04",bad:false},
+ {t:"11:07  LOGIN FAIL x86 user=root ip=45.155.20.7 — puis LOGIN OK",bad:true}
+];
+(function(){
+  var found=0;var logList=document.getElementById('logList');
+  logs.forEach(function(l){
+    var b=document.createElement('button');b.className='logline';b.textContent=l.t;
+    b.onclick=function(){
+      if(b.dataset.done)return;b.dataset.done=1;
+      if(l.bad){b.classList.add('found');found++;document.getElementById('logScore').textContent='Suspects trouvés : '+found+' / 2';
+        if(found===2){var f=document.getElementById('logFeedback');f.className='feedback show ok';f.textContent='✅ Bravo ! IP externe + heure impossible + téléchargement massif, et brute force sur root : ce sont les 2 vrais signaux. +80 XP';addXP(80,'logs');}}
+      else{b.classList.add('safe');var f2=document.getElementById('logFeedback');f2.className='feedback show bad';f2.textContent='❌ Celle-ci est normale : IP interne, horaires de bureau, action habituelle. Un bon analyste évite les faux positifs.';
+        sayBuddy('buddyMission','Bien essayé ! Celle-ci est normale : IP interne, horaires de bureau. Les vrais signaux sont ailleurs.');setTimeout(function(){f2.classList.remove('show');},2200);}
+    };logList.appendChild(b);
+  });
+})();
+/* ═══ TERMINAL LINUX ═══ */
+var labOut=document.getElementById('labTermOut');
+var labCmds={
+ help:"Commandes disponibles :\n  whoami        qui es-tu ?\n  pwd           où es-tu ?\n  ls            lister les fichiers\n  cat flag.txt  lire le flag\n  cat notes.txt lire tes notes\n  nmap localhost  scanner les ports locaux (lab)\n  ping lab.local  tester la connectivité\n  clear         effacer l'écran",
+ whoami:"darkman — analyste SOC junior, autorisé sur ce lab uniquement.",
+ pwd:"/home/darkman/mission",
+ ls:"notes.txt  flag.txt  logs/  outils/",
+ "cat notes.txt":"Notes : 1) Toujours vérifier l'expéditeur. 2) Un port ouvert = une porte à surveiller. 3) Le flag est dans flag.txt.",
+ "cat flag.txt":"FLAG{soc_junior_premier_pas_reussi}\nBravo Darkman ! Tu maîtrises ls + cat : la base de toute enquête Linux.",
+ "nmap localhost":"PORT     STATE  SERVICE\n22/tcp   open   ssh\n80/tcp   open   http\n443/tcp  open   https\n3306/tcp closed mysql\nScan terminé : 3 ports ouverts sur ton lab.",
+ "ping lab.local":"PING lab.local — 4 paquets transmis, 4 reçus, 0% perte, ~1.2 ms",
+ clear:"__CLEAR__"
+};
+function runLab(raw){
+  var c=(raw||'').trim().toLowerCase();
+  if(labCmds[c]==="__CLEAR__"){labOut.textContent='';return;}
+  var out=labCmds[c]||('bash: '+c+' : commande inconnue dans ce lab. Tape "help".');
+  labOut.textContent+="\n\n$ "+c+"\n"+out;labOut.scrollTop=labOut.scrollHeight;
+  if(c==='cat flag.txt')addXP(60,'terminal');
+}
+['help','whoami','ls','cat flag.txt','nmap localhost'].forEach(function(c){
+  var b=document.createElement('button');b.className='chip';b.textContent=c;
+  b.onclick=function(){runLab(c);};document.getElementById('labChips').appendChild(b);
+});
+document.getElementById('labTermForm').addEventListener('submit',function(e){e.preventDefault();var i=document.getElementById('labTermInput');runLab(i.value);i.value='';});
+/* ═══ PHISHING LAB ═══ */
+var phish=[
+ {from:"support@paypal-securite-verif.com",subj:"URGENT : compte suspendu, cliquez sous 1h",body:"Cher client, vérifiez vos identifiants immédiatement sur le lien ci-dessous sinon votre compte sera fermé.",bad:true,why:"Domaine imité (paypal-securite-verif.com ≠ paypal.com), urgence artificielle, demande d'identifiants : phishing classique."},
+ {from:"rh@ton-entreprise.fr",subj:"Planning de la semaine prochaine",body:"Bonjour Darkman, voici le planning mis à jour, aussi disponible sur l'intranet. Bonne journée.",bad:false,why:"Expéditeur interne cohérent, pas d'urgence, pas de demande sensible, contenu vérifiable sur l'intranet : légitime."},
+ {from:"livraison@colis-suivi-express.net",subj:"Votre colis est bloqué : payez 1,99 € de frais",body:"Dernier avis avant retour du colis. Réglez les frais de dédouanement par carte bancaire.",bad:true,why:"Faux transporteur, petit montant pour endormir la vigilance, paiement par carte demandé par lien : arnaque très répandue."}
+];
+(function(){
+  var done=0;var pg=document.getElementById('phishGrid');
+  phish.forEach(function(p,idx){
+    var d=document.createElement('div');d.className='card';
+    d.innerHTML='<span class="tag">E-mail '+(idx+1)+'</span><p class="mono" style="font-size:11px;margin-top:10px">De : '+p.from+'<br>Objet : <b>'+p.subj+'</b></p><p style="font-size:12px">« '+p.body+' »</p><div style="display:flex;gap:8px"><button class="mini-btn ph-legit" style="flex:1">✓ Légitime</button><button class="mini-btn ph-bad" style="flex:1">⚠ Phishing</button></div><div class="feedback"></div>';
+    var fb=d.querySelector('.feedback');
+    function answer(guessBad){
+      if(d.dataset.done)return;d.dataset.done=1;
+      var ok=guessBad===p.bad;fb.className='feedback show '+(ok?'ok':'bad');fb.textContent=(ok?'✅ Bien vu. ':'❌ Raté. ')+p.why;
+      if(ok){done++;if(done===3)addXP(70,'phishing');}else sayBuddy('buddyPhish','Bien essayé ! Regarde l’expéditeur et le domaine : c’est souvent là que ça se joue.');
+    }
+    d.querySelector('.ph-legit').onclick=function(){answer(false);};
+    d.querySelector('.ph-bad').onclick=function(){answer(true);};
+    pg.appendChild(d);
+  });
+})();
+/* ═══ MOT DE PASSE ═══ */
+document.getElementById('pwdInput').addEventListener('input',function(e){
+  var v=e.target.value;var score=0;
+  if(v.length>=8)score++;if(v.length>=14)score++;if(/[a-z]/.test(v)&&/[A-Z]/.test(v))score++;if(/\d/.test(v))score++;if(/[^A-Za-z0-9]/.test(v))score++;
+  var labels=['Très faible','Faible','Moyen','Correct','Fort','Excellent'];
+  var colors=['#ff4d5e','#ff4d5e','#ffb020','#ffb020','#14c86e','#2dff8f'];
+  document.getElementById('pwdMeter').style.width=(v?Math.max(12,score/5*100):0)+'%';
+  document.getElementById('pwdMeter').style.background=colors[score];
+  document.getElementById('pwdResult').textContent=v?('Force : '+labels[score]+' • '+v.length+' caractères'):'En attente…';
+  if(score===5)addXP(30,'pwd');
+});
+/* ═══ QUIZ 8 QUESTIONS ═══ */
+var quiz=[
+ {q:"Que signifie l'adresse 192.168.1.10 ?",o:["Un site web","Une adresse IP privée d'un réseau local","Un mot de passe","Un type de virus"],a:1,x:"Les plages 192.168.x.x sont privées : elles identifient une machine sur un réseau local."},
+ {q:"Quel port est utilisé par HTTPS ?",o:["80","21","443","3389"],a:2,x:"80 = HTTP, 443 = HTTPS, 21 = FTP, 3389 = RDP (bureau à distance Windows)."},
+ {q:"Un attaquant essaie des milliers de mots de passe jusqu'à trouver le bon. C'est…",o:["Du phishing","Un brute force","Un pare-feu","Une sauvegarde"],a:1,x:"Le brute force teste massivement des combinaisons. D'où l'intérêt des mots de passe longs + MFA + limitation des tentatives."},
+ {q:"Dans un terminal Linux, quelle commande liste les fichiers ?",o:["cd","ls","rm","ping"],a:1,x:"ls = lister, cd = changer de dossier, ping = tester la connectivité."},
+ {q:"Qu'est-ce qu'un SIEM ?",o:["Un antivirus grand public","Un système qui centralise les logs et alerte sur les incidents","Un câble réseau","Un langage de programmation"],a:1,x:"Le SIEM est l'outil central d'un SOC : collecte, corrélation, alertes."},
+ {q:"Un e-mail urgent te demande ton mot de passe via un lien. Réflexe ?",o:["Cliquer vite avant l'expiration","Vérifier l'expéditeur et passer par le site officiel, jamais par le lien","Transférer à tes contacts","Répondre avec ton mot de passe"],a:1,x:"Aucun service sérieux ne demande un mot de passe par e-mail. On vérifie le domaine et on signale."},
+ {q:"Que fait la commande grep dans un fichier de logs ?",o:["Elle supprime le fichier","Elle cherche les lignes contenant un mot","Elle chiffre le disque","Elle redémarre le serveur"],a:1,x:"grep ERROR auth.log = ne garder que les lignes utiles. L'allié n°1 de l'analyse de logs."},
+ {q:"La double authentification (MFA) sert à…",o:["Rendre le Wi-Fi plus rapide","Ajouter une 2e preuve d'identité en plus du mot de passe","Cacher ton adresse IP","Supprimer les virus"],a:1,x:"Même avec un mot de passe volé, l'attaquant bloque sur le 2e facteur (code, application, clé)."}
+];
+var qi=0,qScore=0;
+function renderQuiz(){
+  document.getElementById('quizDots').innerHTML=quiz.map(function(_,i){return '<i class="'+(i<=qi?'on':'')+'"></i>';}).join('');
+  if(qi>=quiz.length){if(qScore>=6)checkDaily('quiz');document.getElementById('quizMeta').textContent='Quiz terminé';document.getElementById('quizQ').textContent='Score final : '+qScore+' / '+quiz.length;document.getElementById('quizOpts').innerHTML='<button class="mini-btn primary" id="quizReplay">↺ Rejouer le quiz</button>';document.getElementById('quizReplay').onclick=function(){qi=0;qScore=0;renderQuiz();};return;}
+  var q=quiz[qi];document.getElementById('quizMeta').textContent='Question '+(qi+1)+' / '+quiz.length+' • Score : '+qScore;
+  document.getElementById('quizQ').textContent=q.q;
+  document.getElementById('quizFeedback').classList.remove('show');
+  var box=document.getElementById('quizOpts');box.innerHTML='';
+  q.o.forEach(function(opt,i){var b=document.createElement('button');b.className='quiz-opt';b.textContent=opt;b.onclick=function(){
+    var fb=document.getElementById('quizFeedback');
+    if(i===q.a){b.classList.add('correct');qScore++;addXP(10);fb.className='feedback show ok';fb.textContent='✅ Bonne réponse. '+q.x;}
+    else{b.classList.add('wrong');fb.className='feedback show bad';fb.textContent='❌ Pas tout à fait. '+q.x;sayBuddy('buddyQuiz','Pas de souci, on retient et on continue. La prochaine sera la bonne.');}
+    box.querySelectorAll('button').forEach(function(x){x.disabled=true;});
+    setTimeout(function(){qi++;renderQuiz();},1700);
+  };box.appendChild(b);});
+}
+/* ═══ GLOSSAIRE ═══ */
+var gloss=[
+ ["Adresse IP","Adresse qui identifie une machine sur un réseau. Ex : 192.168.1.10 en local."],
+ ["Port","Porte d'entrée d'un service sur une machine : 443 pour HTTPS, 22 pour SSH…"],
+ ["DNS","L'annuaire d'Internet : traduit un nom (exemple.fr) en adresse IP."],
+ ["Pare-feu (Firewall)","Filtre le trafic réseau selon des règles : autoriser ou bloquer."],
+ ["SIEM","Logiciel qui centralise les logs et génère des alertes de sécurité pour le SOC."],
+ ["SOC","Security Operations Center : l'équipe qui surveille et répond aux incidents 24/7."],
+ ["Phishing","Arnaque par message imitant un organisme de confiance pour voler identifiants ou argent."],
+ ["Brute force","Attaque qui teste un très grand nombre de mots de passe jusqu'à trouver le bon."],
+ ["IOC","Indicator of Compromise : trace d'une compromission (IP malveillante, fichier suspect…)."],
+ ["Malware","Logiciel malveillant : virus, ransomware, cheval de Troie…"],
+ ["MFA / 2FA","Double authentification : mot de passe + un second facteur (code, appli, clé)."],
+ ["Pentest","Test d'intrusion autorisé et encadré, pour trouver les failles avant les attaquants."],
+ ["OWASP","Organisation qui publie le Top 10 des risques web les plus critiques."],
+ ["Log","Journal d'événements d'un système : connexions, erreurs, actions. La matière première du SOC."],
+ ["VPN","Tunnel chiffré qui protège la connexion, notamment sur les Wi-Fi publics."],
+ ["Kill chain","Chaîne d'attaque en phases : reconnaissance, accès initial, persistance, mouvement latéral, exfiltration."],
+ ["MITRE ATT&CK","Référentiel qui décrit les tactiques et techniques des attaquants (ex : T1595 reconnaissance)."],
+ ["Crown jewel","Actif le plus précieux d'une organisation — ici la base paie sur db-srv-01."]
+];
+function renderGloss(filter){
+  document.getElementById('glossList').innerHTML=gloss.filter(function(g){return !filter||(g[0]+g[1]).toLowerCase().indexOf(filter.toLowerCase())>=0;}).map(function(g){return '<dt>'+g[0]+'</dt><dd>'+g[1]+'</dd>';}).join('')||'<dd>Aucun terme trouvé.</dd>';
+}
+document.getElementById('glossSearch').addEventListener('input',function(e){renderGloss(e.target.value);});
+
+/* ═══ NUIT AU SOC — scénarios kill-chain en 3 phases ═══ */
+function RN(n){return Math.floor(Math.random()*n);}
+function pick(a){return a[RN(a.length)];}
+function shuf(a){return a.map(function(x){return [Math.random(),x];}).sort(function(p,q){return p[0]-q[0];}).map(function(x){return x[1];});}
+function ctx(){return {u:pick(["c.leroy","m.durand","s.bakari","l.nguyen","j.moreau"]),h:pick(["WS-04","WS-09","WS-12","PC-RH-2","PC-COMPTA-1"]),ip:pick(["203.0.113.","198.51.100."])+(10+RN(200)),d:pick(["fact0r-pay.example","compta-secure.example","pay-notif.example"])};}
+function hm(m){return String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0");}
+function fill(s,c,m,k){return s.replace(/\{T\}/g,hm(m)+":"+String(10+k*3)).replace(/\{(u|h|ip|d)\}/g,function(_,x){return c[x];});}
+var SC=[
+ {p:["Hameçonnage","Exécution","Exfiltration"],a:[
+  ["Pièce jointe avec macros",["{T} MAIL-GW from=compta@{d} to={u} pj=Facture.docm","{T} MAIL-GW spf=fail dkim=none verdict=delivered"],"Domaine imitant un prestataire, SPF en échec, macros : hameçonnage livré."],
+  ["Word lance PowerShell",["{T} {h} user={u} proc=WINWORD.EXE enfant=powershell.exe","{T} {h} cmdline=\"powershell -w hidden -enc JABz...\" dst={ip}:443"],"Word ne lance pas PowerShell caché vers l'extérieur : la macro s'exécute."],
+  ["Gros transfert vers l'extérieur",["{T} FILES user={u} lecture=2311 fichiers (RH)","{T} FW-01 src={h} dst={ip}:443 octets=2,3 Go"],"Des milliers de fichiers lus puis 2,3 Go envoyés vers un inconnu : exfiltration."]],
+  q:["Comment l'attaquant est-il entré ?","Par un mail avec pièce jointe piégée","Par une faille du pare-feu","Par une clé USB perdue"]},
+ {p:["Accès","Propagation","Chiffrement"],a:[
+  ["Rafale de connexions RDP",["{T} FW-01 dst={h}:3389 src={ip} tentatives=240/5min","{T} {h} evt=4624 user=admin src={ip} succès"],"240 essais puis un succès depuis Internet : mot de passe admin deviné sur un RDP exposé."],
+  ["Connexions admin en cascade",["{T} DC-01 evt=4624 user=admin src={h} cibles=SRV-01,SRV-02,SRV-03","{T} {h} service créé à distance sur 3 serveurs"],"Le même compte admin saute de machine en machine en quelques secondes : propagation."],
+  ["Fichiers renommés en masse",["{T} SRV-01 renommage=4800 fichiers/min ext=.locked","{T} {h} suppression des clichés instantanés"],"Renommages massifs et sauvegardes locales supprimées : chiffrement en cours."]],
+  q:["Quelle faiblesse a permis l'accès ?","Un RDP exposé avec un mot de passe faible","Une imprimante réseau","Une mise à jour trop récente"]},
+ {p:["Identifiants","Connexion","Fuite cloud"],a:[
+  ["Un IP teste des centaines de comptes",["{T} IDP src={ip} comptes_testés=312 échecs=309","{T} IDP user={u} succès src={ip}"],"Un même IP teste 312 comptes avec des mots de passe réutilisés : un compte tombe."],
+  ["Voyage impossible",["{T} IDP user={u} connexion=Lyon 08:02","{T} IDP user={u} connexion=Singapour 08:19 mfa=non"],"Deux pays en 17 minutes et sans MFA : le compte est utilisé par quelqu'un d'autre."],
+  ["Partage cloud public créé",["{T} CLOUD user={u} action=lien public sur dossier Contrats","{T} CLOUD téléchargements=1870 src={ip}"],"Dossier sensible rendu public puis aspiré : fuite de données dans le cloud."]],
+  q:["Quelle mesure aurait bloqué l'attaque ?","Le MFA obligatoire sur tous les comptes","Changer de fournisseur mail","Désactiver les mises à jour"]}
+];
+var FPN=[
+ ["Gros téléchargement nocturne",["{T} FW-01 src={h} dst=cdn-maj.vendor.example octets=640 Mo","{T} WSUS statut=mise à jour téléchargée certificat=valide"],"Mise à jour planifiée depuis le CDN officiel de l'éditeur."],
+ ["Échecs de connexion puis succès",["{T} DC-01 user={u} échecs=4 puis succès src={h}","{T} RH poste habituel, début de service 08:50"],"Un mot de passe mal tapé depuis son poste habituel."],
+ ["Balayage de ports interne",["{T} SCAN-01 cible=10.0.0.0/24 ports=1-1024","{T} CMDB ticket=CHG-2231 statut=approuvé"],"Un scan prévu par l'équipe IT, avec un ticket approuvé."],
+ ["Sauvegarde nocturne volumineuse",["{T} BKP-01 src=SRV-01 dst=NAS-02 octets=48 Go","{T} BKP-01 job=sauvegarde-quotidienne statut=ok"],"Le job de sauvegarde habituel, vers le NAS interne."],
+ ["Connexion VPN depuis l'étranger",["{T} VPN user={u} pays=Espagne mfa=oui","{T} RH {u} en déplacement, congés validés"],"Déplacement déclaré et MFA validé."],
+ ["L'antivirus détecte un fichier de test",["{T} AV {h} détection=EICAR-Test-File action=bloqué","{T} IT ticket=SEC-77 test de l'antivirus planifié"],"Fichier de test standard lancé par l'IT."]
+];
+function mkAlert(a,c,m,real,ph){return {n:a[0],t:hm(m),m:m,l:a[1].map(function(s,k){return fill(s,c,m,k);}),w:fill(a[2],c,m,0),real:real,ph:ph};}
+function nuitTri(list,fin,onLive){
+  var i=0,res=[];var v=document.getElementById('nuitView');
+  function go(){
+    var a=list[i];
+    v.innerHTML='<div class="card"><div class="m" style="color:var(--muted);font-size:11px">Alerte '+(i+1)+' sur '+list.length+', '+a.t+'</div><h3>'+a.n+'</h3><pre class="log">'+a.l.join('\n')+'</pre><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><button class="mini-btn" id="nuitReal" style="border-color:var(--red);color:var(--red)">Menace réelle</button><button class="mini-btn" id="nuitFp" style="border-color:var(--blue);color:var(--blue)">Faux positif</button></div><div id="nuitFb"></div></div>';
+    document.getElementById('nuitReal').onclick=function(){answer(true);};
+    document.getElementById('nuitFp').onclick=function(){answer(false);};
+    function answer(g){
+      var ok=g===a.real;res.push({a:a,g:g,ok:ok});
+      if(onLive)onLive(a,ok);
+      document.getElementById('nuitReal').disabled=true;document.getElementById('nuitFp').disabled=true;
+      document.getElementById('nuitFb').innerHTML='<div class="feedback show '+(ok?'ok':'bad')+'"><b>'+(ok?'Bien vu.':'Raté.')+'</b> '+a.w+'</div><button class="btn btn-primary btn-block" id="nuitNx">'+(i<list.length-1?'Alerte suivante':'Continuer')+'</button>';
+      document.getElementById('nuitNx').onclick=function(){i++;if(i<list.length)go();else fin(res);};
+    }
+  }
+  go();
+}
+function nuitAsk(html,opts,cb){
+  var v=document.getElementById('nuitView');
+  var o=shuf(opts);
+  v.innerHTML='<div class="card">'+html+'<div style="display:grid;gap:10px;margin-top:12px">'+o.map(function(x,k){return '<button class="quiz-opt" data-o="'+k+'">'+x[0]+'</button>';}).join('')+'</div><div id="nuitFb2"></div></div>';
+  v.querySelectorAll('[data-o]').forEach(function(b){b.onclick=function(){
+    var x=o[+b.getAttribute('data-o')];var good=x[1]>=100;
+    v.querySelectorAll('[data-o]').forEach(function(y){y.disabled=true;});
+    document.getElementById('nuitFb2').innerHTML='<div class="feedback show '+(good?'ok':'bad')+'"><b>'+(good?'Bon réflexe.':'Pas idéal.')+'</b> '+x[2]+'</div><button class="btn btn-primary btn-block" id="nuitNx2">Continuer</button>';
+    document.getElementById('nuitNx2').onclick=function(){cb(x[1]);};
+  };});
+}
+function nuitReport(key,sc,max,again,extra,title){
+  nuitActive=false;syncTopbar();
+  sc=Math.max(0,Math.round(sc));var pc=sc/max;
+  var r=title||(pc>=0.85?'Analyste confirmé':pc>=0.6?'Analyste':'Recrue');
+  state.xp+=sc;state.games++;state.best[key]=Math.max(state.best[key]||0,sc);save();renderStats();
+  document.getElementById('nuitHud').innerHTML='';
+  document.getElementById('nuitView').innerHTML='<div class="card"><div style="color:var(--muted);font-size:11px">Rapport de fin de partie</div><h3>'+r+'</h3><div class="big" id="endXpBig">'+sc+' sur '+max+'</div>'+endRankHtml()+'<div style="color:var(--muted);font-size:11px">Meilleur score : '+state.best[key]+' • XP ajoutés à ton total : '+sc+'</div>'+(extra||'')+'<button class="btn btn-primary btn-block" id="nuitRp">↺ Encore une partie</button><button class="btn btn-ghost btn-block" onclick="showScreen(\'screen-home\')">Menu</button></div>';
+  document.getElementById('nuitRp').onclick=again;
+  countUp(document.getElementById('endXpBig'),sc,' sur '+max);
+}
+function startNuitSoc(){
+  if(window.socRoomLight)window.socRoomLight();
+  showScreen('screen-nuit');
+  nuitActive=true;syncTopbar();
+  var s=pick(SC),c=ctx(),L=ROLES[state.role],n=3+L.fp,lit=[0,0,0],sc=0;
+  var mins=[];for(var k=0;k<n;k++)mins.push(120+RN(580));mins.sort(function(a,b){return a-b;});
+  var slots=shuf([0,1,2,3,4,5,6,7].slice(0,n)).slice(0,3).sort(function(a,b){return a-b;});
+  var fp=shuf(FPN).slice(0,L.fp),f=0;
+  var list=mins.map(function(m,i){var j=slots.indexOf(i);return j>=0?mkAlert(s.a[j],c,m,true,j):mkAlert(fp[f++],c,m,false);});
+  function hd(){document.getElementById('nuitHud').innerHTML='<div class="chain">'+s.p.map(function(x,k){return '<div class="st '+(lit[k]?'on':'')+'">'+x+'</div>';}).join('')+'</div><p style="font-size:11px;margin-top:8px">Score '+sc+' • Rôle '+L.name+' (×'+String(L.mult).replace('.',',')+')</p>';}
+  hd();
+  nuitTri(list,function(res){
+    nuitAsk('<h3>Incident confirmé</h3><p>'+c.h+' est compromis et l\u2019attaque progresse. Que fais-tu en premier ?</p>',[['Isoler '+c.h+' du réseau',150,"Stoppe la propagation et garde le poste intact pour l'enquête."],["Éteindre le serveur de fichiers",40,"Coupe un service pour tout le monde, mais le poste compromis reste actif."],["Prévenir toute l'entreprise par mail",0,"Trop lent : l'attaque continue pendant que tu écris."]],function(p1){
+      nuitAsk('<h3>Rapport d\u2019incident</h3><p>'+s.q[0]+'</p>',[[s.q[1],100,"Exact : c'est la cause racine, à corriger en priorité."],[s.q[2],0,"Non : rien dans les logs ne le montre."],[s.q[3],0,"Non : rien dans les logs ne le montre."]],function(p2){
+        sc+=p1+p2;
+        nuitReport('soc',sc*L.mult,(n*100+250)*L.mult,startNuitSoc,'<ul class="rec">'+res.map(function(x){return '<li>'+(x.ok?'✓':'✗')+' '+x.a.n+' : '+(x.a.real?'menace réelle':'faux positif')+'</li>';}).join('')+'</ul>');
+      });
+    });
+  },function(a,ok){sc+=ok?100:-50;if(ok&&a.real)lit[a.ph]=1;hd();});
+}
+/* ═══ NUIT AU SOC — RED TEAM (5 phases) ═══ */
+var RD=[
+ ["Reconnaissance",[["Veille OSINT passive",0,90,0],["Scan de ports ciblé et lent",1,80,["Scan de ports lent","{T} FW-01 src={ip} ports=22,80,443 débit=1/min"]],["Scan complet agressif",3,95,["Scan de ports massif","{T} FW-01 src={ip} ports=1-65535 débit=900/s"]]]],
+ ["Accès initial",[["Mail d'hameçonnage ciblé",1,60,["Mail avec lien suspect","{T} MAIL-GW from=rh@{d} lien=URL récente verdict=livré"]],["Force brute sur le VPN",3,70,["Rafale d'échecs VPN","{T} VPN src={ip} échecs=500/10min"]],["Mot de passe volé et réutilisé",1,65,["Connexion VPN inhabituelle","{T} VPN user={u} pays=inhabituel mfa=non"]]]],
+ ["Persistance",[["Tâche planifiée discrète",1,75,["Nouvelle tâche planifiée","{T} {h} tâche=MajSys créée par {u} chemin=temp"]],["Nouveau compte administrateur",3,85,["Compte admin créé","{T} DC-01 evt=4720 compte=svc-backup2 groupe=Admins"]],["Se fondre dans un processus légitime",0,50,0]]],
+ ["Mouvement latéral",[["Utiliser un compte de service existant",1,70,["Compte de service sur un nouveau poste","{T} DC-01 user=svc-print src={h} première fois"]],["Balayage SMB du réseau",3,85,["Balayage SMB interne","{T} {h} cibles=250 port=445 durée=40s"]],["Rester sur place et fouiller",0,60,0]]],
+ ["Exfiltration",[["Gros envoi direct",3,90,["Gros transfert vers l'extérieur","{T} FW-01 src={h} dst={ip}:443 octets=3 Go"]],["Petits envois sur plusieurs jours",1,70,["Petits envois réguliers","{T} FW-01 src={h} dst={ip}:443 octets=40 Mo/h"]],["Exfiltration via DNS",2,60,["Requêtes DNS très longues","{T} DNS {h} requêtes=9000/h taille=anormale"]]]]
+];
+function startNuitRed(){
+  if(window.socRoomLight)window.socRoomLight();
+  showScreen('screen-nuit');
+  nuitActive=true;syncTopbar();
+  var p=0,no=0,ok=0,al=[];var c=ctx();var L=ROLES[state.role];var T=L.det;
+  function mt(){document.getElementById('nuitHud').innerHTML='<p style="font-size:11px;margin-top:12px">Détection '+no+' sur '+T+'</p><div class="xpbar"><i style="width:'+Math.min(100,no/T*100)+'%;background:'+(no>=T*0.75?'var(--red)':'var(--amber)')+'"></i></div>';}
+  function step(){
+    mt();var os=RD[p][1];var v=document.getElementById('nuitView');
+    v.innerHTML='<div class="card"><div style="color:var(--muted);font-size:11px">Phase '+(p+1)+' sur 5</div><h3>'+RD[p][0]+'</h3><div style="display:grid;gap:10px">'+os.map(function(o,k){return '<button class="quiz-opt" data-o="'+k+'">'+o[0]+'<div style="font-size:11px;color:var(--muted)">Bruit '+['nul','faible','moyen','élevé'][o[1]]+', réussite '+o[2]+' %</div></button>';}).join('')+'</div><div id="nuitFb3"></div></div>';
+    v.querySelectorAll('[data-o]').forEach(function(b){b.onclick=function(){
+      var o=os[+b.getAttribute('data-o')];var w=RN(100)<o[2];
+      v.querySelectorAll('[data-o]').forEach(function(y){y.disabled=true;});
+      ok+=w?1:0;no+=o[1]+(w?0:1);
+      if(o[3])al.push(mkAlert([o[3][0],[o[3][1]],"C'est la trace d'une action de l'attaquant."],c,120+p*110+RN(90),true));
+      mt();
+      var caught=no>=T,last=p===4;
+      document.getElementById('nuitFb3').innerHTML='<div class="feedback show '+(w?'ok':'bad')+'"><b>'+(w?'Action réussie.':'Action ratée.')+'</b> Ce que voit le SOC : '+(o[3]?o[3][0]:'rien')+'.</div><button class="btn btn-primary btn-block" id="nuitNx3">'+(caught?'Tu es repéré':last?'Terminer':'Phase suivante')+'</button>';
+      document.getElementById('nuitNx3').onclick=function(){if(caught||last){finishRed();}else{p++;step();}};
+    };});
+  }
+  function finishRed(){
+    var score=(100*ok+(no>=T?0:Math.max(0,T-no)*20))*L.mult;
+    nuitReport('soc',score,(500+T*20)*L.mult,startNuitRed,'<p style="color:var(--muted)">'+(no>=T?"Le SOC t'a repéré avant la fin.":"Mission accomplie sans être repéré.")+' '+ok+' phases réussies sur 5. Tes traces générées : '+al.length+' alerte(s) réelle(s) dans le SIEM.</p>');
+  }
+  step();
+}
+
+/* ═══ NIGHTWATCH — OPÉRATION PALLAS ═══ */
+function makeTargets(){return {
+  web:{key:'web',ip:'10.10.1.10',name:'web-srv-01',os:'Debian 9 (Linux)',scanned:false,owned:false,ports:[['22','ssh   OpenSSH 7.4'],['80','http  nginx 1.14.2'],['443','https nginx 1.14.2']],vulnHint:'Formulaire /login vulnérable à une injection SQL (sqlmap)',files:[{name:'users.txt',content:'# comptes applicatifs\nbackup : S3cr3t!2026\nsvc_app : Tr0ub4dor&3'}]},
+  file:{key:'file',ip:'10.10.1.20',name:'file-srv-01',os:'Ubuntu 16.04 (Linux)',scanned:false,owned:false,ports:[['21','ftp   vsftpd 2.3.4'],['22','ssh   OpenSSH 6.6'],['445','samba 4.3.11']],vulnHint:'vsftpd 2.3.4 — porte dérobée connue (CVE-2011-2523)',files:[{name:'notes.txt',content:'NOTE INFRA 2026-02 :\nCompte MySQL dbadmin sur db-srv-01\nmot de passe : Sup3rDB!2026\n(ne PAS le partager, merci. — J.)'},{name:'paie_backup.tar.gz',content:'Archive de sauvegarde hebdomadaire (chiffrée, inutilisable sans clé).'}]},
+  db:{key:'db',ip:'10.10.1.30',name:'db-srv-01',os:'RHEL 7 (Linux)',scanned:false,owned:false,ports:[['22','ssh   OpenSSH 7.2'],['3306','mysql MySQL 5.7.28']],vulnHint:'Aucune faille directe connue — accès par credentials requis.',files:[{name:'paie_2026.sql',content:'-- BASE PAIE PALLAS CORP 2026\n-- 482 employés, salaires, IBAN…\n-- ★ OBJECTIF DE LA MISSION ★'},{name:'incident_2025.txt',content:'Post-mortem incident ransomware 2025 : attaque entrée par un FTP non patché. Penser à patcher. (jamais fait, visiblement)'}]}
+};}
+var AI_STAGES=[
+ {name:'Reconnaissance',mitre:'T1595',desc:'balayage de ports externe'},
+ {name:'Accès initial',mitre:'T1566.002',desc:'spearphishing avec lien malveillant'},
+ {name:'Persistance',mitre:'T1505.003',desc:'webshell déployé sur le portail RH'},
+ {name:'Command & Control',mitre:'T1071.001',desc:'beacons HTTPS sortants'},
+ {name:'Mouvement latéral',mitre:'T1021.002',desc:'SMB / PsExec vers le serveur couronnes'},
+ {name:'Exfiltration',mitre:'T1041',desc:'tunnel DNS — fuite de données'}
+];
+var VORTEX_IPS=['45.155.204.71','185.220.101.34','91.219.238.7'];
+function makeRealAlert(stageIdx,clockStr){
+  var s=AI_STAGES[stageIdx];var ip=VORTEX_IPS[stageIdx%VORTEX_IPS.length];
+  var per=[
+   {sev:'low',title:'Balayage de ports détecté sur le pare-feu',logs:'fw-edge-01 kernel: SYN flood détecté\nfw-edge-01 snort[412]: ET SCAN Potential SSH Scan ... SRC '+ip+'\nfw-edge-01 snort[412]: 412 paquets SYN vers ports 22,80,443 en 40s'},
+   {sev:'medium',title:'Email de phishing signalé par un utilisateur',logs:'mail-gw: SPF=fail  DKIM=none  FROM "RH NIGHTWATCH <rh@n1ghtwatch-hr[.]com>"\nmail-gw: URL dans le corps : http://'+ip+'/portal/login.php (hameçon)\nuser=martin.d — "j\'ai cliqué mais j\'ai rien entré…"'},
+   {sev:'high',title:'Fichier suspect uploadé sur le portail RH',logs:'web-rh access.log: POST /uploads/avatars/backup.php 200 — src '+ip+'\nweb-rh modsec: WAF contourné (multipart)\nEDR siem-01: processus "backup.php" → cmd /c whoami'},
+   {sev:'high',title:'Beacons HTTPS sortants — cadence régulière',logs:'proxy: CONNECT cdn-metrics-sync[.]top (résout '+ip+') toutes les 60 s\nproxy: User-Agent "Mozilla/5.0" — taille requête fixe 512 o\ndns: 312 requêtes TXT vers ns1.cdn-metrics-sync[.]top'},
+   {sev:'high',title:'Authentifications SMB anormales vers serveur couronnes',logs:'crown-jewel-01: 4624 Logon Type 3 — compte "svc_backup" depuis SIEM-01 (anormal)\ncrown-jewel-01: service PSExec installé : PSEXESVC\nEDR: powershell.exe -nop -w hidden -enc SQBFAFMA... (base64)'},
+   {sev:'high',title:'Exfiltration en cours — tunnel DNS',logs:'dns: volume TXT sortant x400 vs baseline (2.1 Go en 30 min)\nfw-edge-01: destination '+ip+':53 — flux continu\ncrown-jewel-01: archive ZIP chiffrée "AJBACKUP.zip" créée dans C:\\Temp'}
+  ][stageIdx];
+  return {id:null,real:true,duel:false,ip:ip,mitre:s.mitre,stage:stageIdx,clock:clockStr,sev:per.sev,title:per.title,logs:per.logs};
+}
+function makeDuelAlert(kind,clockStr,ip){
+  var src=ip||('203.0.113.'+(50+RN(60)));
+  var per={
+   scan:{sev:'medium',title:'Balayage de ports détecté sur le périmètre',logs:'fw-edge-01 snort[412]: ET SCAN — série SYN vers ports 21,22,80,443\nfw-edge-01: source '+src+' — motif régulier, outillage type nmap\nSOC N1: pas de ticket IT référencé pour un scan autorisé.'},
+   exploit:{sev:'high',title:'Exploitation de service détectée',logs:'siem-01: corrélation WAF + EDR — payload anormal sur service externe\nEDR: processus fils inattendu — comportement type webshell\nsource '+src+' — requêtes répétées sur la même URL'},
+   ssh:{sev:'medium',title:'Connexion SSH atypique',logs:'sshd: Accepted password depuis '+src+' — horaire inhabituel\nsshd: session interactive longue, commandes sudo observées\nSOC N1: pas de changement configuré pour ce créneau.'},
+   hydra:{sev:'high',title:'Attaque par dictionnaire détectée',logs:'sshd: rafale d\'échecs d\'authentification depuis '+src+'\nfw-edge-01: 800 tentatives / 2 min — pattern brute-force\nEDR: compte verrouillé temporairement par politique'},
+   exfil:{sev:'high',title:'Transfert sortant volumineux',logs:'fw-edge-01: 300 Mo sortants vers '+src+' en tunnel chiffré\nproxy: User-Agent inconnu, destination hors liste blanche\nDLP: alerte règle "données financières"'}
+  }[kind];
+  return {id:null,real:true,duel:true,kind:kind,ip:src,mitre:null,clock:clockStr,sev:per.sev,title:per.title,logs:per.logs};
+}
+var FP_NW=[
+ {sev:'low',title:'Trafic inhabituel vers un CDN externe',logs:'proxy: CONNECT cdn.assets-vendor[.]com — 340 Mo (2h)\nproxy: User-Agent "VendorDesktop/3.2 (update check)"\nIT: déploiement des visuels de la campagne marketing prévu ce matin (ticket GLPI #4412).'},
+ {sev:'medium',title:'Échecs de connexion répétés — compte svc_backup',logs:'sshd: Failed password for svc_backup depuis 10.0.2.15 (5 tentatives)\nsshd: Accepted password ensuite — session normale\nIT: le job de sauvegarde nocturne utilise ce compte, rotation de mot de passe hier soir (ticket #4431).'},
+ {sev:'medium',title:'Pic de trafic sortant sur le serveur web',logs:'fw-edge-01: 1.2 Go sortant vers IPs clients variées\nweb-01: access.log — 38000 requêtes / 10 min sur /presse/\nMarketing: communiqué de presse publié ce matin (retombées presse normales).'},
+ {sev:'low',title:'Processus inconnu : win-update.exe',logs:'EDR siem-01: win-update.exe signé "Microsoft Windows Publishing" (valide)\nEDR: hash connu, fichier système légitime, chemin C:\\Windows\\WinSxS\\\nSuggestion: installer la KB5034441 (mises à jour WSUS prévues à 03:00).'},
+ {sev:'low',title:'Certificat TLS expiré détecté sur le portail RH',logs:'nagios: SSL CERTIFICATE WARNING — portail-rh.nightwatch.local\nDétail: expire dans 12 jours (seuil d\'alerte: 14)\nIT: renouvellement planifié le mois prochain (routine).'},
+ {sev:'medium',title:"Pièce jointe .zip reçue d'un expéditeur externe",logs:'mail-gw: FROM "facturation@fournisseur-pro[.]fr" — SPF=pass DKIM=pass\nmail-gw: pièce jointe "facture_2026-11.zip" (2.1 Mo) — 3 destinataires\nComptabilité: le fournisseur envoie ses factures en zip chaque mois (contrat actif).'}
+];
+var MISSIONS=[
+ {id:1,name:'PREMIER CONTACT',time:480,aiNext:52,aiVar:20,fpRate:30,detStart:0,decay:0.55,desc:"Initiation : PALLAS CORP, défense standard. Apprends à jongler entre les deux fronts.",story:"Le commanditaire veut la base paie de PALLAS CORP. Leur SOC est moyen, ton réseau est calme. Un bon point d'entrée dans le métier.",fine:'8 minutes. Deux fronts. Un seul poste.'},
+ {id:2,name:'APPÂT',time:420,aiNext:40,aiVar:12,fpRate:16,detStart:0,decay:0.55,desc:'VORTEX accélère sa kill chain, et le SIEM déborde de faux positifs. Triage sous pression.',story:"Campagne spearphishing massive : VORTEX passe à la vitesse supérieure. En face, ton SIEM remplit de bruit — marketing, sauvegardes, factures. Ce n'est plus du hacking, c'est du triage sous pression.",fine:'7 minutes. Le SIEM crie. Concentre-toi.'},
+ {id:3,name:'PROTOCOLE FANTÔME',time:480,aiNext:55,aiVar:18,fpRate:30,detStart:30,decay:0.35,desc:'Ta couverture commence déjà grillée à 30 %. La furtivité n\u2019est plus une option.',story:"Un précédent opérateur s'est fait repérer la semaine dernière : ta réputation te précède, la détection démarre à 30 %. Les actions discrètes (ssh, credentials) valent mieux que la force brute.",fine:'Budget détection serré. Chaque pourcent compte.'},
+ {id:4,name:'ÉCHIQUIER',time:300,aiNext:34,aiVar:10,fpRate:22,detStart:0,decay:0.55,desc:'Sprint final : 5 minutes, VORTEX en mode APT, aucun répit.',story:"Fin de partie. Le client ne paie que si les deux fronts tiennent : l'exfiltration côté Red, le réseau debout côté Blue. VORTEX joue serré, toi aussi.",fine:'5 minutes. Dernier effort.'}
+];
+var DUEL={time:240,fpRate:24,story:"Deux opérateurs, un seul poste. Manche 1 : le Joueur 1 attaque PALLAS CORP pendant que le Joueur 2 défend NIGHTWATCH — chaque action bruyante de l'attaquant génère une alerte réelle dans le SIEM du défenseur. Bloquer une alerte réelle brûle l'IP de l'attaquant (+8 % détection). Puis on échange les rôles. Le meilleur total RED + BLUE gagne.",fine:'4 minutes par manche. Puis on échange les rôles.'};
+var nw={phase:'menu',mode:null,mission:null,timeLeft:0,phaseTime:0,decay:0.55,detection:0,red:0,blue:0,shell:null,alerts:[],seq:0,ai:{stage:0,next:16},nextFp:26,tally:{hosts:0,contained:0,missed:0,fpBlocked:0,fpClosed:0,scans:0},duel:null,targets:makeTargets(),completed:{}};
+try{var _c=JSON.parse(localStorage.getItem('nw-completed')||'{}');nw.completed=_c;}catch(e){}
+var tickHandle=null;
+function fmtTime(s){s=Math.max(0,Math.floor(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');}
+function nwClock(){return fmtTime(nw.phaseTime-nw.timeLeft);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function goNightwatch(){showScreen('screen-nightwatch');showNwMenu();}
+function showNwMenu(){
+  nw.phase='menu';clearInterval(tickHandle);syncTopbar();
+  document.getElementById('nwMenu').style.display='block';
+  document.getElementById('nwBrief').style.display='none';
+  document.getElementById('nwPlay').style.display='none';
+  var list=document.getElementById('nwMissionList');list.innerHTML='';
+  MISSIONS.forEach(function(m){
+    var b=document.createElement('button');b.className='mission-card'+(nw.completed[m.id]?' done':'');
+    b.innerHTML='<b>'+String(m.id).padStart(2,'0')+' — '+m.name+(nw.completed[m.id]?' <span class="tag green">Terminée</span>':'')+'</b><p>'+m.desc+'</p><p class="mission-meta">Difficulté : '+['Facile','Moyen','Difficile','Expert'][m.id-1]+' • Récompense : jusqu’à +500 XP</p><p style="font-size:11px">'+Math.round(m.time/60)+' min'+(m.detStart?' • détection de départ '+m.detStart+' %':'')+'</p>';
+    b.onclick=function(){selectMission(m);};list.appendChild(b);
+  });
+  updateNwHud();
+}
+function selectMission(m){
+  nw.mode='campaign';nw.mission=m;nw.phaseTime=m.time;nw.decay=m.decay;nw.detStart=m.detStart;
+  fillBrief('BRIEFING — MISSION '+m.id+' : '+m.name,'Opération PALLAS — '+m.name,m.story,
+   ['Scanne le réseau cible (10.10.1.0/24)','Exploite les failles (sqli, ftp) ou force des accès (hydra)','Exfiltre la base paie_2026.sql sur db-srv-01','Chaque action bruyante augmente la Détection : à 100 %, traçé = perdu'],
+   ['VORTEX attaque ton réseau en suivant la kill chain','Trie les alertes du SIEM : bloque les vraies menaces, ferme les faux positifs','Bloquer un utilisateur légitime coûte cher','Si VORTEX atteint l\u2019exfiltration, ton réseau tombe'],
+   m.fine,"LANCER L'OPÉRATION");
+}
+function startDuel(){
+  showScreen('screen-nightwatch');
+  nw.mode='duel';nw.mission=null;nw.phaseTime=DUEL.time;nw.decay=0.55;nw.detStart=0;
+  nw.duel={round:1,rounds:[{},{}],alerts:[]};
+  fillBrief('DUEL — 2 JOUEURS, UN SEUL POSTE','Duel RED vs BLUE',DUEL.story,
+   ['<b>Attaquant</b> : terminal — scan, exploits, hydra, ssh, exfiltration','Chaque action bruyante crée une <b>alerte réelle</b> dans le SIEM du défenseur',"Si le défenseur bloque ton IP : +8 % détection pour toi",'Détection à 100 % ou exfiltration = fin de manche'],
+   ['<b>Défenseur</b> : SIEM — bloque les attaques de l\u2019autre joueur, ferme les faux positifs',"Tu vois ses actions passer (scans, exploits, exfiltrations) — bloque-les vite",'Bloquer un vrai attaquant : +100 • fermer un vrai attaquant : −30','2 manches de 4 min, rôles inversés — total RED + BLUE'],
+   DUEL.fine,"MANCHE 1 — JOUEUR 1 À L'ATTAQUE");
+}
+function fillBrief(tag,title,text,redList,blueList,fine,btnLabel){
+  document.getElementById('nwMenu').style.display='none';
+  document.getElementById('nwBrief').style.display='block';
+  document.getElementById('nwPlay').style.display='none';
+  document.getElementById('nwBriefTag').textContent=tag;
+  document.getElementById('nwBriefTitle').textContent=title;
+  document.getElementById('nwBriefText').textContent=text;
+  document.getElementById('nwBriefRed').innerHTML=redList.map(function(x){return '<li>'+x+'</li>';}).join('');
+  document.getElementById('nwBriefBlue').innerHTML=blueList.map(function(x){return '<li>'+x+'</li>';}).join('');
+  document.getElementById('nwStartBtn').textContent=btnLabel;
+}
+document.getElementById('nwStartBtn').onclick=function(){
+  if(nw.mode==='duel')startDuelRound(1);else beginPlay();
+};
+function startDuelRound(round){
+  nw.duel.round=round;nw.duel.alerts=[];
+  beginPlay();
+  nwTermLine('── MANCHE '+round+' — JOUEUR '+round+' À L\u2019ATTAQUE ──','t-head');
+  nwTermLine('Le Joueur '+(round===1?2:1)+' défend le SIEM. Le Joueur '+round+' attaque le réseau cible.','t-info');
+  nwTermLine('Objectif attaquant : exfiltrer paie_2026.sql. Objectif défenseur : trier et bloquer.','t-warn');
+}
+
+/* ═══ TERMINAL NIGHTWATCH ═══ */
+var nwOut=document.getElementById('nwTermOut');
+function nwTermLine(html,cls){
+  var div=document.createElement('div');div.innerHTML=html;
+  div.style.color=cls==='t-err'?'#ff8a96':cls==='t-ok'?'#7dffb0':cls==='t-warn'?'#ffb020':cls==='t-head'?'#38d9c5':'#9db3a6';
+  nwOut.appendChild(div);nwOut.scrollTop=nwOut.scrollHeight;
+}
+function nwEcho(cmd){
+  var h=nw.shell?nw.targets[nw.shell]:null;
+  var p=h?'root@'+h.name:'anonyme@nightwatch';
+  nwTermLine('<span style="color:#2dff8f">'+p+'</span>:~$ '+esc(cmd),'t-cmd');
+}
+function setNwPrompt(){
+  var h=nw.shell?nw.targets[nw.shell]:null;
+  document.getElementById('nwTermTarget').textContent=h?('shell : '+h.name):'cible : réseau PALLAS CORP';
+  document.getElementById('nwTermInput').placeholder=h?('root@'+h.name+':~$ — ls, cat, exfiltrate…'):"tape 'help'… ex : scan 10.10.1.10";
+}
+function noise(amount,duelKind,duelIp){
+  nw.detection=Math.min(100,nw.detection+amount);updateNwHud();
+  if(nw.mode==='duel'&&duelKind){var a=makeDuelAlert(duelKind,nwClock(),duelIp);nw.duel.alerts.push(a);pushAlert(a);}
+  if(nw.detection>=100)endNw('traced');
+}
+function hostByIp(ip){var vs=Object.values(nw.targets);for(var i=0;i<vs.length;i++){if(vs[i].ip===ip)return vs[i];}return null;}
+function runNw(raw){
+  var cmd=(raw||'').trim();if(!cmd)return;
+  nwEcho(cmd);
+  var parts=cmd.split(/\s+/);var name=parts[0].toLowerCase();var args=parts.slice(1);
+  if(name==='help'){
+    nwTermLine('COMMANDES DISPONIBLES','t-head');
+    [['help','cette aide'],['targets','plages cibles connues'],['ping <ip>','sonde un hôte (quasi silencieux)'],['scan <ip>','balayage de ports (+12% détection)'],['exploit <ip> <faille>','exploite une faille (sqli, ftp) — bruyant'],['hydra <ip>','brute-force SSH (+40% détection)'],['ssh <ip> <user> <mdp>','connexion SSH discrète si credentials valides'],['ls / cat <fichier>','naviguer dans le shell obtenu'],['exfiltrate <fichier>','exfiltrer (objectif : paie_2026.sql)'],['status','état de la mission'],['clear','nettoyer le terminal']].forEach(function(r){nwTermLine('  '+r[0]+' — '+r[1],'t-dim');});
+  }else if(name==='clear'){nwOut.innerHTML='';}
+  else if(name==='targets'){
+    nwTermLine('PLAGE CIBLE — PALLAS CORP (10.10.1.0/24)','t-head');
+    Object.values(nw.targets).forEach(function(t){nwTermLine('  '+t.ip+'  '+t.name+'  ['+t.os+']'+(t.scanned?'':'  (non scanné)'),'t-info');});
+  }else if(name==='status'){
+    nwTermLine('── ÉTAT DE LA MISSION ──','t-head');
+    nwTermLine('  Temps restant : '+fmtTime(nw.timeLeft)+'   Détection : '+Math.round(nw.detection)+' %','t-info');
+    nwTermLine('  Score RED : '+nw.red+'   Score BLUE : '+nw.blue,'t-info');
+    Object.values(nw.targets).forEach(function(t){nwTermLine('  '+t.name+' '+(t.owned?'COMPROMIS':t.scanned?'scanné':'non scanné'),t.owned?'t-ok':'t-dim');});
+    if(nw.mode==='duel')nwTermLine('  Manche '+nw.duel.round+'/2 — '+(nw.duel.round===1?'Joueur 1 attaque / Joueur 2 défend':'Joueur 2 attaque / Joueur 1 défend'),'t-warn');
+    else nwTermLine('  Menace VORTEX : phase '+nw.ai.stage+'/6 — '+AI_STAGES[Math.min(nw.ai.stage,5)].name,'t-warn');
+  }else if(name==='whoami'){nwTermLine(nw.shell?'root (accès obtenu)':'anonyme — opérateur nightwatch','t-info');}
+  else if(name==='ping'){
+    var ip=args[0];if(!ip){nwTermLine('usage : ping <ip>','t-err');return;}
+    var h=hostByIp(ip);if(!h){nwTermLine('PING '+esc(ip)+' — délai dépassé (hôte inexistant).','t-err');return;}
+    nwTermLine('PING '+ip+' 56 data bytes','t-dim');
+    nwTermLine('64 bytes from '+h.name+': icmp_seq=0 ttl=63 time='+(8+Math.random()*40).toFixed(1)+' ms','t-ok');
+    if(!h.scanned)nwTermLine('→ Hôte actif — un scan révèlera les services. (bruit : négligeable)','t-info');
+    noise(1);
+  }else if(name==='scan'){
+    var ip2=args[0];if(!ip2){nwTermLine('usage : scan <ip>  (ex. scan 10.10.1.10)','t-err');return;}
+    var h2=hostByIp(ip2);if(!h2){nwTermLine('Aucune réponse de '+esc(ip2)+' — hôte hors périmètre ou inexistant.','t-err');return;}
+    if(h2.scanned){nwTermLine(ip2+' déjà scanné — résultats en cache (commande targets).','t-dim');return;}
+    h2.scanned=true;nw.tally.scans++;
+    nwTermLine('Nmap scan report for '+h2.name+' ('+h2.ip+')','t-dim');
+    h2.ports.forEach(function(pp){nwTermLine(pp[0]+'/tcp   open   '+esc(pp[1]),'t-ok');});
+    nwTermLine('OS guess : '+h2.os,'t-dim');
+    nwTermLine('→ '+h2.vulnHint,'t-warn');
+    nwTermLine('Bruit généré : +12 %','t-warn');
+    noise(12,'scan',h2.ip);updateNwMap();
+  }else if(name==='exploit'){
+    var ip3=args[0],vuln=(args[1]||'').toLowerCase();
+    if(!ip3||!vuln){nwTermLine('usage : exploit <ip> <faille>   failles : sqli, ftp','t-err');return;}
+    var h3=hostByIp(ip3);if(!h3){nwTermLine('Cible inconnue : '+esc(ip3),'t-err');return;}
+    if(!h3.scanned){nwTermLine("Scanne d'abord "+ip3+" — on n'exploite pas à l'aveugle.",'t-err');return;}
+    if(h3.owned){nwTermLine(h3.name+' déjà compromis.','t-dim');return;}
+    if(h3.key==='web'&&vuln==='sqli'){
+      h3.owned=true;nw.shell='web';
+      nwTermLine('[*] sqlmap -u http://10.10.1.10/login --forms --dbs …','t-dim');
+      nwTermLine('[+] Base "pallascorp" dumpée — table users (2 comptes)','t-ok');
+      nwTermLine('[+] RCE obtenue via INTO OUTFILE → shell web-srv-01','t-ok');
+      nwTermLine("→ 'ls' puis 'cat users.txt' pour lire les comptes.",'t-info');
+      gainHost(h3,24,'exploit');
+    }else if(h3.key==='file'&&vuln==='ftp'){
+      h3.owned=true;nw.shell='file';
+      nwTermLine('[*] vsftpd 2.3.4 backdoor — connexion port 6200…','t-dim');
+      nwTermLine('[+] Shell root obtenu sur file-srv-01 (chemin bruyant !)','t-ok');
+      nwTermLine("→ 'ls' puis 'cat notes.txt'.",'t-info');
+      gainHost(h3,32,'exploit');
+    }else{nwTermLine("Aucune faille '"+esc(vuln)+"' applicable sur "+h3.name+'.','t-err');}
+  }else if(name==='hydra'){
+    var ip4=args[0];if(!ip4){nwTermLine('usage : hydra <ip>  (brute-force SSH, très bruyant)','t-err');return;}
+    var h4=hostByIp(ip4);if(!h4){nwTermLine('Cible inconnue : '+esc(ip4),'t-err');return;}
+    if(!h4.scanned){nwTermLine("Scanne d'abord "+ip4+'.','t-err');return;}
+    if(h4.owned){nwTermLine(h4.name+' déjà compromis.','t-dim');return;}
+    if(h4.key==='db'){
+      nwTermLine('hydra : db-srv-01 — politique de verrouillage agressive, brute-force échoué.','t-err');
+      nwTermLine('→ Les credentials se trouvent sur file-srv-01 (cat notes.txt).','t-dim');
+      noise(10,'hydra',h4.ip);return;
+    }
+    h4.owned=true;nw.shell=h4.key;
+    nwTermLine('[*] hydra -L users.txt -P rockyou.txt -t 64 ssh://'+ip4,'t-dim');
+    nwTermLine('[+] [22][ssh] host: '+h4.ip+'   login: backup   password: S3cr3t!2026','t-ok');
+    nwTermLine('[+] Session SSH ouverte sur '+h4.name+' — chemin BRUYANT (+40 %)','t-warn');
+    gainHost(h4,40,'hydra');
+  }else if(name==='ssh'){
+    var ip5=args[0],user=args[1],pass=args.slice(2).join(' ');
+    if(!ip5||!user){nwTermLine('usage : ssh <ip> <user> <motdepasse>','t-err');return;}
+    var h5=hostByIp(ip5);if(!h5){nwTermLine('Cible inconnue : '+esc(ip5),'t-err');return;}
+    var creds={web:[['backup','S3cr3t!2026'],['svc_app','Tr0ub4dor&3']],file:[['backup','S3cr3t!2026']],db:[['dbadmin','Sup3rDB!2026']]}[h5.key];
+    var ok=false;creds.forEach(function(cp){if(cp[0]===user&&cp[1]===pass)ok=true;});
+    if(!ok){
+      nwTermLine('ssh '+user+'@'+ip5+' : Permission denied (publickey,password).','t-err');
+      nwTermLine('→ Les credentials se trouvent dans les fichiers des machines compromises (cat users.txt / notes.txt).','t-dim');
+      return;
+    }
+    h5.owned=true;nw.shell=h5.key;
+    nwTermLine('ssh '+user+'@'+ip5+' — connexion établie.','t-ok');
+    nwTermLine('Bruit généré : +6 %','t-warn');
+    gainHost(h5,6,'ssh');
+  }else if(name==='ls'){
+    if(!nw.shell){nwTermLine("ls : commande locale — rien d'utile ici. Compromets d'abord une machine (voir 'targets').",'t-dim');return;}
+    var hh=nw.targets[nw.shell];
+    nwTermLine('.  ..  '+hh.files.map(function(f){return f.name;}).join('  '),'t-ok');
+  }else if(name==='cat'){
+    if(!nw.shell){nwTermLine('cat : aucun shell distant actif.','t-err');return;}
+    var file=args[0];if(!file){nwTermLine('usage : cat <fichier>','t-err');return;}
+    var h6=nw.targets[nw.shell];var f=null;
+    h6.files.forEach(function(x){if(x.name===file)f=x;});
+    if(!f){nwTermLine('cat : '+esc(file)+': Aucun fichier de ce type','t-err');return;}
+    nwTermLine(esc(f.content),'t-info');
+    if(f.name==='users.txt'||f.name==='notes.txt')nwTermLine('→ credentials récupérés — utilisables via : ssh <ip> <user> <mdp>','t-head');
+  }else if(name==='exfiltrate'){
+    if(!nw.shell){nwTermLine('exfiltrate : aucun shell distant actif.','t-err');return;}
+    if(nw.shell!=='db'){nwTermLine('exfiltrate : il faut être sur db-srv-01 (la base paie y vit).','t-err');return;}
+    if(args[0]&&args[0]!=='paie_2026.sql'){nwTermLine('Exfiltration de '+esc(args[0])+' : non pertinent pour la mission.','t-dim');return;}
+    nwTermLine('[*] Compression + chiffrement du dump (paie_2026.sql, 340 Mo)…','t-dim');
+    nwTermLine('[*] Découpage en blocs de 64 Ko, envoi sur relais…','t-dim');
+    nwTermLine('[+] TRANSFERT TERMINÉ — 340 Mo exfiltrés sans interruption.','t-ok');
+    nwTermLine('[+] OBJECTIF DE MISSION ATTEINT : base paie 2026 récupérée.','t-head');
+    nw.red+=500;updateNwHud();
+    endNw('exfiltrated');
+  }else{
+    nwTermLine('commande inconnue : '+esc(name)+" — tape 'help'",'t-err');
+  }
+}
+function gainHost(h,noiseAmt,duelKind){
+  nw.red+=200;nw.tally.hosts++;
+  noise(noiseAmt,duelKind,h.ip);
+  updateNwHud();updateNwMap();setNwPrompt();
+  if(h.key==='db')nwTermLine('★ MySQL accessible — la base paie est ici.','t-head');
+}
+document.getElementById('nwTermForm').addEventListener('submit',function(e){e.preventDefault();var i=document.getElementById('nwTermInput');runNw(i.value);i.value='';});
+['help','targets','scan 10.10.1.10','scan 10.10.1.20','exploit 10.10.1.10 sqli','cat users.txt'].forEach(function(c){
+  var b=document.createElement('button');b.className='chip';b.textContent=c;
+  b.onclick=function(){runNw(c);};document.getElementById('nwChips').appendChild(b);
+});
+/* ═══ SIEM NIGHTWATCH ═══ */
+function pushAlert(a){
+  a.id=++nw.seq;nw.alerts.push(a);renderAlert(a);updateSiemCount();
+  if(a.real&&a.sev==='high')buzz(60);
+  var feed=document.getElementById('nwSiem');
+  while(feed.children.length>40)feed.removeChild(feed.firstChild);
+}
+function renderAlert(a){
+  var div=document.createElement('div');div.className='alert sev-'+a.sev;div.id='nw-alert-'+a.id;
+  div.innerHTML='<h4><span class="tag '+(a.sev==='high'?'red':a.sev==='medium'?'amber':'blue')+'">'+(SEV_FR[a.sev]||a.sev)+'</span> '+esc(a.title)+(a.mitre?' <span class="tag cyan">'+a.mitre+'</span>':'')+' <span style="color:var(--muted);font-size:11px">'+a.clock+'</span></h4><div class="alog" style="display:none">'+esc(a.logs)+'</div><div class="acts"><button class="mini-btn" data-act="contain">Bloquer l\u2019IP source</button><button class="mini-btn" data-act="close">Fermer — faux positif</button></div><div class="afb"></div>';
+  div.querySelector('h4').onclick=function(){var l=div.querySelector('.alog');l.style.display=l.style.display==='none'?'block':'none';};
+  div.querySelectorAll('[data-act]').forEach(function(b){b.onclick=function(e){e.stopPropagation();resolveAlert(a.id,b.getAttribute('data-act'));};});
+  document.getElementById('nwSiem').prepend(div);
+}
+function updateSiemCount(){
+  var open=0;nw.alerts.forEach(function(a){if(!a.resolved)open++;});
+  document.getElementById('nwSiemOpen').textContent=open;
+}
+function resolveAlert(id,act){
+  var a=null;nw.alerts.forEach(function(x){if(x.id===id)a=x;});
+  if(!a||a.resolved)return;
+  a.resolved=true;
+  var card=document.getElementById('nw-alert-'+a.id);if(card)card.classList.add('resolved');
+  if(card)card.querySelectorAll('[data-act]').forEach(function(b){b.disabled=true;});
+  var fb=card?card.querySelector('.afb'):null;
+  function msg(html){if(fb)fb.innerHTML='<div class="feedback show '+(html.indexOf('✔')===0?'ok':'bad')+'" style="display:block">'+html+'</div>';}
+  if(a.real&&act==='contain'){
+    if(a.duel){nw.blue+=100;nw.tally.contained++;nw.detection=Math.min(100,nw.detection+8);msg('✔ IP de l\u2019attaquant bloquée — sa couverture brûle (+8 % détection pour lui). (+100)');}
+    else{
+      nw.blue+=100;nw.tally.contained++;
+      var back=Math.min(2,nw.ai.stage);nw.ai.stage=Math.max(0,nw.ai.stage-back);
+      nw.ai.next=55+RN(15);
+      msg('✔ Menace VORTEX contenue — kill chain interrompue, retour phase '+(nw.ai.stage+1)+'. (+100)');
+    }
+  }else if(a.real&&act==='close'){
+    nw.blue-=30;nw.tally.missed++;
+    if(a.duel){msg('✘ Faux négatif — l\u2019attaquant opère tranquillement. (−30)');}
+    else{nw.ai.stage=Math.min(6,nw.ai.stage+1);nw.ai.next=40+RN(15);msg('✘ Faux négatif — l\u2019attaque a progressé pendant que l\u2019alerte traînait. (−30)');}
+  }else if(!a.real&&act==='contain'){
+    nw.blue-=50;nw.tally.fpBlocked++;
+    msg('✘ Utilisateur légitime bloqué — ticket IT, colère du DSI. (−50)');
+  }else{
+    nw.blue+=25;nw.tally.fpClosed++;
+    msg('✔ Bien trié — faux positif documenté et fermé. (+25)');
+  }
+  updateNwHud();updateNwMap();
+  if(nw.mode==='campaign'&&nw.ai.stage>=6)endNw('breached');
+}
+/* ═══ HUD / CARTE NIGHTWATCH ═══ */
+function updateNwHud(){
+  document.getElementById('hudTimer').textContent=nw.phase==='playing'?fmtTime(nw.timeLeft):'--:--';
+  document.getElementById('hudRed').textContent=nw.red;
+  document.getElementById('hudBlue').textContent=nw.blue;
+  var fill=document.getElementById('hudDet');
+  fill.style.width=Math.min(100,nw.detection)+'%';
+  fill.className=nw.detection>=75?'danger':nw.detection>=45?'warn':'';
+  document.getElementById('hudDetPct').textContent=Math.round(nw.detection)+'%';
+  var lvl=nw.mode==='duel'?Math.round(nw.detection/100*6):nw.ai.stage;
+  var dots=document.getElementById('hudThreat').children;
+  for(var i=0;i<dots.length;i++){dots[i].className=i<lvl?'on':'';}
+  var st=document.getElementById('nwStatus');
+  if(st&&nw.phase==='playing'){
+    st.textContent=nw.mode==='duel'?('Duel — manche '+nw.duel.round+'/2 • Détection '+Math.round(nw.detection)+' %'):('Menace VORTEX : phase '+Math.min(6,nw.ai.stage+1)+'/6 — '+AI_STAGES[Math.min(nw.ai.stage,5)].name);
+  }
+}
+function updateNwMap(){
+  var map=document.getElementById('nwMap');if(!map)return;
+  var html='';
+  Object.values(nw.targets).forEach(function(t){
+    var cls=t.owned?'st-own':t.scanned?'st-scan':'st-ok';
+    var txt=t.owned?'compromis ✓':t.scanned?'scanné':'non scanné';
+    html+='<button class="maphost" data-ip="'+t.ip+'"><b>'+t.name+'</b><span>'+t.ip+'</span><span class="'+cls+'">'+txt+'</span></button>';
+  });
+  html+='<div class="maphost def"><b>Pare-feu périmètre</b><span>edge-fw-01</span><span class="st-ok">actif</span></div>';
+  html+='<div class="maphost def"><b>SOC — SIEM</b><span>siem-01</span><span class="st-ok" id="nwSocState">surveillance</span></div>';
+  html+='<div class="maphost def"><b>Serveur couronnes</b><span>crown-jewel-01</span><span class="st-ok" id="nwCrownState">protégé</span></div>';
+  map.innerHTML=html;
+  map.querySelectorAll('[data-ip]').forEach(function(b){b.onclick=function(){runNw('scan '+b.getAttribute('data-ip'));};});
+  var th=document.getElementById('nwThreatText');
+  if(th){
+    if(nw.mode==='duel')th.textContent="Adversaire : l'autre joueur — détection de l'attaquant : "+Math.round(nw.detection)+' %.';
+    else th.textContent='Adversaire : GROUPE VORTEX — phase '+(nw.ai.stage>=6?'EXFILTRATION EN COURS':AI_STAGES[nw.ai.stage].name+' — '+AI_STAGES[nw.ai.stage].desc)+'.';
+  }
+  var crown=document.getElementById('nwCrownState');
+  if(crown){crown.textContent=nw.ai.stage>=5?'exfiltration en cours':nw.ai.stage>=4?'cible de latéralisation':'protégé';}
+  if(window.syncMap3d)window.syncMap3d();
+}
+/* ═══ BOUCLE & FIN NIGHTWATCH ═══ */
+function tick(){
+  if(nw.phase!=='playing')return;
+  if(document.hidden)return; /* LÉGÈRE : pause quand l'onglet est caché */
+  nw.timeLeft--;
+  nw.detection=Math.max(0,nw.detection-nw.decay);
+  if(nw.mode==='campaign'){
+    nw.ai.next--;
+    if(nw.ai.next<=0&&nw.ai.stage<6){
+      pushAlert(makeRealAlert(nw.ai.stage,nwClock()));
+      nw.ai.stage++;
+      nw.ai.next=(nw.mission?nw.mission.aiNext:52)+RN(nw.mission?nw.mission.aiVar:20);
+    }
+  }
+  nw.nextFp--;
+  if(nw.nextFp<=0){
+    var rate=nw.mode==='duel'?DUEL.fpRate:(nw.mission?nw.mission.fpRate:30);
+    nw.nextFp=rate+RN(14);
+    var open=0;nw.alerts.forEach(function(a){if(!a.resolved)open++;});
+    if(open<=7){var t=FP_NW[RN(FP_NW.length)];pushAlert({sev:t.sev,title:t.title,logs:t.logs,id:null,real:false,duel:false,mitre:null,clock:nwClock()});}
+  }
+  updateNwHud();updateNwMap();
+  if(nw.timeLeft<=0){endNw('timeout');return;}
+  if(nw.detection>=100){endNw('traced');return;}
+  if(nw.mode==='campaign'&&nw.ai.stage>=6){endNw('breached');return;}
+}
+function grade(total){if(total>=1600)return 'S';if(total>=1200)return 'A';if(total>=800)return 'B';if(total>=400)return 'C';return 'D';}
+function endNw(reason){
+  if(nw.phase!=='playing')return;
+  nw.phase='over';clearInterval(tickHandle);updateNwHud();
+  if(reason==='traced'||reason==='breached')buzz([80,40,80]);
+  syncTopbar();
+  if(nw.mode==='duel'){
+    nw.duel.rounds[nw.duel.round-1]={red:nw.red,blue:nw.blue};
+    if(nw.duel.round===1){duelTriage();return;}
+    showDuelFinal();return;
+  }
+  showMissionEnd(reason);
+}
+function showMissionEnd(reason){
+  var total=nw.red+nw.blue;var m=nw.mission;
+  if(reason==='exfiltrated'){nw.completed[m.id]=true;try{localStorage.setItem('nw-completed',JSON.stringify(nw.completed));}catch(e){}}
+  var outcomes={
+   exfiltrated:{tag:'RAPPORT — MISSION '+m.id+' : SUCCÈS',title:'MISSION RÉUSSIE',text:'Base paie exfiltrée avec '+fmtTime(nw.timeLeft)+' restantes. Côté défense, VORTEX en est resté à la phase '+nw.ai.stage+'/6. Un consultant double casquette — le cauchemar du RSSI de PALLAS.'},
+   traced:{tag:'RAPPORT — MISSION '+m.id+' : ÉCHEC',title:'TRAÇÉ',text:"Ta couverture a grillé : trop de scans, trop de bruit, et le CERT de PALLAS a remonté ton IP jusqu'à ton relais. La discrétion est une arme — tu l'as oubliée."},
+   breached:{tag:'RAPPORT — MISSION '+m.id+' : ÉCHEC',title:'RÉSEAU COMPROMIS',text:"VORTEX a bouclé sa kill chain : accès, persistance, C2, latéralisation, exfiltration. Les données couronnes sont parties. Le SOC a regardé ailleurs."},
+   timeout:{tag:'RAPPORT — MISSION '+m.id+' : INCOMPLET',title:'TEMPS ÉCOULÉ',text:"Fenêtre d'opération fermée. Ni exfiltration côté Red, ni compromission totale côté Blue — un match nul qui ne nourrit personne."}
+  }[reason];
+  var xpGain=Math.max(0,Math.round(total/5));
+  state.xp+=xpGain;state.games++;state.best.nw=Math.max(state.best.nw||0,total);save();renderStats();
+  document.getElementById('nwEnd').style.display='block';
+  document.getElementById('nwEndTag').textContent=outcomes.tag;
+  document.getElementById('nwEndTitle').textContent=outcomes.title;
+  document.getElementById('nwEndText').textContent=outcomes.text+' (+'+xpGain+' XP ajoutés à ton total.)';
+  document.getElementById('nwEndRed').textContent=nw.red;
+  document.getElementById('nwEndBlue').textContent=nw.blue;
+  document.getElementById('nwEndTime').textContent=fmtTime(nw.phaseTime-nw.timeLeft);
+  document.getElementById('nwEndGrade').textContent=grade(total);
+  var t=nw.tally;
+  document.getElementById('nwEndBreak').innerHTML=
+   (t.hosts?'✔ '+t.hosts+' machine(s) compromise(s) — +'+(t.hosts*200)+'<br>':'• Aucune machine compromise<br>')+
+   (reason==='exfiltrated'?'✔ Exfiltration paie_2026.sql — +500<br>':'• Exfiltration non réalisée<br>')+
+   (t.contained?'✔ Menaces contenues : '+t.contained+' — +'+(t.contained*100)+'<br>':'• Aucune menace contenue<br>')+
+   (t.missed?'✘ Alertes réelles ignorées : '+t.missed+' — −'+(t.missed*30)+'<br>':'')+
+   (t.fpBlocked?'✘ Utilisateurs légitimes bloqués : '+t.fpBlocked+' — −'+(t.fpBlocked*50)+'<br>':'')+
+   (t.fpClosed?'✔ Faux positifs bien triés : '+t.fpClosed+' — +'+(t.fpClosed*25)+'<br>':'')+
+   '• Scans : '+t.scans+' — détection finale : '+Math.round(nw.detection)+' %';
+  document.getElementById('nwEndBreak').innerHTML+=endRankHtml();
+  countUp(document.getElementById('nwEndRed'),nw.red);
+  countUp(document.getElementById('nwEndBlue'),nw.blue);
+  document.getElementById('nwReplayBtn').onclick=function(){document.getElementById('nwEnd').style.display='none';selectMission(m);};
+  var hasNext=MISSIONS.some(function(x){return x.id===m.id+1;});
+  document.getElementById('nwNextBtn').style.display=hasNext?'':'none';
+  document.getElementById('nwNextBtn').onclick=function(){var nx=null;MISSIONS.forEach(function(x){if(x.id===m.id+1)nx=x;});if(nx){document.getElementById('nwEnd').style.display='none';selectMission(nx);}};
+  document.getElementById('nwEnd').scrollIntoView();
+}
+function duelTriage(){
+  var c=ctx();
+  var list=nw.duel.alerts.slice();
+  var fps=shuf(FP_NW).slice(0,3).map(function(x){return {n:x.title,t:'--:--',m:0,l:x.logs.split('\n'),w:'Faux positif : contexte légitime, ticket IT ou événement prévu.',real:false,ph:0};});
+  var triList=list.map(function(a){return {n:a.title,t:a.clock,m:0,l:a.logs.split('\n'),w:"C'est la trace d'une action de l'attaquant (joueur "+nw.duel.round+').',real:true,ph:0};}).concat(fps);
+  triList=shuf(triList);
+  document.getElementById('nwEnd').style.display='none';
+  var v=document.getElementById('nwSiem');
+  v.innerHTML='<div class="handover">RELAIS Passage de relais — passe le téléphone au joueur '+(nw.duel.round===1?2:1)+'</div><div class="card"><h3>Joueur '+(nw.duel.round===1?2:1)+' — à toi de défendre</h3><p>Passe le téléphone au joueur '+(nw.duel.round===1?2:1)+'. Tu dois trier les traces de l\u2019attaquant parmi les fausses alertes. Prends ton temps, chaque alerte compte.</p><div class="buddy"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2</b><span class="buddy-text">À toi de jouer ! Regarde bien chaque log avant de bloquer — un faux positif bloqué, ça coûte cher.</span></div></div></div>';
+  var i=0,good=0;
+  function go(){
+    var a=triList[i];
+    v.innerHTML='<div class="card"><div style="color:var(--muted);font-size:11px">Alerte '+(i+1)+' sur '+triList.length+'</div><h3>'+esc(a.n)+'</h3><pre class="log">'+a.l.join('\n')+'</pre><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><button class="mini-btn" id="dReal" style="border-color:var(--red);color:var(--red)">Menace réelle</button><button class="mini-btn" id="dFp" style="border-color:var(--blue);color:var(--blue)">Faux positif</button></div><div id="dFb"></div></div>';
+    document.getElementById('dReal').onclick=function(){answer(true);};
+    document.getElementById('dFp').onclick=function(){answer(false);};
+    function answer(g){
+      var ok=g===a.real;if(ok)good++;
+      nw.blue+=ok?100:-50;
+      document.getElementById('dReal').disabled=true;document.getElementById('dFp').disabled=true;
+      document.getElementById('dFb').innerHTML='<div class="feedback show '+(ok?'ok':'bad')+'"><b>'+(ok?'Bien vu.':'Raté.')+'</b> '+a.w+'</div><button class="btn btn-primary btn-block" id="dNx">'+(i<triList.length-1?'Alerte suivante':'Voir le résultat')+'</button>';
+      document.getElementById('dNx').onclick=function(){i++;if(i<triList.length)go();else finishTriage();};
+    }
+  }
+  function finishTriage(){
+    nw.duel.rounds[nw.duel.round-1]={red:nw.red,blue:nw.blue};
+    if(nw.duel.round===1){
+      v.innerHTML='<div class="card"><h3>Manche 1 terminée</h3><p>Joueur 1 RED '+nw.red+' • Joueur 2 BLUE '+nw.blue+' (triage : '+good+'/'+triList.length+' bien classées).</p><button class="btn btn-primary btn-block" id="dNext">Manche 2 — Joueur 2 à l\u2019attaque</button></div>';
+      document.getElementById('dNext').onclick=function(){startDuelRound(2);};
+    }else{
+      showDuelFinal();
+    }
+    updateNwHud();
+  }
+  go();
+}
+function showDuelFinal(){
+  var r=nw.duel.rounds;
+  var p1=(r[0].red||0)+(r[1].blue||0);
+  var p2=(r[0].blue||0)+(r[1].red||0);
+  var winner=p1===p2?null:(p1>p2?1:2);
+  var total=p1+p2;
+  state.xp+=Math.max(0,Math.round(total/5));state.games++;state.best.duel=Math.max(state.best.duel||0,total);save();renderStats();
+  document.getElementById('nwEnd').style.display='block';
+  document.getElementById('nwEndTag').textContent='RAPPORT DE DUEL';
+  document.getElementById('nwEndTitle').textContent=winner?('JOUEUR '+winner+' GAGNE'):'ÉGALITÉ PARFAITE';
+  document.getElementById('nwEndText').textContent='Total Joueur 1 : '+(r[0].red||0)+' (RED manche 1) + '+(r[1].blue||0)+' (BLUE manche 2) = '+p1+' pts. Total Joueur 2 : '+(r[0].blue||0)+' (BLUE manche 1) + '+(r[1].red||0)+' (RED manche 2) = '+p2+' pts. '+(winner?('Le Joueur '+winner+' a la meilleure somme des deux casquettes.'):'Deux opérateurs parfaitement équilibrés.');
+  document.getElementById('nwEndRed').textContent=p1;
+  document.getElementById('nwEndBlue').textContent=p2;
+  document.getElementById('nwEndTime').textContent='—';
+  document.getElementById('nwEndGrade').textContent=winner?('J'+winner):'=';
+  document.getElementById('nwEndBreak').innerHTML='Manche 1 — J1 RED : '+(r[0].red||0)+' • J2 BLUE : '+(r[0].blue||0)+'<br>Manche 2 — J2 RED : '+(r[1].red||0)+' • J1 BLUE : '+(r[1].blue||0);
+  document.getElementById('nwEndBreak').innerHTML+=endRankHtml();
+  countUp(document.getElementById('nwEndRed'),p1);
+  countUp(document.getElementById('nwEndBlue'),p2);
+  document.getElementById('nwNextBtn').style.display='none';
+  document.getElementById('nwReplayBtn').onclick=function(){document.getElementById('nwEnd').style.display='none';startDuel();};
+  document.getElementById('nwEnd').scrollIntoView();
+}
+function beginPlay(){
+  nw.timeLeft=nw.phaseTime;
+  nw.detection=nw.detStart||0;
+  nw.red=0;nw.blue=0;nw.shell=null;
+  nw.alerts=[];nw.seq=0;
+  nw.ai={stage:0,next:16};
+  nw.nextFp=20+RN(10);
+  nw.tally={hosts:0,contained:0,missed:0,fpBlocked:0,fpClosed:0,scans:0};
+  nw.targets=makeTargets();
+  nwOut.innerHTML='';document.getElementById('nwSiem').innerHTML='';document.getElementById('nwEnd').style.display='none';
+  document.getElementById('nwBrief').style.display='none';
+  document.getElementById('nwMenu').style.display='none';
+  document.getElementById('nwPlay').style.display='block';
+  nw.phase='playing';syncTopbar();
+  if(window.socRoomLight)window.socRoomLight();
+  updateSiemCount();updateNwHud();updateNwMap();setNwPrompt();
+  nwTermLine('── NIGHTWATCH // OPÉRATION PALLAS ──','t-head');
+  nwTermLine('Terminal sécurisé — session initiée.','t-head');
+  nwTermLine('Objectif : exfiltrer la base paie_2026.sql (db-srv-01).','t-info');
+  nwTermLine('Plage cible : 10.10.1.0/24 — commence par un scan. Attention : le bruit te trahit.','t-info');
+  if(nw.mode==='campaign')nwTermLine("Pendant ce temps, surveille le SIEM : VORTEX attaque TON réseau.",'t-warn');
+  nwTermLine("Commandes : 'help' · 'targets' · 'scan 10.10.1.10' · 'ping'",'t-dim');
+  clearInterval(tickHandle);
+  tickHandle=setInterval(tick,1000);
+}
+/* ═══ 3D LÉGÈRE — Canvas 2D + projection 3D, 100 % hors-ligne, sans CDN ═══
+   Choix technique : pas de WebGL, pas de Three.js. Three.js pèse lourd et
+   demanderait un CDN (interdit ici : le jeu doit rester hors-ligne, un seul
+   fichier). À la place, on projette des points 3D en 2D (perspective simple)
+   et on dessine avec Canvas 2D, l'API native du navigateur : quelques Ko,
+   aucune dépendance, ça marche même si WebGL n'est pas disponible.
+   Si le canvas est indisponible, le jeu bascule en 2D sans erreur.
+   Low-poly par construction : 6 nœuds, quelques lignes, pas de textures,
+   pas d'ombres. L'animation s'arrête quand la vue n'est pas visible
+   (IntersectionObserver + visibilité de la page) pour économiser la batterie.
+   Le quiz, le glossaire et les terminaux restent en 2D. */
+var D3=(function(){
+  'use strict';
+  var TAU=Math.PI*2;
+  function clamp(v,a,b){return v<a?a:v>b?b:v;}
+  var store='jeu-3d-prefs-v2';
+  var prefs={on:false,map:'2d'}; /* LÉGÈRE : 3D coupée par défaut (plantage S21) */
+  try{var _p=JSON.parse(localStorage.getItem(store)||'{}');for(var _k in _p)prefs[_k]=_p[_k];}catch(e){}
+  function savePrefs(){try{localStorage.setItem(store,JSON.stringify(prefs));}catch(e){}}
+
+  /* ---------- projection 3D -> 2D ---------- */
+  function project(pt,rotY,rotX,cx,cy,scale,dist){
+    var x=pt.x,y=pt.y,z=pt.z;
+    var c=Math.cos(rotY),s=Math.sin(rotY);
+    var x1=x*c+z*s, z1=-x*s+z*c;
+    var c2=Math.cos(rotX),s2=Math.sin(rotX);
+    var y1=y*c2-z1*s2, z2=y*s2+z1*c2;
+    var persp=dist/(dist-z2);
+    return {x:cx+x1*scale*persp, y:cy-y1*scale*persp, z:z2, s:persp};
+  }
+
+  /* ---------- 1. CARTE RÉSEAU 3D ---------- */
+  var MAP_NODES=[
+    {key:'web',  x:-2.4,y: 0.9,z: 0.2,label:'web-srv-01', sub:'10.10.1.10', kind:'target'},
+    {key:'file', x: 0.0,y: 1.1,z:-0.7,label:'file-srv-01',sub:'10.10.1.20', kind:'target'},
+    {key:'db',   x: 2.4,y: 0.9,z: 0.2,label:'db-srv-01',  sub:'10.10.1.30', kind:'target'},
+    {key:'fw',   x:-1.6,y:-1.0,z: 0.9,label:'Pare-feu',    sub:'edge-fw-01',   kind:'defense'},
+    {key:'soc',  x: 0.0,y:-1.2,z: 1.0,label:'SOC — SIEM', sub:'siem-01',      kind:'defense'},
+    {key:'crown',x: 1.7,y:-1.0,z: 0.9,label:'Crown-jewel',sub:'crown-jewel-01',kind:'defense'}
+  ];
+  var MAP_EDGES=[['web','file'],['file','db'],['web','fw'],['file','soc'],['db','crown'],['fw','soc'],['soc','crown'],['web','soc']];
+  var COLORS={unknown:'#9db3a6',scanned:'#ffb020',owned:'#ff4d5e',ok:'#2dff8f',warn:'#ffb020',danger:'#ff4d5e'};
+  var STATE_TXT={unknown:'non scanné',scanned:'scanné',owned:'compromis ✓',ok:'actif',warn:'menacé',danger:'exfiltration !'};
+  function nodeState(n){
+    if(n.kind==='target'){
+      var t=(typeof nw!=='undefined'&&nw.targets)?nw.targets[n.key]:null;
+      if(!t)return 'unknown';
+      if(t.owned)return 'owned';
+      if(t.scanned)return 'scanned';
+      return 'unknown';
+    }
+    if(n.key==='crown'){
+      var st=(typeof nw!=='undefined'&&nw.ai)?nw.ai.stage:0;
+      if(st>=5)return 'danger';
+      if(st>=4)return 'warn';
+      return 'ok';
+    }
+    return 'ok';
+  }
+  var map={cv:null,ctx:null,rotY:0.55,rotX:0.32,zoom:1,raf:0,running:false,visible:false,proj:{},sel:null,lastInteract:0};
+  function mapActive(){return prefs.on&&prefs.map==='3d';}
+  function drawMap(now){
+    var cv=map.cv,ctx=map.ctx;if(!cv||!ctx)return;
+    var W=cv.width,H=cv.height,t=matchMedia('(prefers-reduced-motion: reduce)').matches?0:now/1000;
+    if(Date.now()-map.lastInteract>4000&&!matchMedia('(prefers-reduced-motion: reduce)').matches)map.rotY+=0.0016; /* rotation lente au repos */
+    ctx.fillStyle='#050807';ctx.fillRect(0,0,W,H);
+    /* points de fond façon grille */
+    ctx.fillStyle='rgba(157,179,166,0.16)';
+    var gx,gy;for(gx=20;gx<W;gx+=28){for(gy=20;gy<H;gy+=28){ctx.fillRect(gx,gy,1,1);}}
+    var cx=W/2,cy=H/2+8,scale=62*map.zoom,dist=5.5;
+    var pts={};
+    MAP_NODES.forEach(function(n){pts[n.key]=project(n,map.rotY,map.rotX,cx,cy,scale,dist);});
+    ctx.lineWidth=1.5;
+    MAP_EDGES.forEach(function(e){
+      var a=pts[e[0]],b=pts[e[1]];
+      ctx.strokeStyle='rgba(56,217,197,0.35)';
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+    });
+    var order=MAP_NODES.slice().sort(function(a,b){return pts[a.key].z-pts[b.key].z;});
+    order.forEach(function(n){
+      var p=pts[n.key],st=nodeState(n),col=COLORS[st];
+      var r=(n.kind==='target'?15:13)*p.s;
+      if(st==='owned'||st==='danger')r*=1+0.12*Math.sin(t*5);
+      ctx.beginPath();ctx.arc(p.x,p.y,r+9,0,TAU);ctx.fillStyle=col+'22';ctx.fill();
+      ctx.beginPath();ctx.arc(p.x,p.y,r,0,TAU);ctx.fillStyle='#0c1210';ctx.fill();
+      ctx.lineWidth=2.5;ctx.strokeStyle=col;ctx.stroke();
+      ctx.beginPath();ctx.arc(p.x,p.y,3.5,0,TAU);ctx.fillStyle=col;ctx.fill();
+      ctx.fillStyle='#e8f0ea';ctx.font='bold 12px system-ui,sans-serif';ctx.textAlign='center';
+      ctx.fillText(n.label,p.x,p.y+r+16);
+      ctx.fillStyle='#9db3a6';ctx.font='10px ui-monospace,monospace';
+      ctx.fillText(STATE_TXT[st],p.x,p.y+r+30);
+    });
+    if(map.sel&&pts[map.sel]){
+      var sp=pts[map.sel];
+      ctx.beginPath();ctx.arc(sp.x,sp.y,26*sp.s,0,TAU);
+      ctx.strokeStyle='#ffffff';ctx.lineWidth=1.5;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+    }
+    map.proj=pts;
+  }
+  function mapLoop(now){
+    if(!map.running)return;
+    if(!map.visible||!mapActive()||document.hidden){map.running=false;map.raf=0;return;}
+    drawMap(now);
+    map.raf=requestAnimationFrame(mapLoop);
+  }
+  function startMap(){if(!map.running&&map.cv&&map.ctx&&mapActive()){map.running=true;map.raf=requestAnimationFrame(mapLoop);}}
+  function stopMap(){map.running=false;if(map.raf)cancelAnimationFrame(map.raf);map.raf=0;}
+  function syncMap3d(){if(map.visible&&mapActive())startMap();}
+  function tapMap(e){
+    var rect=map.cv.getBoundingClientRect();
+    var x=(e.clientX-rect.left)*map.cv.width/rect.width;
+    var y=(e.clientY-rect.top)*map.cv.height/rect.height;
+    var best=null,bd=1e9;
+    MAP_NODES.forEach(function(n){var p=map.proj[n.key];if(!p)return;var d=Math.hypot(p.x-x,p.y-y);if(d<bd){bd=d;best=n;}});
+    if(!best||bd>36)return;
+    map.sel=best.key;
+    var selEl=document.getElementById('map3dSel');
+    if(best.kind==='target'){
+      var t=nw.targets[best.key];
+      if(selEl)selEl.textContent='Sélection : '+best.label+' ('+best.sub+') — '+(t.owned?'compromis':t.scanned?'scanné':'non scanné')+' — scan lancé…';
+      if(typeof nw!=='undefined'&&nw.phase==='playing'){runNw('scan '+best.sub);}
+      else if(window.toast)toast('Lance d’abord une mission NIGHTWATCH, puis touche un serveur pour le scanner.');
+    }else{
+      if(selEl)selEl.textContent='Sélection : '+best.label+' ('+best.sub+') — défense, état : '+STATE_TXT[nodeState(best)]+'.';
+      if(window.toast)toast(best.label+' — '+STATE_TXT[nodeState(best)]+'.');
+    }
+  }
+  function bindMap(){
+    var cv=map.cv;if(!cv)return;
+    var pointers={},lastPinch=0,downPos=null,downTime=0,moved=0;
+    cv.addEventListener('pointerdown',function(e){
+      try{cv.setPointerCapture(e.pointerId);}catch(err){}
+      pointers[e.pointerId]={x:e.clientX,y:e.clientY};
+      if(Object.keys(pointers).length===1){downPos={x:e.clientX,y:e.clientY};downTime=Date.now();moved=0;}
+    });
+    cv.addEventListener('pointermove',function(e){
+      if(!pointers[e.pointerId])return;
+      var prev=pointers[e.pointerId];
+      var dx=e.clientX-prev.x,dy=e.clientY-prev.y;
+      pointers[e.pointerId]={x:e.clientX,y:e.clientY};
+      var ids=Object.keys(pointers);
+      if(ids.length===2){
+        var p1=pointers[ids[0]],p2=pointers[ids[1]];
+        var d=Math.hypot(p2.x-p1.x,p2.y-p1.y);
+        if(lastPinch>0)map.zoom=clamp(map.zoom*d/lastPinch,0.6,1.9);
+        lastPinch=d;moved+=Math.abs(dx)+Math.abs(dy);
+      }else{
+        map.rotY+=dx*0.008;map.rotX=clamp(map.rotX+dy*0.005,-0.9,0.9);
+        moved+=Math.abs(dx)+Math.abs(dy);
+      }
+      map.lastInteract=Date.now();
+    });
+    function endPointer(e){
+      if(pointers[e.pointerId])delete pointers[e.pointerId];
+      if(Object.keys(pointers).length<2)lastPinch=0;
+      if(downPos&&moved<8&&Date.now()-downTime<500)tapMap(e);
+      downPos=null;
+    }
+    cv.addEventListener('pointerup',endPointer);
+    cv.addEventListener('pointercancel',endPointer);
+    cv.addEventListener('wheel',function(e){e.preventDefault();map.zoom=clamp(map.zoom*(e.deltaY<0?1.08:0.93),0.6,1.9);map.lastInteract=Date.now();},{passive:false});
+  }
+  function setMapView(v){
+    prefs.map=v;savePrefs();
+    var cv=document.getElementById('nwMap3d'),grid=document.getElementById('nwMap');
+    var b3=document.getElementById('map3dBtn'),b2=document.getElementById('map2dBtn');
+    if(v==='3d'&&prefs.on){
+      if(cv)cv.style.display='block';if(grid)grid.style.display='none';
+      if(b3)b3.classList.add('on');if(b2)b2.classList.remove('on');
+      startMap();
+    }else{
+      if(cv)cv.style.display='none';if(grid)grid.style.display='grid';
+      if(b3)b3.classList.remove('on');if(b2)b2.classList.add('on');
+      stopMap();
+    }
+  }
+
+  /* ---------- 2. SALLE SOC 3D (décor) ---------- */
+  var room={cv:null,ctx:null,raf:0,running:false,visible:false,lit:0,litTarget:0};
+  var ROOM_LOGS=['02:47 AUTH FAIL admin 185.220.14.9','02:48 AUTH SUCCESS admin — alerte !','SIEM: 3 alertes ouvertes','FW-01: scan SYN détecté','EDR: powershell.exe suspect','proxy: beacon 60s vers C2 ?'];
+  function drawRoom(now){
+    var cv=room.cv,ctx=room.ctx;if(!cv||!ctx)return;
+    var W=cv.width,H=cv.height,t=matchMedia('(prefers-reduced-motion: reduce)').matches?0:now/1000;
+    room.lit+=(room.litTarget-room.lit)*0.04;
+    var lit=room.lit;
+    var vx=W/2+Math.sin(t*0.15)*14, vy=96; /* caméra lente qui bouge */
+    ctx.fillStyle='#070a09';ctx.fillRect(0,0,W,H);
+    /* plafond */
+    ctx.fillStyle='#0a0f0d';
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(W,0);ctx.lineTo(vx+170,vy-58);ctx.lineTo(vx-170,vy-58);ctx.closePath();ctx.fill();
+    /* mur du fond */
+    ctx.fillStyle='#0d1512';ctx.fillRect(vx-170,vy-58,340,vy+40-(vy-58));
+    ctx.strokeStyle='#1c2b24';ctx.lineWidth=1;ctx.strokeRect(vx-170,vy-58,340,98);
+    /* bandeau lumineux du plafond */
+    ctx.fillStyle=lit>0.1?('rgba(45,255,143,'+(0.25+0.55*lit)+')'):'rgba(45,255,143,0.08)';
+    ctx.fillRect(vx-120,vy-52,240,4);
+    /* titre au mur */
+    ctx.fillStyle='rgba(232,240,234,'+(0.25+0.5*lit)+')';
+    ctx.font='bold 13px ui-monospace,monospace';ctx.textAlign='center';
+    ctx.fillText('NIGHTWATCH — SALLE SOC',vx,vy-66);
+    /* 3 écrans */
+    var screens=[
+      {x:vx-158,y:vy-44,w:98,h:56,kind:'logs'},
+      {x:vx-49, y:vy-44,w:98,h:56,kind:'net'},
+      {x:vx+60, y:vy-44,w:98,h:56,kind:'gauge'}
+    ];
+    screens.forEach(function(sc,idx){
+      var glow=0.12+0.75*lit;
+      ctx.fillStyle='#050807';ctx.fillRect(sc.x,sc.y,sc.w,sc.h);
+      ctx.strokeStyle=idx===1&&typeof nw!=='undefined'&&nw.detection>70?'#ff4d5e':'#24352c';
+      ctx.lineWidth=idx===1&&typeof nw!=='undefined'&&nw.detection>70?2:1;
+      ctx.strokeRect(sc.x,sc.y,sc.w,sc.h);
+      if(lit>0.05){
+        ctx.save();
+        ctx.beginPath();ctx.rect(sc.x+2,sc.y+2,sc.w-4,sc.h-4);ctx.clip();
+        ctx.globalAlpha=lit;
+        if(sc.kind==='logs'){
+          ctx.fillStyle='#2dff8f';ctx.font='7px ui-monospace,monospace';ctx.textAlign='left';
+          var off=Math.floor(t*1.2)%ROOM_LOGS.length;
+          for(var i=0;i<4;i++){ctx.fillText(ROOM_LOGS[(off+i)%ROOM_LOGS.length],sc.x+5,sc.y+12+i*11);}
+        }else if(sc.kind==='net'){
+          var dots=[[18,14],[48,10],[78,18],[34,36],[66,38]];
+          ctx.strokeStyle='rgba(56,217,197,0.8)';ctx.lineWidth=1;
+          ctx.beginPath();ctx.moveTo(sc.x+18,sc.y+14);ctx.lineTo(sc.x+48,sc.y+10);ctx.lineTo(sc.x+78,sc.y+18);ctx.moveTo(sc.x+48,sc.y+10);ctx.lineTo(sc.x+34,sc.y+36);ctx.lineTo(sc.x+66,sc.y+38);ctx.stroke();
+          dots.forEach(function(d,j){
+            ctx.beginPath();ctx.arc(sc.x+d[0],sc.y+d[1],j===2?4:3,0,TAU);
+            ctx.fillStyle=j===2?(Math.sin(t*5)>0?'#ff4d5e':'#ffb020'):'#2dff8f';ctx.fill();
+          });
+          ctx.fillStyle='#9db3a6';ctx.font='7px ui-monospace,monospace';ctx.textAlign='left';
+          ctx.fillText('VORTEX ?  — 10.10.1.0/24',sc.x+5,sc.y+52);
+        }else{
+          var det=(typeof nw!=='undefined')?Math.round(nw.detection):0;
+          ctx.fillStyle='#9db3a6';ctx.font='7px ui-monospace,monospace';ctx.textAlign='left';
+          ctx.fillText('DÉTECTION',sc.x+5,sc.y+12);
+          ctx.fillStyle='#16211c';ctx.fillRect(sc.x+5,sc.y+18,sc.w-10,8);
+          ctx.fillStyle=det>=75?'#ff4d5e':det>=45?'#ffb020':'#2dff8f';
+          ctx.fillRect(sc.x+5,sc.y+18,(sc.w-10)*det/100,8);
+          ctx.fillStyle='#e8f0ea';ctx.font='bold 13px ui-monospace,monospace';
+          ctx.fillText(det+' %',sc.x+5,sc.y+44);
+          ctx.fillStyle='#9db3a6';ctx.font='7px ui-monospace,monospace';
+          ctx.fillText('RED '+(typeof nw!=='undefined'?nw.red:0)+'  •  BLUE '+(typeof nw!=='undefined'?nw.blue:0),sc.x+5,sc.y+52);
+        }
+        ctx.restore();
+      }else{
+        ctx.fillStyle='rgba(157,179,166,0.35)';ctx.font='8px ui-monospace,monospace';ctx.textAlign='center';
+        ctx.fillText('— VEILLE —',sc.x+sc.w/2,sc.y+sc.h/2+3);
+      }
+    });
+    /* sol + lignes de fuite */
+    ctx.fillStyle='#0a0f0d';
+    ctx.beginPath();ctx.moveTo(0,H);ctx.lineTo(W,H);ctx.lineTo(vx+170,vy+40);ctx.lineTo(vx-170,vy+40);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(56,217,197,0.14)';ctx.lineWidth=1;
+    [0.15,0.35,0.5,0.65,0.85].forEach(function(f){
+      ctx.beginPath();ctx.moveTo(W*f,H);ctx.lineTo(vx,vy+40);ctx.stroke();
+    });
+    ctx.strokeStyle='rgba(157,179,166,0.10)';
+    [150,180,210].forEach(function(y){
+      ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();
+    });
+    /* deux bureaux au premier plan */
+    function desk(x,y,w){
+      ctx.fillStyle='#111916';
+      ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+w,y);ctx.lineTo(x+w-14,y+26);ctx.lineTo(x+14,y+26);ctx.closePath();ctx.fill();
+      ctx.strokeStyle='#24352c';ctx.stroke();
+      ctx.fillStyle='#050807';ctx.fillRect(x+w/2-26,y-26,52,24);
+      ctx.strokeStyle='#1c2b24';ctx.strokeRect(x+w/2-26,y-26,52,24);
+      ctx.fillStyle='rgba(45,255,143,'+(0.15+0.6*lit)+')';
+      ctx.fillRect(x+w/2-22,y-22,44,2);
+      var blink=Math.sin(t*3+x)>0;
+      ctx.beginPath();ctx.arc(x+w-18,y+8,2.5,0,TAU);ctx.fillStyle=blink?'#ffb020':'#2dff8f';ctx.fill();
+    }
+    desk(28,H-64,150);
+    desk(W-178,H-64,150);
+    /* chaise d'opérateur au centre */
+    ctx.fillStyle='#16211c';
+    ctx.beginPath();ctx.moveTo(vx-26,H-34);ctx.lineTo(vx+26,H-34);ctx.lineTo(vx+20,H-58);ctx.lineTo(vx-20,H-58);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='#24352c';ctx.stroke();
+  }
+  function roomLoop(now){
+    if(!room.running)return;
+    if(!room.visible||!prefs.on||document.hidden){room.running=false;room.raf=0;return;}
+    drawRoom(now);
+    room.raf=requestAnimationFrame(roomLoop);
+  }
+  function startRoom(){if(!room.running&&room.cv&&room.ctx&&prefs.on){room.running=true;room.raf=requestAnimationFrame(roomLoop);}}
+  function stopRoom(){room.running=false;if(room.raf)cancelAnimationFrame(room.raf);room.raf=0;}
+  function socRoomLight(){
+    room.litTarget=1;
+    var b=document.getElementById('socLightBtn');
+    if(b)b.textContent='VEILLE Éteindre les écrans';
+    if(room.visible&&prefs.on)startRoom();
+  }
+
+  /* ---------- activation / désactivation ---------- */
+  function apply3dState(){
+    var btn=document.getElementById('toggle3dBtn');
+    if(btn)btn.textContent=prefs.on?' 3D : Oui':' 3D : Non';
+    var roomCv=document.getElementById('socRoom'),roomOff=document.getElementById('socRoomOff');
+    if(prefs.on){
+      if(roomCv)roomCv.style.display='block';
+      if(roomOff)roomOff.style.display='none';
+      setMapView(prefs.map);
+      if(room.visible)startRoom();
+    }else{
+      if(roomCv)roomCv.style.display='none';
+      if(roomOff)roomOff.style.display='block';
+      var grid=document.getElementById('nwMap'),cv=document.getElementById('nwMap3d');
+      if(cv)cv.style.display='none';if(grid)grid.style.display='grid';
+      stopMap();stopRoom();
+    }
+  }
+  function toggle3d(){
+    prefs.on=!prefs.on;savePrefs();apply3dState();
+    if(window.toast)toast(prefs.on?'3D activée — carte réseau et salle SOC en 3D.':'3D désactivée — retour à la vue 2D, plus légère.');
+  }
+  function init3d(){
+    map.cv=document.getElementById('nwMap3d');
+    room.cv=document.getElementById('socRoom');
+    var okMap=true,okRoom=true;
+    try{map.ctx=map.cv?map.cv.getContext('2d'):null;if(!map.cv||!map.ctx)okMap=false;}catch(e){okMap=false;}
+    try{room.ctx=room.cv?room.cv.getContext('2d'):null;if(!room.cv||!room.ctx)okRoom=false;}catch(e){okRoom=false;}
+    if(!okMap&&!okRoom){
+      prefs.on=false;savePrefs();
+      var g=document.getElementById('nwMap');if(g)g.style.display='grid';
+      if(window.toast)toast('3D indisponible sur ce navigateur — vue 2D activée.');
+    }
+    if(okMap)bindMap();
+    var tgl=document.getElementById('toggle3dBtn');
+    if(tgl)tgl.onclick=toggle3d;
+    var b3=document.getElementById('map3dBtn');if(b3)b3.onclick=function(){setMapView('3d');};
+    var b2=document.getElementById('map2dBtn');if(b2)b2.onclick=function(){setMapView('2d');};
+    var zi=document.getElementById('mapZoomIn');if(zi)zi.onclick=function(){map.zoom=clamp(map.zoom*1.2,0.6,1.9);map.lastInteract=Date.now();};
+    var zo=document.getElementById('mapZoomOut');if(zo)zo.onclick=function(){map.zoom=clamp(map.zoom/1.2,0.6,1.9);map.lastInteract=Date.now();};
+    var lb=document.getElementById('socLightBtn');
+    if(lb)lb.onclick=function(){
+      room.litTarget=room.litTarget?0:1;
+      lb.textContent=room.litTarget?'VEILLE Éteindre les écrans':' Allumer les écrans';
+      if(room.visible&&prefs.on)startRoom();
+    };
+    if('IntersectionObserver' in window){
+      var obs=new IntersectionObserver(function(entries){
+        entries.forEach(function(en){
+          if(en.target===map.cv){map.visible=en.isIntersecting;if(en.isIntersecting&&mapActive())startMap();}
+          if(en.target===room.cv){room.visible=en.isIntersecting;if(en.isIntersecting&&prefs.on)startRoom();}
+        });
+      },{threshold:0.05});
+      if(map.cv)obs.observe(map.cv);
+      if(room.cv)obs.observe(room.cv);
+    }else{
+      map.visible=true;room.visible=true;
+      if(mapActive())startMap();
+      startRoom();
+    }
+    document.addEventListener('visibilitychange',function(){
+      if(document.hidden){stopMap();stopRoom();}
+      else{if(map.visible&&mapActive())startMap();if(room.visible&&prefs.on)startRoom();}
+    });
+    apply3dState();
+  }
+  window.syncMap3d=syncMap3d;
+  window.socRoomLight=socRoomLight;
+  window.setMapView=setMapView;
+  window.toggle3d=toggle3d;
+  window.init3d=init3d;
+  return {init:init3d};
+})();
+init3d();
+
+/* ═══ REFONTE — AJOUTS : LÉA, RÉTENTION, FIN DE PARTIE, TOPBAR ═══ */
+var nuitActive=false;
+function buzz(p){try{if(navigator.vibrate)navigator.vibrate(p);}catch(e){}}
+function reducedMotion(){try{return window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(e){return false;}}
+function sayBuddy(id,msg){
+  var el=document.getElementById(id);if(!el)return;
+  var t=el.querySelector('.buddy-text');if(t)t.textContent=msg;
+  el.classList.remove('pop');void el.offsetWidth;el.classList.add('pop');
+}
+function countUp(el,to,suffix){
+  if(!el)return;
+  if(reducedMotion()){el.textContent=to+(suffix||'');return;}
+  var start=0,t0=null;
+  function step(ts){
+    if(t0===null)t0=ts;
+    var p=Math.min(1,(ts-t0)/800);
+    el.textContent=Math.round(to*(1-Math.pow(1-p,3)))+(suffix||'');
+    if(p<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+function nextRankInfo(){
+  var xp=state.xp;
+  var ranks=[[500,'Analyste'],[1500,'Analyste confirmé'],[3000,'Chasseur de menaces']];
+  for(var i=0;i<ranks.length;i++){
+    if(xp<ranks[i][0]){
+      var prev=i===0?0:ranks[i-1][0];
+      var pct=Math.round((xp-prev)/(ranks[i][0]-prev)*100);
+      return {next:ranks[i][1],missing:ranks[i][0]-xp,pct:pct};
+    }
+  }
+  return {next:null,missing:0,pct:100};
+}
+function endRankHtml(){
+  var r=nextRankInfo();
+  if(!r.next)return '<div class="rank-next">MAX Rang maximum atteint — Chasseur de menaces. Bravo !</div>';
+  return '<div class="rank-progress"><i style="width:'+r.pct+'%"></i></div><div class="rank-next">Encore '+r.missing+' XP pour devenir '+r.next+'.</div>';
+}
+function syncTopbar(){
+  var m=(typeof nw!=='undefined'&&nw.phase==='playing')||nuitActive;
+  document.body.classList.toggle('in-mission',!!m);
+}
+/* --- Série de jours --- */
+var STREAK_KEY='cybersec-streak-v1';
+function todayKey(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function touchStreak(){
+  var st={last:'',count:0};
+  try{var s=JSON.parse(localStorage.getItem(STREAK_KEY)||'{}');if(s.last)st=s;}catch(e){}
+  var today=todayKey();
+  if(st.last!==today){
+    var y=new Date(Date.now()-86400000);
+    var yk=y.getFullYear()+'-'+String(y.getMonth()+1).padStart(2,'0')+'-'+String(y.getDate()).padStart(2,'0');
+    st.count=(st.last===yk)?st.count+1:1;
+    st.last=today;
+    try{localStorage.setItem(STREAK_KEY,JSON.stringify(st));}catch(e){}
+  }
+  var el=document.getElementById('streakLine');
+  if(el)el.textContent=' '+st.count+' jour'+(st.count>1?'s':'')+' de suite — reviens demain pour continuer ta série.';
+  return st.count;
+}
+/* --- Défi du jour --- */
+function dailyDef(){
+  var day=Math.floor(Date.now()/86400000);
+  var defs=[
+    {key:'parcours',title:'Défi du jour — Parcours',desc:'Valide un niveau du parcours pour gagner un bonus.',btn:'Aller au parcours',go:function(){showScreen('screen-parcours');}},
+    {key:'mission',title:'Défi du jour — Mission SOC',desc:'Termine la Mission SOC 02:47 ou une Nuit au SOC.',btn:'Lancer la mission',go:function(){showScreen('screen-mission');}},
+    {key:'quiz',title:'Défi du jour — Quiz',desc:'Termine le quiz avec au moins 6 bonnes réponses.',btn:'Lancer le quiz',go:function(){showScreen('screen-quiz');}}
+  ];
+  return {def:defs[day%3],dateKey:todayKey()};
+}
+function renderDaily(){
+  var el=document.getElementById('dailyCard');if(!el)return;
+  var d=dailyDef();
+  var done=!!state.flags['daily-'+d.dateKey];
+  document.getElementById('dailyTitle').textContent=d.def.title;
+  document.getElementById('dailyDesc').textContent=d.def.desc;
+  document.getElementById('dailyBonus').textContent=done?'Relevé ✓ — +50 XP déjà gagnés':'Bonus : +50 XP';
+  var btn=document.getElementById('dailyBtn');
+  btn.textContent=done?'Défi relevé ✓':d.def.btn;
+  btn.disabled=done;
+  btn.onclick=d.def.go;
+}
+function awardDaily(){
+  var d=dailyDef();
+  if(state.flags['daily-'+d.dateKey])return;
+  addXP(50,'daily-'+d.dateKey);
+  toast(' Défi du jour relevé : +50 XP bonus !');
+  renderDaily();
+}
+function checkDaily(key){
+  if(!key||key.indexOf('daily-')===0)return;
+  var d=dailyDef().def.key;
+  if(d==='parcours'&&key.indexOf('mod-')===0)awardDaily();
+  else if(d==='mission'&&(key==='scenario'||key==='logs'))awardDaily();
+  else if(d==='quiz'&&key==='quiz')awardDaily();
+}
+/* --- Badges --- */
+var BADGES=[
+  {id:'first',icon:'01',name:'Premier pas',desc:'Gagner 100 XP',check:function(){return state.xp>=100;}},
+  {id:'logs',icon:'LOG',name:'Chasseur de logs',desc:'Trouver les 2 suspects',check:function(){return !!state.flags['logs'];}},
+  {id:'terminal',icon:'CLI',name:'Premier flag',desc:'Lire flag.txt',check:function(){return !!state.flags['terminal'];}},
+  {id:'phish',icon:'PH',name:'Œil de lynx',desc:'Classer les 3 e-mails',check:function(){return !!state.flags['phishing'];}},
+  {id:'quiz',icon:'QZ',name:'Sans faute',desc:'8/8 au quiz',check:function(){return qScore>=8&&qi>=quiz.length;}},
+  {id:'soc',icon:'SOC',name:'Gardien du SOC',desc:'Terminer une Nuit au SOC',check:function(){return state.games>0&&!!state.best.soc;}},
+  {id:'nw',icon:'⚔️',name:'Double casquette',desc:'Réussir une mission NIGHTWATCH',check:function(){return !!(nw.completed[1]||nw.completed[2]||nw.completed[3]||nw.completed[4]);}},
+  {id:'rank',icon:'MAX',name:'Analyste confirmé',desc:'Atteindre 1500 XP',check:function(){return state.xp>=1500;}}
+];
+function renderBadges(){
+  var el=document.getElementById('badgeGrid');if(!el)return;
+  el.innerHTML=BADGES.map(function(b){
+    var un=false;try{un=!!b.check();}catch(e){un=false;}
+    if(un&&!state.badges[b.id]){state.badges[b.id]=true;save();}
+    return '<div class="badge'+(un?'':' locked')+'"><span>'+b.icon+'</span><b>'+b.name+'</b><small>'+b.desc+'</small></div>';
+  }).join('');
+}
+/* --- Reprendre la mission --- */
+function resumeGame(){
+  if(!state.done.m1){showScreen('screen-parcours');}
+  else if(!state.flags.scenario){showScreen('screen-mission');}
+  else{goNightwatch();}
+  toast('Bonne reprise ! Léa est avec toi.');
+}
+
+/* ═══ RETENTION COMPARAISON + POLISH ═══ */
+var SEV_FR={low:'Faible',medium:'Moyenne',high:'Élevée'};
+function rankIdx(x){return x>=3000?3:x>=1500?2:x>=500?1:0;}
+var lastRankIdx=0;try{lastRankIdx=rankIdx(state.xp);}catch(e){}
+function updateGreeting(){
+  var g=document.getElementById('greet');if(!g)return;
+  var h=new Date().getHours();
+  var t=h<5||h>=22?'Bonne nuit, Darkman':h<12?'Bonjour, Darkman':h<18?'Bon après-midi, Darkman':'Bonsoir, Darkman';
+  g.textContent=t;
+  var sub=document.getElementById('greetSub');
+  if(sub)sub.textContent=state.xp===0?'Bienvenue au SOC. Ta première mission t’attend.':state.xp<500?'Reprise en douceur — ta prochaine étape t’attend.':state.xp<1500?'Le SOC tourne grâce à toi. Continue comme ça.':'Chasseur de menaces en devenir — le SOC compte sur toi.';
+}
+function nextStep(){
+  for(var i=0;i<modules.length;i++){
+    if(!state.done[modules[i].id])return {title:'Prochain niveau du parcours',text:modules[i].title+' — chaque niveau te rend meilleur analyste. +100 XP à la clé.',btn:'Y aller →',go:function(){showScreen('screen-parcours');}};
+  }
+  if(!state.flags.scenario)return {title:'Mission SOC 02:47',text:'Trois décisions, un incident à clôturer. +100 XP à la clé.',btn:'Lancer la mission →',go:function(){showScreen('screen-mission');}};
+  if(!state.flags.logs)return {title:'Chasse aux logs',text:'Trouve les 2 lignes vraiment suspectes. +80 XP à la clé.',btn:'Chasser l’intrus →',go:function(){showScreen('screen-mission');}};
+  if(!state.flags.terminal)return {title:'Terminal Linux',text:'Trouve flag.txt et lis son contenu. +60 XP à la clé.',btn:'Ouvrir le terminal →',go:function(){showScreen('screen-terminal');}};
+  if(!state.flags.phishing)return {title:'Phishing Lab',text:'Classe les 3 e-mails. +70 XP à la clé.',btn:'Trier les e-mails →',go:function(){showScreen('screen-phishing');}};
+  var doneMission=false;for(var k in nw.completed){if(nw.completed[k])doneMission=true;}
+  if(!doneMission)return {title:'Campagne NIGHTWATCH',text:'Mission 1 : Premier contact — attaque et défends en même temps.',btn:'Lancer NIGHTWATCH →',go:function(){goNightwatch();}};
+  return {title:'Records à battre',text:'Ton meilleur score NIGHTWATCH : '+(state.best.nw||0)+' pts. Bats ton record !',btn:'Rejouer →',go:function(){goNightwatch();}};
+}
+function renderNextStep(){
+  var t=document.getElementById('nextStepTitle');if(!t)return;
+  var s=nextStep();
+  t.textContent=s.title;
+  document.getElementById('nextStepText').textContent=s.text;
+  var b=document.getElementById('nextStepBtn');
+  b.textContent=s.btn;b.onclick=s.go;
+}
+function updateNextRank(){
+  var el=document.getElementById('statNextRank');if(!el)return;
+  var r=nextRankInfo();
+  el.textContent=r.next?('Encore '+r.missing+' XP pour devenir '+r.next+'.'):'Rang maximum atteint — bravo !';
+}
+function renderStreakChip(){
+  var el=document.getElementById('streakChip');if(!el)return;
+  var st={last:'',count:0};
+  try{var s=JSON.parse(localStorage.getItem(STREAK_KEY)||'{}');if(s.last)st=s;}catch(e){}
+  el.textContent=' '+st.count+' jour'+(st.count>1?'s':'');
+}
+function floatXP(n){
+  if(reducedMotion())return;
+  var d=document.createElement('div');d.className='xpfloat';d.textContent='+'+n+' XP';
+  d.style.top=(56+Math.random()*48)+'px';
+  document.body.appendChild(d);
+  setTimeout(function(){if(d.parentNode)d.parentNode.removeChild(d);},1300);
+}
+function showRankup(rank){
+  var m=document.getElementById('rankup');if(!m)return;
+  document.getElementById('rankupTitle').textContent='Rang supérieur !';
+  document.getElementById('rankupText').textContent='Tu es maintenant '+rank+' — tu progresses vite, Darkman.';
+  m.style.display='grid';
+  buzz([60,40,60]);
+}
+function checkRankUp(){
+  var idx=rankIdx(state.xp);
+  if(idx>lastRankIdx){lastRankIdx=idx;showRankup(rankName(state.xp));}
+  else{lastRankIdx=idx;}
+}
+var rankupBtn=document.getElementById('rankupBtn');
+if(rankupBtn)rankupBtn.onclick=function(){document.getElementById('rankup').style.display='none';};
+
+/* ═══ INIT ═══ */
+renderScenario();
+renderQuiz();
+renderGloss('');
+renderStats();
+updateNwHud();
+updateNwMap();
+showNwMenu();
+</script>
+</body>
+</html>
