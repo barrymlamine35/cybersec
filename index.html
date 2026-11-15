@@ -2,7 +2,8 @@
 <!-- Cybersec — REBUILD (15 nov 2026). Même contenu que cybersec-redesign.html (redesign Figma Make), reconstruit proprement.
 Règles de stabilité : 0 backdrop-filter · 0 couche fixe plein écran (scanlines dans le fond du body, elles défilent avec la page) · 0 confirm()/alert()/prompt() (confirmation en page) · 3D coupée par défaut, boucles rAF gardées (pause si caché / hors écran) · timer NIGHTWATCH uniquement en partie, sur son écran, onglet visible · 100 % hors-ligne, un seul fichier. Mêmes clés localStorage : 'jeu-combine-v1' (progression) et 'jeu-3d-prefs-v2' (3D).
 MAJ 15 nov 13:39 — Firebase Auth fusionne (ecran de connexion avant le jeu, inscription, mot de passe oublie, deconnexion Menu/Profil). Progression toujours en localStorage (pas encore de synchro Firestore). Base : version 20 ecrans (Quiz v2, Reseau, OSINT, Statistiques + correctifs SIEM/quiz/ports).
-MAJ 15 nov 11:45 — cause du freeze trouvée par Darkman : overflow-x:hidden sur html,body (déplacé sur .wrap uniquement). Restaurés : voile plein écran de montée de rang (.rankup-overlay) + couche flottante +XP (#fxlayer). Non restaurés (causes connues de plantage Android) : backdrop-filter blur, scanlines fixes plein écran. -->
+MAJ 15 nov 11:45 — cause du freeze trouvée par Darkman : overflow-x:hidden sur html,body (déplacé sur .wrap uniquement). Restaurés : voile plein écran de montée de rang (.rankup-overlay) + couche flottante +XP (#fxlayer). Non restaurés (causes connues de plantage Android) : backdrop-filter blur, scanlines fixes plein écran. MAJ 15 nov 13:47 — Choix de langue FR/EN dans le Menu (interface traduite ; contenu pédagogique en français). Section « Ton compte » déplacée du Profil vers le Menu (correctif fusion Auth).
+-->
 <html lang="fr">
 <head>
 <meta charset="utf-8">
@@ -446,19 +447,23 @@ footer{font-size:10px}
 <div id="authScreen">
   <div class="auth-logo">Cybersec</div>
   <h1 id="authTitle">Connexion</h1>
-  <p id="authOffline" class="feedback bad show" style="display:none">Connexion requise : vérifie ta connexion internet, puis recharge la page.</p>
+  <p id="authOffline" class="feedback bad show" style="display:none" data-i18n="auth.offline">Connexion requise : vérifie ta connexion internet, puis recharge la page.</p>
   <div class="auth-field">
     <label for="authEmail">E-mail</label>
     <input type="email" id="authEmail" autocomplete="email" placeholder="ton@email.com">
   </div>
   <div class="auth-field">
-    <label for="authPass">Mot de passe</label>
+    <label for="authPass" data-i18n="auth.pass">Mot de passe</label>
     <input type="password" id="authPass" autocomplete="current-password" placeholder="Ton mot de passe">
   </div>
   <div class="feedback" id="authFeedback"></div>
   <button class="btn btn-primary btn-block" id="authSubmit">Se connecter</button>
   <button class="auth-link" id="authToggle">Pas encore de compte ? Créer un compte</button>
-  <button class="auth-link" id="authForgot">Mot de passe oublié ?</button>
+  <button class="auth-link" id="authForgot" data-i18n="auth.forgot">Mot de passe oublié ?</button>
+  <div style="margin-top:14px;display:flex;gap:8px">
+    <button class="mini-btn" onclick="setLang('fr')">🇫🇷 Français</button>
+    <button class="mini-btn" onclick="setLang('en')">🇬🇧 English</button>
+  </div>
 </div>
 <header class="topbar"><div class="topbar-in">
   <div class="hudrow">
@@ -487,54 +492,54 @@ footer{font-size:10px}
 <div class="screen active" id="screen-home">
   <div class="hero">
     <div class="hero-top"><div><div class="greet" id="greet">Bonsoir, Darkman</div><div class="greet-sub" id="greetSub">Bienvenue au SOC. Ta première mission t’attend.</div></div><div class="streak-chip" id="streakChip"> 1 jour</div></div>
-    <h1>Apprends le hacking <em>éthique</em>, comme dans la vraie vie.</h1>
-    <p class="hero-tagline">Une mission par jour, un réflexe de plus — Léa reste à tes côtés.</p>
+    <h1 data-i18n="hero.title" data-i18n-html="1">Apprends le hacking <em>éthique</em>, comme dans la vraie vie.</h1>
+    <p class="hero-tagline" data-i18n="hero.tag">Une mission par jour, un réflexe de plus — Léa reste à tes côtés.</p>
     <button class="btn btn-primary btn-cta" id="ctaResume" onclick="resumeGame()">▶ Commencer</button>
     <div class="stats">
-      <div class="stat"><small>Progression</small><strong id="statProgress">0%</strong><div class="xpbar"><i id="xpFill"></i></div></div>
-      <div class="stat"><small>XP gagnés</small><strong id="statXp">0</strong><span style="color:var(--muted);font-size:11px"> / 3000 XP pour Chasseur de menaces</span><div class="nextrank" id="statNextRank">Encore 500 XP pour devenir Analyste.</div></div>
-      <div class="stat"><small>Défis réussis</small><strong id="statMissions">0</strong></div>
-      <div class="stat"><small>Rang actuel</small><strong id="statRank" style="font-size:15px;padding-top:4px">Recrue</strong></div>
+      <div class="stat"><small data-i18n="stat.prog">Progression</small><strong id="statProgress">0%</strong><div class="xpbar"><i id="xpFill"></i></div></div>
+      <div class="stat"><small data-i18n="stat.xp">XP gagnés</small><strong id="statXp">0</strong><span id="statXpGoal" style="color:var(--muted);font-size:11px"> / 3000 XP pour Chasseur de menaces</span><div class="nextrank" id="statNextRank">Encore 500 XP pour devenir Analyste.</div></div>
+      <div class="stat"><small data-i18n="stat.missions">Défis réussis</small><strong id="statMissions">0</strong></div>
+      <div class="stat"><small data-i18n="stat.rank">Rang actuel</small><strong id="statRank" style="font-size:15px;padding-top:4px">Recrue</strong></div>
     </div>
   </div>
 
-<div class="card nextstep" id="nextStepCard"><span class="ns-kicker">À toi de jouer</span><h3 style="margin-top:10px" id="nextStepTitle">Prochain niveau du parcours</h3><p id="nextStepText">Du binaire au SQL, chaque niveau te rend meilleur analyste. +100 XP à la clé.</p><button class="mini-btn primary" id="nextStepBtn">Y aller →</button></div>
+<div class="card nextstep" id="nextStepCard"><span class="ns-kicker" data-i18n="ns.kicker">À toi de jouer</span><h3 style="margin-top:10px" id="nextStepTitle">Prochain niveau du parcours</h3><p id="nextStepText">Du binaire au SQL, chaque niveau te rend meilleur analyste. +100 XP à la clé.</p><button class="mini-btn primary" id="nextStepBtn">Y aller →</button></div>
   <div class="card hero-soc">
-    <span class="tag cyan">Salle SOC — 3D</span>
-    <h3 style="margin-top:10px">Ta salle SOC en 3D</h3>
+    <span class="tag cyan" data-i18n="soc.tag">Salle SOC — 3D</span>
+    <h3 style="margin-top:10px" data-i18n="soc.title">Ta salle SOC en 3D</h3>
     <canvas id="socRoom" width="560" height="240" aria-label="Salle SOC en 3D"></canvas>
-    <p id="socRoomOff" style="display:none;font-size:11px;color:var(--muted)">3D désactivée — la salle SOC est en pause. Réactive la 3D avec le bouton « 3D » en haut de page.</p>
+    <p id="socRoomOff" style="display:none;font-size:11px;color:var(--muted)" data-i18n="soc.off">3D désactivée — la salle SOC est en pause. Réactive la 3D avec le bouton « 3D » en haut de page.</p>
     <div class="soc3d-bar">
-      <button class="mini-btn primary" id="socLightBtn"> Allumer les écrans</button>
-      <button class="mini-btn" onclick="showScreen('screen-nightwatch');goNightwatch()">▶ Lancer NIGHTWATCH</button>
-      <button class="mini-btn" onclick="showScreen('screen-nuit')">☾ Nuit au SOC</button>
+      <button class="mini-btn primary" id="socLightBtn" data-i18n="soc.on"> Allumer les écrans</button>
+      <button class="mini-btn" onclick="showScreen('screen-nightwatch');goNightwatch()" data-i18n="soc.launch">▶ Lancer NIGHTWATCH</button>
+      <button class="mini-btn" onclick="showScreen('screen-nuit')" data-i18n="soc.night">☾ Nuit au SOC</button>
     </div>
   </div>
 
   <div class="card daily-card" id="dailyCard">
-    <span class="tag amber">Défi du jour</span>
+    <span class="tag amber" data-i18n="daily.tag">Défi du jour</span>
     <h3 style="margin-top:10px" id="dailyTitle">Défi du jour</h3>
     <p id="dailyDesc">Reviens chaque jour pour un nouveau défi.</p>
-    <p class="daily-bonus" id="dailyBonus">Bonus : +50 XP</p>
-    <button class="mini-btn primary" id="dailyBtn">C’est parti</button>
+    <p class="daily-bonus" id="dailyBonus" data-i18n="daily.bonus">Bonus : +50 XP</p>
+    <button class="mini-btn primary" id="dailyBtn" data-i18n="daily.btn">C’est parti</button>
   </div>
 
   <div class="card">
-    <span class="tag amber">1 — Choisis ton rôle</span>
-    <h3 style="margin-top:10px">Recrue, Analyste ou Expert ?</h3>
+    <span class="tag amber" data-i18n="role.tag">1 — Choisis ton rôle</span>
+    <h3 style="margin-top:10px" data-i18n="role.title">Recrue, Analyste ou Expert ?</h3>
     <div class="seg" id="roleSeg">
-      <button data-role="0">Recrue<div style="font-size:11px;color:var(--muted)">score ×1</div></button>
-      <button data-role="1">Analyste<div style="font-size:11px;color:var(--muted)">score ×1,5</div></button>
-      <button data-role="2">Expert<div style="font-size:11px;color:var(--muted)">score ×2</div></button>
+      <button data-role="0"><span data-i18n="role.0">Recrue</span><div style="font-size:11px;color:var(--muted)">score ×1</div></button>
+      <button data-role="1"><span data-i18n="role.1">Analyste</span><div style="font-size:11px;color:var(--muted)">score ×1,5</div></button>
+      <button data-role="2"><span data-i18n="role.2">Expert</span><div style="font-size:11px;color:var(--muted)">score ×2</div></button>
     </div>
   </div>
 
   <div class="card">
-    <span class="tag amber">2 — Choisis ton mode</span>
-    <h3 style="margin-top:10px">Campagne ou Duel ?</h3>
+    <span class="tag amber" data-i18n="mode.tag">2 — Choisis ton mode</span>
+    <h3 style="margin-top:10px" data-i18n="mode.title">Campagne ou Duel ?</h3>
     <div class="mode-grid">
-      <button class="btn btn-primary" onclick="goNightwatch()">▶ Campagne NIGHTWATCH</button>
-      <button class="btn btn-ghost" onclick="startDuel()">⚔ Duel à 2 joueurs</button>
+      <button class="btn btn-primary" onclick="goNightwatch()" data-i18n="mode.camp">▶ Campagne NIGHTWATCH</button>
+      <button class="btn btn-ghost" onclick="startDuel()" data-i18n="mode.duel">⚔ Duel à 2 joueurs</button>
     </div>
   </div>
 
@@ -773,29 +778,22 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
 <!-- ═══ PROFIL ═══ -->
 <div class="screen" id="screen-profil">
   <section>
-    <div class="kicker">Ton profil</div>
-    <h2>Profil</h2>
+    <div class="kicker" data-i18n="prof.kicker">Ton profil</div>
+    <h2 data-i18n="prof.h2">Profil</h2>
   <div class="card">
-    <span class="tag">Ton profil</span>
+    <span class="tag" data-i18n="prof.tag">Ton profil</span>
     <h3 style="margin-top:10px" id="profTitle">Recrue</h3>
     <p id="profText">0 XP, 0 partie jouée.</p>
     <p style="font-size:11px" id="profBest">Meilleurs scores : Nuit au SOC 0 • NIGHTWATCH 0 • Duel 0.</p>
     <div class="streak-row" id="streakLine"> Série : 0 jour</div>
-    <h3 style="margin-top:14px">Tes badges</h3>
+    <h3 style="margin-top:14px" data-i18n="prof.badges">Tes badges</h3>
     <div class="badge-grid" id="badgeGrid"></div>
-    <button class="mini-btn" style="margin-top:10px" onclick="renderStatsScreen();showScreen('screen-stats')">📊 Voir mes statistiques</button>
-    <button class="mini-btn" id="resetBtn">Effacer ma progression</button>
-    <button class="mini-btn" id="logoutBtnProfil" style="margin-left:8px">Se déconnecter</button>
-    <div id="resetConfirm" style="display:none;margin-top:10px;border:1px solid var(--red);border-radius:12px;padding:12px"><p style="margin:0 0 10px"><b>Effacer toute ta progression ?</b><br><span style="color:var(--muted)">XP, niveaux, badges et scores seront remis à zéro. Cette action est définitive.</span></p><button class="mini-btn primary" id="resetYes">Oui, tout effacer</button> <button class="mini-btn" id="resetNo">Non, annuler</button></div>
-    <p id="authVerifyNote" style="display:none;font-size:11px;color:var(--amber);margin-top:10px">Ton e-mail n’est pas encore confirmé. <button class="mini-btn" id="authResendBtn">Renvoyer l’e-mail</button></p>
+    <button class="mini-btn" style="margin-top:10px" onclick="renderStatsScreen();showScreen('screen-stats')" data-i18n="prof.stats">📊 Voir mes statistiques</button>
+    <button class="mini-btn" id="resetBtn" data-i18n="prof.reset">Effacer ma progression</button>
+    <button class="mini-btn" id="logoutBtnProfil" style="margin-left:8px" data-i18n="prof.logout">Se déconnecter</button>
+    <div id="resetConfirm" style="display:none;margin-top:10px;border:1px solid var(--red);border-radius:12px;padding:12px"><p style="margin:0 0 10px"><b data-i18n="reset.q">Effacer toute ta progression ?</b><br><span style="color:var(--muted)" data-i18n="reset.warn">XP, niveaux, badges et scores seront remis à zéro. Cette action est définitive.</span></p><button class="mini-btn primary" id="resetYes" data-i18n="reset.yes">Oui, tout effacer</button> <button class="mini-btn" id="resetNo" data-i18n="reset.no">Non, annuler</button></div>
+    <p id="authVerifyNote" style="display:none;font-size:11px;color:var(--amber);margin-top:10px"><span data-i18n="auth.verify">Ton e-mail n’est pas encore confirmé.</span> <button class="mini-btn" id="authResendBtn" data-i18n="auth.resend">Renvoyer l’e-mail</button></p>
   </div>
-  </section>
-  <section>
-  <section>
-    <div class="kicker">Compte</div>
-    <h2>Ton compte</h2>
-    <p style="font-size:12px">Connecté en tant que <b id="authEmailShown">—</b></p>
-    <button class="mini-btn" id="logoutBtnMenu">Se déconnecter</button>
   </section>
 
 </div>
@@ -937,9 +935,9 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
 <!-- ═══ STATISTIQUES ═══ -->
 <div class="screen" id="screen-stats">
   <section>
-    <div class="kicker">Statistiques</div>
-    <h2>Mes statistiques</h2>
-    <p>Ta précision par activité, d'où viennent tes XP, et tes totaux.</p>
+    <div class="kicker" data-i18n="stats.kicker">Statistiques</div>
+    <h2 data-i18n="stats.h2">Mes statistiques</h2>
+    <p data-i18n="stats.intro">Ta précision par activité, d'où viennent tes XP, et tes totaux.</p>
     <div id="statsView"></div>
   </section>
 </div>
@@ -949,9 +947,19 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
   <section>
     <div class="kicker">Menu</div>
     <h2>Menu</h2>
-    <p>Tout est réuni ici : tes explications, tes repères, et les raccourcis du jeu.</p>
+    <p data-i18n="menu.intro">Tout est réuni ici : tes explications, tes repères, et les raccourcis du jeu.</p>
+    <div class="card" style="margin-top:12px">
+      <span class="tag" data-i18n="lang.kicker">Langue</span>
+      <h3 style="margin-top:10px" data-i18n="lang.title">Langue du jeu</h3>
+      <p data-i18n="lang.desc">Choisis la langue de l’interface. Les leçons et les questions restent en français pour l’instant.</p>
+      <div class="seg" id="langSeg" style="grid-template-columns:repeat(2,1fr)">
+        <button data-lang="fr" onclick="setLang('fr')">🇫🇷 Français</button>
+        <button data-lang="en" onclick="setLang('en')">🇬🇧 English</button>
+      </div>
+    </div>
+
     <details class="folder">
-      <summary>📁 Commentaires et explications</summary>
+      <summary data-i18n="menu.folder1">📁 Commentaires et explications</summary>
       <h3 style="margin-top:12px">Les commentaires de Léa</h3>
       <p class="menu-quote"><b>Accueil</b> — <span>« Salut ! On fait équipe : je te briefe, je te conseille, et on apprend ensemble. Prêt ? »</span></p>
       <p class="menu-quote"><b>Parcours</b> — <span>« On y va doucement, un niveau à la fois. Chaque niveau débloque le suivant — et te rapproche du rang Analyste. »</span></p>
@@ -978,7 +986,7 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
       <details><summary>Quelle est la différence entre hacker éthique et pirate ?</summary><p style="color:var(--muted)">Les techniques peuvent se ressembler, l’intention et le cadre changent tout : autorisation écrite, périmètre défini, objectif de défense et compte-rendu. Sans autorisation, c’est illégal — en France, l’accès frauduleux à un système est puni par l’article 323-1 du Code pénal.</p></details>
     </details>
     <details class="folder">
-      <summary>📁 Fonctionnement du jeu</summary>
+      <summary data-i18n="menu.folder2">📁 Fonctionnement du jeu</summary>
       <h3 style="margin-top:12px">Comment ça marche</h3>
       <p class="menu-tool"><b>Le jeu en bref</b> — <span>Un seul jeu qui combine le meilleur des trois : le parcours débutant → intermédiaire, les nuits au SOC avec leurs kill-chains, et NIGHTWATCH — Opération PALLAS, où tu attaques et tu défends en même temps. Tout est simulé, rien n'est réel : aucun scan, aucune commande ne sort de ton téléphone.</span></p>
       <p class="menu-tool"><b>Par où commencer</b> — <span>Débutant ? Commence par le Parcours (6 niveaux, de débutant à intermédiaire), puis la Mission SOC à 02:47, puis une Nuit au SOC. Quand tu es à l'aise, lance une mission NIGHTWATCH.</span></p>
@@ -1007,57 +1015,65 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
     </details>
   </section>
   <section>
-    <div class="kicker">Raccourcis</div>
-    <h2>Aller vite</h2>
+    <div class="kicker" data-i18n="menu.short.kicker">Raccourcis</div>
+    <h2 data-i18n="menu.short.h2">Aller vite</h2>
     <div class="mode-grid">
-      <button class="mode-tile" onclick="showScreen('screen-profil')"><span class="tile-ico">👤</span>Profil<small>XP, rangs, badges</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-debut')"><span class="tile-ico">🧭</span>Par où commencer<small>Parcours, missions, labs</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-parcours')"><span class="tile-ico">▤</span>Parcours<small>6 niveaux</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-mission')"><span class="tile-ico">◈</span>Mission SOC<small>Alerte à 02:47</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-nuit')"><span class="tile-ico">☾</span>Nuit au SOC<small>Scénarios kill-chain</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-nightwatch')"><span class="tile-ico">◎</span>NIGHTWATCH<small>Attaque &amp; défense</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-terminal')"><span class="tile-ico">CLI</span>Terminal Linux<small>Commandes de base</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-phishing')"><span class="tile-ico">PH</span>Phishing Lab<small>Repère les pièges</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-quiz')"><span class="tile-ico">QZ</span>Quiz<small>56 questions</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-outils')"><span class="tile-ico">DOC</span>Outils &amp; Glossaire<small>Références et mots-clés</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-siem')"><span class="tile-ico">SI</span>SIEM — Tri de logs<small>Logs + requêtes SPL</small></button>
-      <button class="mode-tile" onclick="renderMitre();showScreen('screen-mitre')"><span class="tile-ico">AT</span>MITRE ATT&CK<small>Carte des techniques</small></button>
-      <button class="mode-tile" onclick="startGarde();showScreen('screen-garde')"><span class="tile-ico">GD</span>Garde SOC<small>Une garde complète</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-ports')"><span class="tile-ico">PT</span>Devine le port<small>10 manches</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-email')"><span class="tile-ico">ML</span>Analyse e-mail<small>En-têtes &amp; verdict</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-reseau')"><span class="tile-ico">WR</span>Analyse réseau<small>3 captures Wireshark</small></button>
-      <button class="mode-tile" onclick="startOsint();showScreen('screen-osint')"><span class="tile-ico">OS</span>Enquête OSINT<small>Qui est shadow_fox92 ?</small></button>
-      <button class="mode-tile" onclick="renderStatsScreen();showScreen('screen-stats')"><span class="tile-ico">ST</span>Statistiques<small>Précision &amp; XP par activité</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-profil')"><span class="tile-ico">👤</span><span data-i18n="tile.profil">Profil</span><small data-i18n="tile.profil.s">XP, rangs, badges</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-debut')"><span class="tile-ico">🧭</span><span data-i18n="tile.debut">Par où commencer</span><small data-i18n="tile.debut.s">Parcours, missions, labs</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-parcours')"><span class="tile-ico">▤</span><span data-i18n="tile.parcours">Parcours</span><small data-i18n="tile.parcours.s">6 niveaux</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-mission')"><span class="tile-ico">◈</span><span data-i18n="tile.mission">Mission SOC</span><small data-i18n="tile.mission.s">Alerte à 02:47</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-nuit')"><span class="tile-ico">☾</span><span data-i18n="tile.nuit">Nuit au SOC</span><small data-i18n="tile.nuit.s">Scénarios kill-chain</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-nightwatch')"><span class="tile-ico">◎</span><span data-i18n="tile.nw">NIGHTWATCH</span><small data-i18n="tile.nw.s">Attaque &amp; défense</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-terminal')"><span class="tile-ico">CLI</span><span data-i18n="tile.term">Terminal Linux</span><small data-i18n="tile.term.s">Commandes de base</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-phishing')"><span class="tile-ico">PH</span><span data-i18n="tile.phish">Phishing Lab</span><small data-i18n="tile.phish.s">Repère les pièges</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-quiz')"><span class="tile-ico">QZ</span><span data-i18n="tile.quiz">Quiz</span><small data-i18n="tile.quiz.s">56 questions</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-outils')"><span class="tile-ico">DOC</span><span data-i18n="tile.outils">Outils &amp; Glossaire</span><small data-i18n="tile.outils.s">Références et mots-clés</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-siem')"><span class="tile-ico">SI</span><span data-i18n="tile.siem">SIEM — Tri de logs</span><small data-i18n="tile.siem.s">Logs + requêtes SPL</small></button>
+      <button class="mode-tile" onclick="renderMitre();showScreen('screen-mitre')"><span class="tile-ico">AT</span><span data-i18n="tile.mitre">MITRE ATT&CK</span><small data-i18n="tile.mitre.s">Carte des techniques</small></button>
+      <button class="mode-tile" onclick="startGarde();showScreen('screen-garde')"><span class="tile-ico">GD</span><span data-i18n="tile.garde">Garde SOC</span><small data-i18n="tile.garde.s">Une garde complète</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-ports')"><span class="tile-ico">PT</span><span data-i18n="tile.ports">Devine le port</span><small data-i18n="tile.ports.s">10 manches</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-email')"><span class="tile-ico">ML</span><span data-i18n="tile.email">Analyse e-mail</span><small data-i18n="tile.email.s">En-têtes &amp; verdict</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-reseau')"><span class="tile-ico">WR</span><span data-i18n="tile.reseau">Analyse réseau</span><small data-i18n="tile.reseau.s">3 captures Wireshark</small></button>
+      <button class="mode-tile" onclick="startOsint();showScreen('screen-osint')"><span class="tile-ico">OS</span><span data-i18n="tile.osint">Enquête OSINT</span><small data-i18n="tile.osint.s">Qui est shadow_fox92 ?</small></button>
+      <button class="mode-tile" onclick="renderStatsScreen();showScreen('screen-stats')"><span class="tile-ico">ST</span><span data-i18n="tile.stats">Statistiques</span><small data-i18n="tile.stats.s">Précision &amp; XP par activité</small></button>
     </div>
   </section>
+  <section>
+    <div class="kicker" data-i18n="compte.kicker">Compte</div>
+    <h2 data-i18n="compte.h2">Ton compte</h2>
+    <p style="font-size:12px"><span data-i18n="compte.as">Connecté en tant que</span> <b id="authEmailShown">—</b></p>
+    <button class="mini-btn" id="logoutBtnMenu" data-i18n="compte.logout">Se déconnecter</button>
+  </section>
+
 </div>
 
-<footer>Cybersec — Jeu combiné : Parcours SOC + Nuit au SOC + NIGHTWATCH Opération PALLAS. Un seul fichier, hors-ligne, mobile-first. Sources d'inspiration pédagogique : TryHackMe, ANSSI, Cybermalveillance.gouv.fr. Tout est simulé : aucune attaque réelle.</footer>
+<footer data-i18n="footer" data-i18n-html="1">Cybersec — Jeu combiné : Parcours SOC + Nuit au SOC + NIGHTWATCH Opération PALLAS. Un seul fichier, hors-ligne, mobile-first. Sources d'inspiration pédagogique : TryHackMe, ANSSI, Cybermalveillance.gouv.fr. Tout est simulé : aucune attaque réelle.</footer>
 </div>
 
 <nav class="bottomnav">
-  <button data-nav="screen-home" class="on" onclick="showScreen('screen-home')"><span>◈</span>Accueil</button>
-  <button data-nav="screen-parcours" onclick="showScreen('screen-parcours')"><span>▤</span>Parcours</button>
-  <button data-nav="screen-nuit" onclick="showScreen('screen-nuit')"><span>☾</span>Nuit SOC</button>
+  <button data-nav="screen-home" class="on" onclick="showScreen('screen-home')"><span>◈</span><span data-i18n="nav.home">Accueil</span></button>
+  <button data-nav="screen-parcours" onclick="showScreen('screen-parcours')"><span>▤</span><span data-i18n="nav.path">Parcours</span></button>
+  <button data-nav="screen-nuit" onclick="showScreen('screen-nuit')"><span>☾</span><span data-i18n="nav.night">Nuit SOC</span></button>
   <button data-nav="screen-nightwatch" onclick="showScreen('screen-nightwatch')"><span>◎</span>NIGHTWATCH</button>
   <button data-nav="screen-quiz" onclick="showScreen('screen-quiz')"><span>?</span>Quiz</button>
   <button data-nav="screen-menu" onclick="showScreen('screen-menu')"><span>☰</span>Menu</button>
 </nav>
 <div class="toast" id="toast"></div>
 <div id="fxlayer" aria-hidden="true"></div>
-<div class="rankup-overlay" id="rankup" style="display:none"><div class="rankup-card"><div class="rankup-emoji"></div><h2 class="rankup-title" id="rankupTitle">Rang supérieur !</h2><p class="rankup-text" id="rankupText">Tu progresses vite, Darkman.</p><button class="btn btn-primary btn-block" id="rankupBtn">Continuer</button></div></div>
+<div class="rankup-overlay" id="rankup" style="display:none"><div class="rankup-card"><div class="rankup-emoji"></div><h2 class="rankup-title" id="rankupTitle">Rang supérieur !</h2><p class="rankup-text" id="rankupText">Tu progresses vite, Darkman.</p><button class="btn btn-primary btn-block" id="rankupBtn" data-i18n="rankup.continue">Continuer</button></div></div>
 
 <script>
 /* ═══ ÉTAT UNIFIÉ — un seul système d'XP, sauvegarde localStorage ═══ */
 var KEY='jeu-combine-v1';
-var state={xp:0,role:0,games:0,done:{},flags:{},best:{soc:0,nw:0,duel:0},badges:{},stats:{},xpBy:{}};
+var state={xp:0,role:0,games:0,done:{},flags:{},best:{soc:0,nw:0,duel:0},badges:{},stats:{},xpBy:{},lang:'fr'};
 try{var s=JSON.parse(localStorage.getItem(KEY)||'{}');for(var k in s){state[k]=s[k];}}catch(e){}
 if(!state.stats)state.stats={};
 if(!state.xpBy)state.xpBy={};
+if(!state.lang)state.lang='fr';
 if(!state.xpByBf){var _bm={quiz:10,port:5,reseau:30,osint:20,daily:50,scenario:100,logs:80,terminal:60,phishing:70,pwd:30,siem:80,garde:100,email:80};for(var _k in (state.flags||{})){var _a=_k.split('-')[0];if(_bm[_a])state.xpBy[_a]=(state.xpBy[_a]||0)+_bm[_a];}state.xpByBf=true;save();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
 var ROLES=[{name:'Recrue',mult:1,fp:1,det:10},{name:'Analyste',mult:1.5,fp:3,det:8},{name:'Expert',mult:2,fp:5,det:6}];
-function rankName(x){return x>=3000?'Chasseur de menaces':x>=1500?'Analyste confirmé':x>=500?'Analyste':'Recrue';}
+function rankName(x){return tr('rank.'+(x>=3000?3:x>=1500?2:x>=500?1:0));}
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2600);}
 function addXP(n,key){
   if(key&&state.flags[key])return 0;
@@ -1080,14 +1096,14 @@ function renderStats(){
   document.getElementById('statProgress').textContent=pct+'%';
   document.getElementById('xpFill').style.width=Math.max(4,pct)+'%';
   document.getElementById('statMissions').textContent=Object.keys(state.done).length;
-  document.getElementById('profTitle').textContent=rankName(xp)+' — '+ROLES[state.role].name;
-  document.getElementById('profText').textContent=xp+' XP, '+state.games+' partie(s) jouée(s). Rôle : '+ROLES[state.role].name+' (score ×'+String(ROLES[state.role].mult).replace('.',',')+').';
-  document.getElementById('profBest').textContent='Meilleurs scores : Nuit au SOC '+(state.best.soc||0)+' • NIGHTWATCH '+(state.best.nw||0)+' • Duel '+(state.best.duel||0)+'.';
+  document.getElementById('profTitle').textContent=rankName(xp)+' — '+roleName(state.role);
+  document.getElementById('profText').textContent=fmtT(tr('prof.text'),{xp:xp,games:state.games,role:roleName(state.role),mult:String(ROLES[state.role].mult).replace('.',',')});
+  document.getElementById('profBest').textContent=fmtT(tr('prof.best'),{soc:(state.best.soc||0),nw:(state.best.nw||0),duel:(state.best.duel||0)});
   var seg=document.getElementById('roleSeg');
   if(seg){var bs=seg.querySelectorAll('button');for(var i=0;i<bs.length;i++){bs[i].classList.toggle('on',+bs[i].getAttribute('data-role')===state.role);}}
   renderPath();
   renderDaily();renderBadges();touchStreak();updateGreeting();renderNextStep();updateNextRank();renderStreakChip();checkRankUp();
-  var cta=document.getElementById('ctaResume');if(cta)cta.textContent=state.xp>0?'▶ Reprendre la mission':'▶ Commencer';
+  var cta=document.getElementById('ctaResume');if(cta)cta.textContent=state.xp>0?tr('cta.resume'):tr('cta.start');
 }
 /* ═══ FIREBASE AUTH — connexion avant le jeu, progression en localStorage ═══ */
 var firebaseConfig={apiKey:"AIzaSyCb_3vGkXZNTU9VH1JywnNnFpTihsXrkgs",authDomain:"cybersec-game-app.firebaseapp.com",projectId:"cybersec-game-app",storageBucket:"cybersec-game-app.firebasestorage.app",messagingSenderId:"463179213733",appId:"1:463179213733:web:f8852f8bc219194b3bd64c"};
@@ -1102,9 +1118,9 @@ var authMode='login';
 function authMsg(txt,ok){var f=document.getElementById('authFeedback');if(!f)return;f.className='feedback show '+(ok?'ok':'bad');f.textContent=txt;}
 function authHideMsg(){var f=document.getElementById('authFeedback');if(f){f.className='feedback';f.textContent='';}}
 function authSetMode(m){authMode=m;authHideMsg();
-  var t=document.getElementById('authTitle');if(t)t.textContent=m==='signup'?'Créer un compte':'Connexion';
-  var s=document.getElementById('authSubmit');if(s)s.textContent=m==='signup'?'Créer mon compte':'Se connecter';
-  var g=document.getElementById('authToggle');if(g)g.textContent=m==='signup'?'Déjà un compte ? Se connecter':'Pas encore de compte ? Créer un compte';
+  var t=document.getElementById('authTitle');if(t)t.textContent=m==='signup'?tr('auth.signup'):tr('auth.login');
+  var s=document.getElementById('authSubmit');if(s)s.textContent=m==='signup'?tr('auth.submit.signup'):tr('auth.submit.login');
+  var g=document.getElementById('authToggle');if(g)g.textContent=m==='signup'?tr('auth.toggle.signup'):tr('auth.toggle.login');
   var fo=document.getElementById('authForgot');if(fo)fo.style.display=m==='signup'?'none':'block';
   var p=document.getElementById('authPass');if(p)p.value='';
 }
@@ -1121,30 +1137,43 @@ function authErr(code){
     'auth/user-disabled':'Ce compte a été désactivé.',
     'auth/operation-not-allowed':'Connexion par e-mail désactivée. Réessaie plus tard.'
   };
-  return map[code]||'Oups, ça n’a pas marché. Réessaie.';
+  var enMap={
+    'auth/invalid-email':'This email address is not valid.',
+    'auth/user-not-found':'No account with this address. Create an account.',
+    'auth/wrong-password':'Wrong password. Try again.',
+    'auth/invalid-credential':'Wrong email or password.',
+    'auth/email-already-in-use':'This address already has an account. Log in.',
+    'auth/weak-password':'Password too weak: 6 characters minimum.',
+    'auth/too-many-requests':'Too many attempts. Wait a bit and try again.',
+    'auth/network-request-failed':'No internet connection. Check your network.',
+    'auth/user-disabled':'This account has been disabled.',
+    'auth/operation-not-allowed':'Email login is disabled. Try again later.'
+  };
+  var useMap=(state.lang==='en')?enMap:map;
+  return useMap[code]||((state.lang==='en')?'Oops, that didn’t work. Try again.':'Oups, ça n’a pas marché. Réessaie.');
 }
 function authSubmit(){
-  if(!auth){authMsg('Connexion requise : vérifie ta connexion internet et recharge la page.');return;}
+  if(!auth){authMsg(tr('auth.neednet'));return;}
   var em=document.getElementById('authEmail').value.trim();
   var pw=document.getElementById('authPass').value;
-  if(!em||!pw){authMsg('Renseigne ton e-mail et ton mot de passe.');return;}
+  if(!em||!pw){authMsg(tr('auth.fillboth'));return;}
   var btn=document.getElementById('authSubmit');btn.disabled=true;
   function done(){btn.disabled=false;}
   if(authMode==='signup'){
     auth.createUserWithEmailAndPassword(em,pw).then(function(cred){
       done();
       if(cred.user&&cred.user.sendEmailVerification)cred.user.sendEmailVerification().catch(function(){});
-      authMsg('Compte créé ! Vérifie ta boîte mail pour confirmer ton adresse.',true);
+      authMsg(tr('auth.created'),true);
     }).catch(function(e){done();authMsg(authErr(e&&e.code));});
   }else{
     auth.signInWithEmailAndPassword(em,pw).then(function(){done();}).catch(function(e){done();authMsg(authErr(e&&e.code));});
   }
 }
 function authForgot(){
-  if(!auth){authMsg('Connexion requise : vérifie ta connexion internet et recharge la page.');return;}
+  if(!auth){authMsg(tr('auth.neednet'));return;}
   var em=document.getElementById('authEmail').value.trim();
-  if(!em){authMsg('Écris d’abord ton adresse e-mail ci-dessus.');return;}
-  auth.sendPasswordResetEmail(em).then(function(){authMsg('E-mail envoyé ! Regarde ta boîte mail pour réinitialiser ton mot de passe.',true);}).catch(function(e){authMsg(authErr(e&&e.code));});
+  if(!em){authMsg(tr('auth.fillmail'));return;}
+  auth.sendPasswordResetEmail(em).then(function(){authMsg(tr('auth.resetsent'),true);}).catch(function(e){authMsg(authErr(e&&e.code));});
 }
 function authLogout(){if(auth){auth.signOut().catch(function(){});}else{setLocked(true);}}
 function setLocked(locked){
@@ -1159,7 +1188,7 @@ if(auth){
       var shown=document.getElementById('authEmailShown');if(shown)shown.textContent=user.email||'';
       var note=document.getElementById('authVerifyNote');
       if(note)note.style.display=user.emailVerified?'none':'block';
-      if(!user.emailVerified)toast('Pense à confirmer ton e-mail pour sécuriser ton compte.');
+      if(!user.emailVerified)toast(tr('auth.verifytoast'));
     }else{
       setLocked(true);
     }
@@ -1174,9 +1203,119 @@ document.getElementById('logoutBtnMenu').onclick=authLogout;
 document.getElementById('logoutBtnProfil').onclick=authLogout;
 var authResend=document.getElementById('authResendBtn');
 if(authResend)authResend.onclick=function(){
-  if(auth&&auth.currentUser){auth.currentUser.sendEmailVerification().then(function(){toast('E-mail renvoyé. Vérifie ta boîte mail.');}).catch(function(){toast('Impossible pour le moment. Réessaie plus tard.');});}
+  if(auth&&auth.currentUser){auth.currentUser.sendEmailVerification().then(function(){toast(tr('auth.resent'));}).catch(function(){toast(tr('auth.resendfail'));});}
 };
 ['authEmail','authPass'].forEach(function(id){var el=document.getElementById(id);if(el)el.addEventListener('keydown',function(e){if(e.key==='Enter')authSubmit();});});
+/* ═══ LANGUE FR / EN — interface traduite, contenu pédagogique en français ═══ */
+var I18N={
+fr:{
+'nav.home':'Accueil','nav.path':'Parcours','nav.night':'Nuit SOC',
+'top.sound':' Son','top.muted':' Muet','top.soundtoast':'Son activé (aucune musique, juste le bouton).','top.mutedtoast':'Son coupé.',
+'top.3don':' 3D : Oui','top.3doff':' 3D : Non','top.3dna':'3D indisponible sur ce navigateur — vue 2D activée.',
+'hero.title':'Apprends le hacking <em>éthique</em>, comme dans la vraie vie.','hero.tag':'Une mission par jour, un réflexe de plus — Léa reste à tes côtés.',
+'stat.prog':'Progression','stat.xp':'XP gagnés','stat.missions':'Défis réussis','stat.rank':'Rang actuel',
+'stat.xpgoal':' / 3000 XP pour {rank}',
+'greet.night':'Bonne nuit, Darkman','greet.morning':'Bonjour, Darkman','greet.aft':'Bon après-midi, Darkman','greet.eve':'Bonsoir, Darkman',
+'greet.sub0':'Bienvenue au SOC. Ta première mission t’attend.','greet.sub1':'Reprise en douceur — ta prochaine étape t’attend.','greet.sub2':'Le SOC tourne grâce à toi. Continue comme ça.','greet.sub3':'Chasseur de menaces en devenir — le SOC compte sur toi.',
+'cta.resume':'▶ Reprendre la mission','cta.start':'▶ Commencer',
+'ns.kicker':'À toi de jouer',
+'ns.next':'Prochain niveau du parcours','ns.next.text':' — chaque niveau te rend meilleur analyste. +100 XP à la clé.','ns.next.btn':'Y aller →',
+'ns.mission':'Mission SOC 02:47','ns.mission.text':'Trois décisions, un incident à clôturer. +100 XP à la clé.','ns.mission.btn':'Lancer la mission →',
+'ns.logs':'Chasse aux logs','ns.logs.text':'Trouve les 2 lignes vraiment suspectes. +80 XP à la clé.','ns.logs.btn':'Chasser l’intrus →',
+'ns.term':'Terminal Linux','ns.term.text':'Trouve flag.txt et lis son contenu. +60 XP à la clé.','ns.term.btn':'Ouvrir le terminal →',
+'ns.phish':'Phishing Lab','ns.phish.text':'Classe les 3 e-mails. +70 XP à la clé.','ns.phish.btn':'Trier les e-mails →',
+'ns.nw':'Campagne NIGHTWATCH','ns.nw.text':'Mission 1 : Premier contact — attaque et défends en même temps.','ns.nw.btn':'Lancer NIGHTWATCH →',
+'ns.records':'Records à battre','ns.records.text':'Ton meilleur score NIGHTWATCH : {nw} pts. Bats ton record !','ns.records.btn':'Rejouer →',
+'nextrank.more':'Encore {n} XP pour devenir {rank}.','nextrank.max':'Rang maximum atteint — bravo !',
+'streak.chip':'{n} jour{s}','streak.line':'{n} jour{s} de suite — reviens demain pour continuer ta série.','streak.plural':'s',
+'soc.tag':'Salle SOC — 3D','soc.title':'Ta salle SOC en 3D','soc.off':'3D désactivée — la salle SOC est en pause. Réactive la 3D avec le bouton « 3D » en haut de page.','soc.on':' Allumer les écrans','soc.launch':'▶ Lancer NIGHTWATCH','soc.night':'☾ Nuit au SOC',
+'daily.tag':'Défi du jour','daily.bonus':'Bonus : +50 XP','daily.btn':'C’est parti',
+'role.tag':'1 — Choisis ton rôle','role.title':'Recrue, Analyste ou Expert ?','role.0':'Recrue','role.1':'Analyste','role.2':'Expert',
+'mode.tag':'2 — Choisis ton mode','mode.title':'Campagne ou Duel ?','mode.camp':'▶ Campagne NIGHTWATCH','mode.duel':'⚔ Duel à 2 joueurs',
+'rank.0':'Recrue','rank.1':'Analyste','rank.2':'Analyste confirmé','rank.3':'Chasseur de menaces',
+'rankup.title':'Rang supérieur !','rankup.text':'Tu es maintenant {rank} — tu progresses vite, Darkman.','rankup.continue':'Continuer',
+'prof.kicker':'Ton profil','prof.h2':'Profil','prof.tag':'Ton profil','prof.badges':'Tes badges','prof.stats':'📊 Voir mes statistiques','prof.reset':'Effacer ma progression','prof.logout':'Se déconnecter',
+'prof.text':'{xp} XP, {games} partie(s) jouée(s). Rôle : {role} (score ×{mult}).','prof.best':'Meilleurs scores : Nuit au SOC {soc} • NIGHTWATCH {nw} • Duel {duel}.',
+'reset.q':'Effacer toute ta progression ?','reset.warn':'XP, niveaux, badges et scores seront remis à zéro. Cette action est définitive.','reset.yes':'Oui, tout effacer','reset.no':'Non, annuler',
+'auth.verify':'Ton e-mail n’est pas encore confirmé.','auth.resend':'Renvoyer l’e-mail',
+'menu.intro':'Tout est réuni ici : tes explications, tes repères, et les raccourcis du jeu.','menu.folder1':'📁 Commentaires et explications','menu.folder2':'📁 Fonctionnement du jeu','menu.short.kicker':'Raccourcis','menu.short.h2':'Aller vite',
+'lang.kicker':'Langue','lang.title':'Langue du jeu','lang.desc':'Choisis la langue de l’interface. Les leçons et les questions restent en français pour l’instant.',
+'compte.kicker':'Compte','compte.h2':'Ton compte','compte.as':'Connecté en tant que','compte.logout':'Se déconnecter',
+'stats.kicker':'Statistiques','stats.h2':'Mes statistiques','stats.intro':'Ta précision par activité, d’où viennent tes XP, et tes totaux.',
+'stats.acc.tag':'Précision','stats.acc.h':'Précision par activité','stats.acc.none':'Joue à une activité pour voir ta précision ici.','stats.xp.tag':'XP par activité','stats.xp.h':'D’où viennent tes XP','stats.xp.none':'Aucun XP gagné pour l’instant.','stats.tot.tag':'Totaux','stats.tot.h':'En résumé','stats.tot.line':'{xp} XP • {games} partie(s) jouée(s) • {missions} mission(s) terminée(s) • {badges} badge(s) débloqué(s)',
+'auth.login':'Connexion','auth.signup':'Créer un compte','auth.submit.login':'Se connecter','auth.submit.signup':'Créer mon compte','auth.toggle.login':'Pas encore de compte ? Créer un compte','auth.toggle.signup':'Déjà un compte ? Se connecter',
+'auth.pass':'Mot de passe','auth.forgot':'Mot de passe oublié ?','auth.offline':'Connexion requise : vérifie ta connexion internet, puis recharge la page.',
+'auth.neednet':'Connexion requise : vérifie ta connexion internet et recharge la page.','auth.fillboth':'Renseigne ton e-mail et ton mot de passe.','auth.created':'Compte créé ! Vérifie ta boîte mail pour confirmer ton adresse.','auth.fillmail':'Écris d’abord ton adresse e-mail ci-dessus.','auth.resetsent':'E-mail envoyé ! Regarde ta boîte mail pour réinitialiser ton mot de passe.',
+'auth.verifytoast':'Pense à confirmer ton e-mail pour sécuriser ton compte.','auth.resent':'E-mail renvoyé. Vérifie ta boîte mail.','auth.resendfail':'Impossible pour le moment. Réessaie plus tard.',
+'footer':'Cybersec — Jeu combiné : Parcours SOC + Nuit au SOC + NIGHTWATCH Opération PALLAS. Un seul fichier, hors-ligne, mobile-first. Sources d’inspiration pédagogique : TryHackMe, ANSSI, Cybermalveillance.gouv.fr. Tout est simulé : aucune attaque réelle.',
+'tile.profil':'Profil','tile.profil.s':'XP, rangs, badges','tile.debut':'Par où commencer','tile.debut.s':'Parcours, missions, labs','tile.parcours':'Parcours','tile.parcours.s':'6 niveaux','tile.mission':'Mission SOC','tile.mission.s':'Alerte à 02:47','tile.nuit':'Nuit au SOC','tile.nuit.s':'Scénarios kill-chain','tile.nw':'NIGHTWATCH','tile.nw.s':'Attaque & défense','tile.term':'Terminal Linux','tile.term.s':'Commandes de base','tile.phish':'Phishing Lab','tile.phish.s':'Repère les pièges','tile.quiz':'Quiz','tile.quiz.s':'56 questions','tile.outils':'Outils & Glossaire','tile.outils.s':'Références et mots-clés','tile.siem':'SIEM — Tri de logs','tile.siem.s':'Logs + requêtes SPL','tile.mitre':'MITRE ATT&CK','tile.mitre.s':'Carte des techniques','tile.garde':'Garde SOC','tile.garde.s':'Une garde complète','tile.ports':'Devine le port','tile.ports.s':'10 manches','tile.email':'Analyse e-mail','tile.email.s':'En-têtes & verdict','tile.reseau':'Analyse réseau','tile.reseau.s':'3 captures Wireshark','tile.osint':'Enquête OSINT','tile.osint.s':'Qui est shadow_fox92 ?','tile.stats':'Statistiques','tile.stats.s':'Précision & XP par activité'
+},
+en:{
+'nav.home':'Home','nav.path':'Path','nav.night':'SOC Night',
+'top.sound':' Sound','top.muted':' Muted','top.soundtoast':'Sound on (no music, just the button).','top.mutedtoast':'Sound off.',
+'top.3don':' 3D: On','top.3doff':' 3D: Off','top.3dna':'3D is not available in this browser — 2D view enabled.',
+'hero.title':'Learn <em>ethical</em> hacking, like in real life.','hero.tag':'One mission a day, one more reflex — Léa stays by your side.',
+'stat.prog':'Progress','stat.xp':'XP earned','stat.missions':'Challenges completed','stat.rank':'Current rank',
+'stat.xpgoal':' / 3000 XP to reach {rank}',
+'greet.night':'Good night, Darkman','greet.morning':'Good morning, Darkman','greet.aft':'Good afternoon, Darkman','greet.eve':'Good evening, Darkman',
+'greet.sub0':'Welcome to the SOC. Your first mission awaits.','greet.sub1':'Easing back in — your next step awaits.','greet.sub2':'The SOC runs thanks to you. Keep it up.','greet.sub3':'Threat hunter in the making — the SOC counts on you.',
+'cta.resume':'▶ Resume mission','cta.start':'▶ Start',
+'ns.kicker':'Your turn',
+'ns.next':'Next path level','ns.next.text':' — each level makes you a better analyst. +100 XP up for grabs.','ns.next.btn':'Go →',
+'ns.mission':'Mission SOC 02:47','ns.mission.text':'Three decisions, one incident to close. +100 XP up for grabs.','ns.mission.btn':'Start the mission →',
+'ns.logs':'Log hunt','ns.logs.text':'Find the 2 truly suspicious lines. +80 XP up for grabs.','ns.logs.btn':'Hunt the intruder →',
+'ns.term':'Terminal Linux','ns.term.text':'Find flag.txt and read its contents. +60 XP up for grabs.','ns.term.btn':'Open the terminal →',
+'ns.phish':'Phishing Lab','ns.phish.text':'Sort the 3 emails. +70 XP up for grabs.','ns.phish.btn':'Sort the emails →',
+'ns.nw':'NIGHTWATCH Campaign','ns.nw.text':'Mission 1: First contact — attack and defend at the same time.','ns.nw.btn':'Launch NIGHTWATCH →',
+'ns.records':'Records to beat','ns.records.text':'Your best NIGHTWATCH score: {nw} pts. Beat your record!','ns.records.btn':'Replay →',
+'nextrank.more':'{n} more XP to become {rank}.','nextrank.max':'Maximum rank reached — well done!',
+'streak.chip':'{n} day{s}','streak.line':'{n} day{s} in a row — come back tomorrow to keep your streak.','streak.plural':'s',
+'soc.tag':'SOC room — 3D','soc.title':'Your SOC room in 3D','soc.off':'3D off — the SOC room is paused. Turn 3D back on with the “3D” button at the top of the page.','soc.on':' Turn screens on','soc.launch':'▶ Launch NIGHTWATCH','soc.night':'☾ SOC Night',
+'daily.tag':'Daily challenge','daily.bonus':'Bonus: +50 XP','daily.btn':'Let’s go',
+'role.tag':'1 — Choose your role','role.title':'Recruit, Analyst or Expert?','role.0':'Recruit','role.1':'Analyst','role.2':'Expert',
+'mode.tag':'2 — Choose your mode','mode.title':'Campaign or Duel?','mode.camp':'▶ NIGHTWATCH Campaign','mode.duel':'⚔ 2-player Duel',
+'rank.0':'Recruit','rank.1':'Analyst','rank.2':'Confirmed Analyst','rank.3':'Threat Hunter',
+'rankup.title':'Rank up!','rankup.text':'You are now {rank} — you are progressing fast, Darkman.','rankup.continue':'Continue',
+'prof.kicker':'Your profile','prof.h2':'Profile','prof.tag':'Your profile','prof.badges':'Your badges','prof.stats':'📊 View my statistics','prof.reset':'Erase my progress','prof.logout':'Log out',
+'prof.text':'{xp} XP, {games} game(s) played. Role: {role} (score ×{mult}).','prof.best':'Best scores: SOC Night {soc} • NIGHTWATCH {nw} • Duel {duel}.',
+'reset.q':'Erase all your progress?','reset.warn':'XP, levels, badges and scores will be reset to zero. This cannot be undone.','reset.yes':'Yes, erase everything','reset.no':'No, cancel',
+'auth.verify':'Your email is not confirmed yet.','auth.resend':'Resend email',
+'menu.intro':'Everything is here: your explanations, your references, and the game shortcuts.','menu.folder1':'📁 Léa’s comments & explanations','menu.folder2':'📁 How the game works','menu.short.kicker':'Shortcuts','menu.short.h2':'Go fast',
+'lang.kicker':'Language','lang.title':'Game language','lang.desc':'Choose the interface language. Lessons and questions stay in French for now.',
+'compte.kicker':'Account','compte.h2':'Your account','compte.as':'Signed in as','compte.logout':'Log out',
+'stats.kicker':'Statistics','stats.h2':'My statistics','stats.intro':'Your accuracy per activity, where your XP comes from, and your totals.',
+'stats.acc.tag':'Accuracy','stats.acc.h':'Accuracy by activity','stats.acc.none':'Play an activity to see your accuracy here.','stats.xp.tag':'XP by activity','stats.xp.h':'Where your XP comes from','stats.xp.none':'No XP earned yet.','stats.tot.tag':'Totals','stats.tot.h':'Summary','stats.tot.line':'{xp} XP • {games} game(s) played • {missions} mission(s) completed • {badges} badge(s) unlocked',
+'auth.login':'Log in','auth.signup':'Create an account','auth.submit.login':'Log in','auth.submit.signup':'Create my account','auth.toggle.login':'No account yet? Create one','auth.toggle.signup':'Already have an account? Log in',
+'auth.pass':'Password','auth.forgot':'Forgot password?','auth.offline':'Login required: check your internet connection, then reload the page.',
+'auth.neednet':'Login required: check your internet connection and reload the page.','auth.fillboth':'Enter your email and password.','auth.created':'Account created! Check your inbox to confirm your address.','auth.fillmail':'Enter your email address above first.','auth.resetsent':'Email sent! Check your inbox to reset your password.',
+'auth.verifytoast':'Remember to confirm your email to secure your account.','auth.resent':'Email resent. Check your inbox.','auth.resendfail':'Not possible right now. Try again later.',
+'footer':'Cybersec — Combined game: SOC Path + SOC Night + NIGHTWATCH Operation PALLAS. A single file, offline, mobile-first. Learning inspiration: TryHackMe, ANSSI, Cybermalveillance.gouv.fr. Everything is simulated: no real attack.',
+'tile.profil':'Profile','tile.profil.s':'XP, ranks, badges','tile.debut':'Where to start','tile.debut.s':'Path, missions, labs','tile.parcours':'Path','tile.parcours.s':'6 levels','tile.mission':'SOC Mission','tile.mission.s':'02:47 alert','tile.nuit':'SOC Night','tile.nuit.s':'Kill-chain scenarios','tile.nw':'NIGHTWATCH','tile.nw.s':'Attack & defense','tile.term':'Linux Terminal','tile.term.s':'Basic commands','tile.phish':'Phishing Lab','tile.phish.s':'Spot the traps','tile.quiz':'Quiz','tile.quiz.s':'56 questions','tile.outils':'Tools & Glossary','tile.outils.s':'References & keywords','tile.siem':'SIEM — Log triage','tile.siem.s':'Logs + SPL queries','tile.mitre':'MITRE ATT&CK','tile.mitre.s':'Technique map','tile.garde':'SOC Shift','tile.garde.s':'A full shift','tile.ports':'Guess the port','tile.ports.s':'10 rounds','tile.email':'Email analysis','tile.email.s':'Headers & verdict','tile.reseau':'Network analysis','tile.reseau.s':'3 Wireshark captures','tile.osint':'OSINT investigation','tile.osint.s':'Who is shadow_fox92?','tile.stats':'Statistics','tile.stats.s':'Accuracy & XP by activity'
+}
+};
+var STATS_EN={quiz:'Quiz',ports:'Guess the port',siem:'SIEM',garde:'SOC Shift',email:'Email analysis',phishing:'Phishing Lab',osint:'OSINT investigation',reseau:'Network analysis',scenario:'Mission 02:47',logs:'Log hunt',terminal:'Terminal',pwd:'Password',daily:'Daily challenge'};
+function tr(k){var L=I18N[state.lang]||I18N.fr;if(L&&L[k]!==undefined)return L[k];return I18N.fr[k];}
+function fmtT(s,m){return String(s).replace(/\{(\w+)\}/g,function(_,k){return m[k]!==undefined?m[k]:'';});}
+function roleName(i){return tr('role.'+i);}
+function modeName(id,fr){return (state.lang==='en'&&STATS_EN[id])?STATS_EN[id]:fr;}
+function setLang(l){state.lang=(l==='en')?'en':'fr';save();applyLang();}
+function applyLang(){
+  var l=state.lang||'fr';
+  document.documentElement.lang=l;
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    var k=el.getAttribute('data-i18n');var v=tr(k);
+    if(v===undefined)return;
+    if(el.hasAttribute('data-i18n-html'))el.innerHTML=v;else el.textContent=v;
+  });
+  var seg=document.getElementById('langSeg');
+  if(seg){var bs=seg.querySelectorAll('button');for(var i=0;i<bs.length;i++){bs[i].classList.toggle('on',bs[i].getAttribute('data-lang')===l);}}
+  var mb=document.getElementById('muteBtn');if(mb)mb.textContent=(typeof muted!=='undefined'&&muted)?tr('top.muted'):tr('top.sound');
+  var tb=document.getElementById('toggle3dBtn');if(tb&&typeof prefs!=='undefined')tb.textContent=prefs.on?tr('top.3don'):tr('top.3doff');
+  if(typeof authSetMode==='function')authSetMode(authMode);
+  renderStats();
+  var sv=document.getElementById('statsView');if(sv&&sv.innerHTML)renderStatsScreen();
+}
+
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   var el=document.getElementById(id);if(el)el.classList.add('active');
@@ -1218,8 +1357,8 @@ document.getElementById('resetNo').onclick=function(){
 };
 var muted=false;
 document.getElementById('muteBtn').onclick=function(){
-  muted=!muted;this.textContent=muted?' Muet':' Son';
-  toast(muted?'Son coupé.':'Son activé (aucune musique, juste le bouton).');
+  muted=!muted;this.textContent=muted?tr('top.muted'):tr('top.sound');
+  toast(muted?tr('top.mutedtoast'):tr('top.soundtoast'));
 };
 /* ═══ PARCOURS 6 NIVEAUX ═══ */
 var modules=[
@@ -2409,7 +2548,7 @@ var D3=(function(){
   /* ---------- activation / désactivation ---------- */
   function apply3dState(){
     var btn=document.getElementById('toggle3dBtn');
-    if(btn)btn.textContent=prefs.on?' 3D : Oui':' 3D : Non';
+    if(btn)btn.textContent=prefs.on?tr('top.3don'):tr('top.3doff');
     var roomCv=document.getElementById('socRoom'),roomOff=document.getElementById('socRoomOff');
     if(prefs.on){
       if(roomCv)roomCv.style.display='block';
@@ -2437,7 +2576,7 @@ var D3=(function(){
     if(!okMap&&!okRoom){
       prefs.on=false;savePrefs();
       var g=document.getElementById('nwMap');if(g)g.style.display='grid';
-      if(window.toast)toast('3D indisponible sur ce navigateur — vue 2D activée.');
+      if(window.toast)toast(tr('top.3dna'));
     }
     if(okMap)bindMap();
     var tgl=document.getElementById('toggle3dBtn');
@@ -2504,7 +2643,7 @@ function countUp(el,to,suffix){
 }
 function nextRankInfo(){
   var xp=state.xp;
-  var ranks=[[500,'Analyste'],[1500,'Analyste confirmé'],[3000,'Chasseur de menaces']];
+  var ranks=[[500,rankName(500)],[1500,rankName(1500)],[3000,rankName(3000)]];
   for(var i=0;i<ranks.length;i++){
     if(xp<ranks[i][0]){
       var prev=i===0?0:ranks[i-1][0];
@@ -2538,7 +2677,7 @@ function touchStreak(){
     try{localStorage.setItem(STREAK_KEY,JSON.stringify(st));}catch(e){}
   }
   var el=document.getElementById('streakLine');
-  if(el)el.textContent=' '+st.count+' jour'+(st.count>1?'s':'')+' de suite — reviens demain pour continuer ta série.';
+  if(el)el.textContent=' '+fmtT(tr('streak.line'),{n:st.count,s:st.count>1?tr('streak.plural'):''});
   return st.count;
 }
 /* --- Défi du jour --- */
@@ -2611,22 +2750,22 @@ var lastRankIdx=0;try{lastRankIdx=rankIdx(state.xp);}catch(e){}
 function updateGreeting(){
   var g=document.getElementById('greet');if(!g)return;
   var h=new Date().getHours();
-  var t=h<5||h>=22?'Bonne nuit, Darkman':h<12?'Bonjour, Darkman':h<18?'Bon après-midi, Darkman':'Bonsoir, Darkman';
+  var t=h<5||h>=22?tr('greet.night'):h<12?tr('greet.morning'):h<18?tr('greet.aft'):tr('greet.eve');
   g.textContent=t;
   var sub=document.getElementById('greetSub');
-  if(sub)sub.textContent=state.xp===0?'Bienvenue au SOC. Ta première mission t’attend.':state.xp<500?'Reprise en douceur — ta prochaine étape t’attend.':state.xp<1500?'Le SOC tourne grâce à toi. Continue comme ça.':'Chasseur de menaces en devenir — le SOC compte sur toi.';
+  if(sub)sub.textContent=state.xp===0?tr('greet.sub0'):state.xp<500?tr('greet.sub1'):state.xp<1500?tr('greet.sub2'):tr('greet.sub3');
 }
 function nextStep(){
   for(var i=0;i<modules.length;i++){
-    if(!state.done[modules[i].id])return {title:'Prochain niveau du parcours',text:modules[i].title+' — chaque niveau te rend meilleur analyste. +100 XP à la clé.',btn:'Y aller →',go:function(){showScreen('screen-parcours');}};
+    if(!state.done[modules[i].id])return {title:tr('ns.next'),text:modules[i].title+tr('ns.next.text'),btn:tr('ns.next.btn'),go:function(){showScreen('screen-parcours');}};
   }
-  if(!state.flags.scenario)return {title:'Mission SOC 02:47',text:'Trois décisions, un incident à clôturer. +100 XP à la clé.',btn:'Lancer la mission →',go:function(){showScreen('screen-mission');}};
-  if(!state.flags.logs)return {title:'Chasse aux logs',text:'Trouve les 2 lignes vraiment suspectes. +80 XP à la clé.',btn:'Chasser l’intrus →',go:function(){showScreen('screen-mission');}};
-  if(!state.flags.terminal)return {title:'Terminal Linux',text:'Trouve flag.txt et lis son contenu. +60 XP à la clé.',btn:'Ouvrir le terminal →',go:function(){showScreen('screen-terminal');}};
-  if(!state.flags.phishing)return {title:'Phishing Lab',text:'Classe les 3 e-mails. +70 XP à la clé.',btn:'Trier les e-mails →',go:function(){showScreen('screen-phishing');}};
+  if(!state.flags.scenario)return {title:tr('ns.mission'),text:tr('ns.mission.text'),btn:tr('ns.mission.btn'),go:function(){showScreen('screen-mission');}};
+  if(!state.flags.logs)return {title:tr('ns.logs'),text:tr('ns.logs.text'),btn:tr('ns.logs.btn'),go:function(){showScreen('screen-mission');}};
+  if(!state.flags.terminal)return {title:tr('ns.term'),text:tr('ns.term.text'),btn:tr('ns.term.btn'),go:function(){showScreen('screen-terminal');}};
+  if(!state.flags.phishing)return {title:tr('ns.phish'),text:tr('ns.phish.text'),btn:tr('ns.phish.btn'),go:function(){showScreen('screen-phishing');}};
   var doneMission=false;for(var k in nw.completed){if(nw.completed[k])doneMission=true;}
-  if(!doneMission)return {title:'Campagne NIGHTWATCH',text:'Mission 1 : Premier contact — attaque et défends en même temps.',btn:'Lancer NIGHTWATCH →',go:function(){goNightwatch();}};
-  return {title:'Records à battre',text:'Ton meilleur score NIGHTWATCH : '+(state.best.nw||0)+' pts. Bats ton record !',btn:'Rejouer →',go:function(){goNightwatch();}};
+  if(!doneMission)return {title:tr('ns.nw'),text:tr('ns.nw.text'),btn:tr('ns.nw.btn'),go:function(){goNightwatch();}};
+  return {title:tr('ns.records'),text:fmtT(tr('ns.records.text'),{nw:(state.best.nw||0)}),btn:tr('ns.records.btn'),go:function(){goNightwatch();}};
 }
 function renderNextStep(){
   var t=document.getElementById('nextStepTitle');if(!t)return;
@@ -2639,13 +2778,14 @@ function renderNextStep(){
 function updateNextRank(){
   var el=document.getElementById('statNextRank');if(!el)return;
   var r=nextRankInfo();
-  el.textContent=r.next?('Encore '+r.missing+' XP pour devenir '+r.next+'.'):'Rang maximum atteint — bravo !';
+  el.textContent=r.next?fmtT(tr('nextrank.more'),{n:r.missing,rank:r.next}):tr('nextrank.max');
+  var goal=document.getElementById('statXpGoal');if(goal)goal.textContent=fmtT(tr('stat.xpgoal'),{rank:rankName(3000)});
 }
 function renderStreakChip(){
   var el=document.getElementById('streakChip');if(!el)return;
   var st={last:'',count:0};
   try{var s=JSON.parse(localStorage.getItem(STREAK_KEY)||'{}');if(s.last)st=s;}catch(e){}
-  el.textContent=' '+st.count+' jour'+(st.count>1?'s':'');
+  el.textContent=' '+fmtT(tr('streak.chip'),{n:st.count,s:st.count>1?tr('streak.plural'):''});
 }
 function floatXP(n){
   if(reducedMotion())return;
@@ -2657,8 +2797,8 @@ function floatXP(n){
 }
 function showRankup(rank){
   var m=document.getElementById('rankup');if(!m)return;
-  document.getElementById('rankupTitle').textContent='Rang supérieur !';
-  document.getElementById('rankupText').textContent='Tu es maintenant '+rank+' — tu progresses vite, Darkman.';
+  document.getElementById('rankupTitle').textContent=tr('rankup.title');
+  document.getElementById('rankupText').textContent=fmtT(tr('rankup.text'),{rank:rank});
   m.style.display='grid';
   buzz([60,40,60]);
 }
@@ -3111,22 +3251,22 @@ var STATS_XP=[['quiz','Quiz'],['ports','Devine le port'],['siem','SIEM'],['garde
 function renderStatsScreen(){
   var el=document.getElementById('statsView');if(!el)return;
   var st=state.stats||{};
-  var html='<div class="card"><span class="tag">Précision</span><h3 style="margin-top:10px">Précision par activité</h3>';
+  var html='<div class="card"><span class="tag">'+tr('stats.acc.tag')+'</span><h3 style="margin-top:10px">'+tr('stats.acc.h')+'</h3>';
   var any=false;
   STATS_MODES.forEach(function(m){
     var s=st[m[0]];
     if(s&&s.total>0){any=true;var pct=Math.round(s.good/s.total*100);
-      html+='<p style="margin:8px 0 2px"><b>'+m[1]+'</b> — '+s.good+' / '+s.total+' ('+pct+' %)</p><div style="height:8px;background:var(--panel2);border-radius:99px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:var(--green)"></div></div>';}
+      html+='<p style="margin:8px 0 2px"><b>'+modeName(m[0],m[1])+'</b> — '+s.good+' / '+s.total+' ('+pct+' %)</p><div style="height:8px;background:var(--panel2);border-radius:99px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:var(--green)"></div></div>';}
   });
-  if(!any)html+='<p style="color:var(--muted)">Joue à une activité pour voir ta précision ici.</p>';
+  if(!any)html+='<p style="color:var(--muted)">'+tr('stats.acc.none')+'</p>';
   html+='</div>';
-  html+='<div class="card"><span class="tag">XP par activité</span><h3 style="margin-top:10px">D’où viennent tes XP</h3>';
+  html+='<div class="card"><span class="tag">'+tr('stats.xp.tag')+'</span><h3 style="margin-top:10px">'+tr('stats.xp.h')+'</h3>';
   var xb=state.xpBy||{};
   var rows=STATS_XP.filter(function(m){return (xb[m[0]]||0)>0;}).sort(function(a,b){return xb[b[0]]-xb[a[0]];});
-  if(!rows.length)html+='<p style="color:var(--muted)">Aucun XP gagné pour l’instant.</p>';
-  rows.forEach(function(m){html+='<p style="margin:6px 0"><b>'+m[1]+'</b> — '+xb[m[0]]+' XP</p>';});
+  if(!rows.length)html+='<p style="color:var(--muted)">'+tr('stats.xp.none')+'</p>';
+  rows.forEach(function(m){html+='<p style="margin:6px 0"><b>'+modeName(m[0],m[1])+'</b> — '+xb[m[0]]+' XP</p>';});
   html+='</div>';
-  html+='<div class="card"><span class="tag">Totaux</span><h3 style="margin-top:10px">En résumé</h3><p>'+state.xp+' XP • '+state.games+' partie(s) jouée(s) • '+Object.keys(state.done).length+' mission(s) terminée(s) • '+Object.keys(state.badges).length+' badge(s) débloqué(s)</p></div>';
+  html+='<div class="card"><span class="tag">'+tr('stats.tot.tag')+'</span><h3 style="margin-top:10px">'+tr('stats.tot.h')+'</h3><p>'+fmtT(tr('stats.tot.line'),{xp:state.xp,games:state.games,missions:Object.keys(state.done).length,badges:Object.keys(state.badges).length})+'</p></div>';
   el.innerHTML=html;
 }
 
@@ -3139,6 +3279,7 @@ initSiem();renderMitre();startGarde();initPorts();initEmail();initReseau();
 updateNwHud();
 updateNwMap();
 showNwMenu();
+applyLang();
 </script>
 </body>
 </html>
