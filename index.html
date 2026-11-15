@@ -1,6 +1,7 @@
 <!doctype html>
 <!-- Cybersec — REBUILD (15 nov 2026). Même contenu que cybersec-redesign.html (redesign Figma Make), reconstruit proprement.
 Règles de stabilité : 0 backdrop-filter · 0 couche fixe plein écran (scanlines dans le fond du body, elles défilent avec la page) · 0 confirm()/alert()/prompt() (confirmation en page) · 3D coupée par défaut, boucles rAF gardées (pause si caché / hors écran) · timer NIGHTWATCH uniquement en partie, sur son écran, onglet visible · 100 % hors-ligne, un seul fichier. Mêmes clés localStorage : 'jeu-combine-v1' (progression) et 'jeu-3d-prefs-v2' (3D).
+MAJ 15 nov 13:39 — Firebase Auth fusionne (ecran de connexion avant le jeu, inscription, mot de passe oublie, deconnexion Menu/Profil). Progression toujours en localStorage (pas encore de synchro Firestore). Base : version 20 ecrans (Quiz v2, Reseau, OSINT, Statistiques + correctifs SIEM/quiz/ports).
 MAJ 15 nov 11:45 — cause du freeze trouvée par Darkman : overflow-x:hidden sur html,body (déplacé sur .wrap uniquement). Restaurés : voile plein écran de montée de rang (.rankup-overlay) + couche flottante +XP (#fxlayer). Non restaurés (causes connues de plantage Android) : backdrop-filter blur, scanlines fixes plein écran. -->
 <html lang="fr">
 <head>
@@ -96,7 +97,7 @@ section{padding:18px 0 4px}
 .quiz-opt.correct{border-color:var(--green);animation:popIn .25s ease}
 .quiz-opt.wrong{border-color:var(--red)}
 .progress-dots{display:flex;gap:6px;margin:10px 0}.progress-dots i{height:6px;flex:1;border-radius:999px;background:var(--line)}.progress-dots i.on{background:var(--amber)}
-input[type=text],input[type=password],input[type=email]{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);min-height:42px;font-size:12px}
+input[type=text],input[type=password]{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);min-height:42px;font-size:12px}
 .meter{height:10px;border-radius:999px;background:var(--line);overflow:hidden;margin:12px 0}.meter i{display:block;height:100%;width:0;background:var(--red);transition:width .3s ease}
 .search{margin-bottom:12px}
 .glossary dt{font-weight:800;margin-top:14px}.glossary dd{margin:2px 0 0;color:var(--muted)}
@@ -730,7 +731,7 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
       <h3 style="margin-top:10px">Quiz cybersécurité</h3>
       <div class="buddy" id="buddyQuiz"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2</b><span class="buddy-text">Pas de pression, chaque question est un entraînement. Une mauvaise réponse, c’est juste une notion à revoir.</span></div></div>
       <div class="progress-dots" id="quizDots"></div>
-      <p class="mono" style="color:var(--muted);font-size:11px" id="quizMeta">Question 1 / 8</p>
+      <p class="mono" style="color:var(--muted);font-size:11px" id="quizMeta">Choisis un thème</p>
       <h3 id="quizQ" style="font-size:14px"></h3>
       <div id="quizOpts"></div>
       <div class="feedback" id="quizFeedback"></div>
@@ -782,12 +783,21 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
     <div class="streak-row" id="streakLine"> Série : 0 jour</div>
     <h3 style="margin-top:14px">Tes badges</h3>
     <div class="badge-grid" id="badgeGrid"></div>
+    <button class="mini-btn" style="margin-top:10px" onclick="renderStatsScreen();showScreen('screen-stats')">📊 Voir mes statistiques</button>
     <button class="mini-btn" id="resetBtn">Effacer ma progression</button>
     <button class="mini-btn" id="logoutBtnProfil" style="margin-left:8px">Se déconnecter</button>
     <div id="resetConfirm" style="display:none;margin-top:10px;border:1px solid var(--red);border-radius:12px;padding:12px"><p style="margin:0 0 10px"><b>Effacer toute ta progression ?</b><br><span style="color:var(--muted)">XP, niveaux, badges et scores seront remis à zéro. Cette action est définitive.</span></p><button class="mini-btn primary" id="resetYes">Oui, tout effacer</button> <button class="mini-btn" id="resetNo">Non, annuler</button></div>
     <p id="authVerifyNote" style="display:none;font-size:11px;color:var(--amber);margin-top:10px">Ton e-mail n’est pas encore confirmé. <button class="mini-btn" id="authResendBtn">Renvoyer l’e-mail</button></p>
   </div>
   </section>
+  <section>
+  <section>
+    <div class="kicker">Compte</div>
+    <h2>Ton compte</h2>
+    <p style="font-size:12px">Connecté en tant que <b id="authEmailShown">—</b></p>
+    <button class="mini-btn" id="logoutBtnMenu">Se déconnecter</button>
+  </section>
+
 </div>
 
 <!-- ═══ PAR OÙ COMMENCER ═══ -->
@@ -806,7 +816,7 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
     <div class="mode-grid">
       <button class="mode-tile" onclick="showScreen('screen-terminal')"><span class="tile-ico">CLI</span>Terminal Linux<small>Commandes de base</small></button>
       <button class="mode-tile" onclick="showScreen('screen-phishing')"><span class="tile-ico">PH</span>Phishing Lab<small>Repère les pièges</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-quiz')"><span class="tile-ico">QZ</span>Quiz<small>8 questions</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-quiz')"><span class="tile-ico">QZ</span>Quiz<small>56 questions</small></button>
       <button class="mode-tile" onclick="showScreen('screen-outils')"><span class="tile-ico">DOC</span>Outils &amp; Glossaire<small>Références et mots-clés</small></button>
     </div>
   </div>
@@ -886,6 +896,54 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
   </section>
 </div>
 
+<!-- ═══ ANALYSE RÉSEAU — WIRESHARK ═══ -->
+<div class="screen" id="screen-reseau">
+  <section>
+    <div class="kicker">Analyse réseau • +90 XP</div>
+    <h2>Analyse réseau — Wireshark</h2>
+    <p>3 captures à analyser, façon Wireshark. Touche les paquets suspects, puis réponds à la question d'analyse.</p>
+    <div class="buddy" id="buddyReseau"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2</b><span class="buddy-text">En capture, tout ressemble à du trafic normal — sauf 2 paquets. Trouve-les.</span></div></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px" id="reseauTabs"></div>
+    <div class="card">
+      <span class="tag" id="reseauCapTag">Capture 1 / 3 • +30 XP</span>
+      <h3 style="margin-top:10px" id="reseauCapName">—</h3>
+      <div id="reseauPackets"></div>
+      <div class="feedback" id="reseauFb"></div>
+      <p class="mono" style="color:var(--muted);font-size:11px" id="reseauScore">Suspects trouvés : 0 / 2</p>
+    </div>
+    <div id="reseauQWrap" style="display:none">
+      <div class="card">
+        <span class="tag">Question d'analyse</span>
+        <h3 id="reseauQ" style="font-size:14px"></h3>
+        <div id="reseauQOpts"></div>
+        <div class="feedback" id="reseauQFb"></div>
+      </div>
+    </div>
+    <div class="feedback" id="reseauEndFb"></div>
+  </section>
+</div>
+
+<!-- ═══ ENQUÊTE OSINT ═══ -->
+<div class="screen" id="screen-osint">
+  <section>
+    <div class="kicker">Enquête OSINT • +100 XP</div>
+    <h2>Enquête OSINT — Qui est shadow_fox92 ?</h2>
+    <p>Un compte suspect a tenté de se connecter au réseau. Retrouve qui se cache derrière, indice par indice.</p>
+    <div class="buddy" id="buddyOsint"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2</b><span class="buddy-text">L'OSINT, c'est enquêter avec ce qui est public : un pseudo, un e-mail, une photo, un domaine.</span></div></div>
+    <div id="osintView"></div>
+  </section>
+</div>
+
+<!-- ═══ STATISTIQUES ═══ -->
+<div class="screen" id="screen-stats">
+  <section>
+    <div class="kicker">Statistiques</div>
+    <h2>Mes statistiques</h2>
+    <p>Ta précision par activité, d'où viennent tes XP, et tes totaux.</p>
+    <div id="statsView"></div>
+  </section>
+</div>
+
 <!-- ═══ MENU ═══ -->
 <div class="screen" id="screen-menu">
   <section>
@@ -960,20 +1018,17 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
       <button class="mode-tile" onclick="showScreen('screen-nightwatch')"><span class="tile-ico">◎</span>NIGHTWATCH<small>Attaque &amp; défense</small></button>
       <button class="mode-tile" onclick="showScreen('screen-terminal')"><span class="tile-ico">CLI</span>Terminal Linux<small>Commandes de base</small></button>
       <button class="mode-tile" onclick="showScreen('screen-phishing')"><span class="tile-ico">PH</span>Phishing Lab<small>Repère les pièges</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-quiz')"><span class="tile-ico">QZ</span>Quiz<small>8 questions</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-quiz')"><span class="tile-ico">QZ</span>Quiz<small>56 questions</small></button>
       <button class="mode-tile" onclick="showScreen('screen-outils')"><span class="tile-ico">DOC</span>Outils &amp; Glossaire<small>Références et mots-clés</small></button>
       <button class="mode-tile" onclick="showScreen('screen-siem')"><span class="tile-ico">SI</span>SIEM — Tri de logs<small>Logs + requêtes SPL</small></button>
       <button class="mode-tile" onclick="renderMitre();showScreen('screen-mitre')"><span class="tile-ico">AT</span>MITRE ATT&CK<small>Carte des techniques</small></button>
       <button class="mode-tile" onclick="startGarde();showScreen('screen-garde')"><span class="tile-ico">GD</span>Garde SOC<small>Une garde complète</small></button>
       <button class="mode-tile" onclick="showScreen('screen-ports')"><span class="tile-ico">PT</span>Devine le port<small>10 manches</small></button>
       <button class="mode-tile" onclick="showScreen('screen-email')"><span class="tile-ico">ML</span>Analyse e-mail<small>En-têtes &amp; verdict</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-reseau')"><span class="tile-ico">WR</span>Analyse réseau<small>3 captures Wireshark</small></button>
+      <button class="mode-tile" onclick="startOsint();showScreen('screen-osint')"><span class="tile-ico">OS</span>Enquête OSINT<small>Qui est shadow_fox92 ?</small></button>
+      <button class="mode-tile" onclick="renderStatsScreen();showScreen('screen-stats')"><span class="tile-ico">ST</span>Statistiques<small>Précision &amp; XP par activité</small></button>
     </div>
-  </section>
-  <section>
-    <div class="kicker">Compte</div>
-    <h2>Ton compte</h2>
-    <p style="font-size:12px">Connecté en tant que <b id="authEmailShown">—</b></p>
-    <button class="mini-btn" id="logoutBtnMenu">Se déconnecter</button>
   </section>
 </div>
 
@@ -995,8 +1050,11 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
 <script>
 /* ═══ ÉTAT UNIFIÉ — un seul système d'XP, sauvegarde localStorage ═══ */
 var KEY='jeu-combine-v1';
-var state={xp:0,role:0,games:0,done:{},flags:{},best:{soc:0,nw:0,duel:0},badges:{}};
+var state={xp:0,role:0,games:0,done:{},flags:{},best:{soc:0,nw:0,duel:0},badges:{},stats:{},xpBy:{}};
 try{var s=JSON.parse(localStorage.getItem(KEY)||'{}');for(var k in s){state[k]=s[k];}}catch(e){}
+if(!state.stats)state.stats={};
+if(!state.xpBy)state.xpBy={};
+if(!state.xpByBf){var _bm={quiz:10,port:5,reseau:30,osint:20,daily:50,scenario:100,logs:80,terminal:60,phishing:70,pwd:30,siem:80,garde:100,email:80};for(var _k in (state.flags||{})){var _a=_k.split('-')[0];if(_bm[_a])state.xpBy[_a]=(state.xpBy[_a]||0)+_bm[_a];}state.xpByBf=true;save();}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
 var ROLES=[{name:'Recrue',mult:1,fp:1,det:10},{name:'Analyste',mult:1.5,fp:3,det:8},{name:'Expert',mult:2,fp:5,det:6}];
 function rankName(x){return x>=3000?'Chasseur de menaces':x>=1500?'Analyste confirmé':x>=500?'Analyste':'Recrue';}
@@ -1005,10 +1063,13 @@ function addXP(n,key){
   if(key&&state.flags[key])return 0;
   if(key)state.flags[key]=true;
   var g=Math.round(n*ROLES[state.role].mult);
-  state.xp+=g;save();renderStats();checkDaily(key);
+  state.xp+=g;
+  if(key){if(!state.xpBy)state.xpBy={};var act=key.split('-')[0];state.xpBy[act]=(state.xpBy[act]||0)+g;}
+  save();renderStats();checkDaily(key);
   if(g>0){toast('+'+g+' XP');floatXP(g);}
   return g;
 }
+function stat(mode,ok){if(!state.stats)state.stats={};var s=state.stats[mode]||(state.stats[mode]={good:0,total:0});s.total++;if(ok)s.good++;save();}
 function renderStats(){
   var xp=state.xp;
   document.getElementById('hudXp').textContent=xp+' XP';
@@ -1148,7 +1209,7 @@ document.getElementById('resetBtn').onclick=function(){
   var c=document.getElementById('resetConfirm');if(c)c.style.display='block';
 };
 document.getElementById('resetYes').onclick=function(){
-  state={xp:0,role:0,games:0,done:{},flags:{},best:{soc:0,nw:0,duel:0},badges:{}};save();try{localStorage.removeItem(STREAK_KEY);}catch(e){}renderStats();renderQuiz();
+  state={xp:0,role:0,games:0,done:{},flags:{},best:{soc:0,nw:0,duel:0},badges:{},stats:{},xpBy:{}};save();try{localStorage.removeItem(STREAK_KEY);}catch(e){}renderStats();renderQuiz();
   var c=document.getElementById('resetConfirm');if(c)c.style.display='none';
   toast('Progression effacée.');
 };
@@ -1276,7 +1337,7 @@ var phish=[
     var fb=d.querySelector('.feedback');
     function answer(guessBad){
       if(d.dataset.done)return;d.dataset.done=1;
-      var ok=guessBad===p.bad;fb.className='feedback show '+(ok?'ok':'bad');fb.textContent=(ok?'✅ Bien vu. ':'❌ Raté. ')+p.why;
+      var ok=guessBad===p.bad;stat('phishing',ok);fb.className='feedback show '+(ok?'ok':'bad');fb.textContent=(ok?'✅ Bien vu. ':'❌ Raté. ')+p.why;
       if(ok){done++;if(done===3)addXP(70,'phishing');}else sayBuddy('buddyPhish','Bien essayé ! Regarde l’expéditeur et le domaine : c’est souvent là que ça se joue.');
     }
     d.querySelector('.ph-legit').onclick=function(){answer(false);};
@@ -1296,32 +1357,105 @@ document.getElementById('pwdInput').addEventListener('input',function(e){
   if(score===5)addXP(30,'pwd');
 });
 /* ═══ QUIZ 8 QUESTIONS ═══ */
-var quiz=[
- {q:"Que signifie l'adresse 192.168.1.10 ?",o:["Un site web","Une adresse IP privée d'un réseau local","Un mot de passe","Un type de virus"],a:1,x:"Les plages 192.168.x.x sont privées : elles identifient une machine sur un réseau local."},
- {q:"Quel port est utilisé par HTTPS ?",o:["80","21","443","3389"],a:2,x:"80 = HTTP, 443 = HTTPS, 21 = FTP, 3389 = RDP (bureau à distance Windows)."},
- {q:"Un attaquant essaie des milliers de mots de passe jusqu'à trouver le bon. C'est…",o:["Du phishing","Un brute force","Un pare-feu","Une sauvegarde"],a:1,x:"Le brute force teste massivement des combinaisons. D'où l'intérêt des mots de passe longs + MFA + limitation des tentatives."},
- {q:"Dans un terminal Linux, quelle commande liste les fichiers ?",o:["cd","ls","rm","ping"],a:1,x:"ls = lister, cd = changer de dossier, ping = tester la connectivité."},
- {q:"Qu'est-ce qu'un SIEM ?",o:["Un antivirus grand public","Un système qui centralise les logs et alerte sur les incidents","Un câble réseau","Un langage de programmation"],a:1,x:"Le SIEM est l'outil central d'un SOC : collecte, corrélation, alertes."},
- {q:"Un e-mail urgent te demande ton mot de passe via un lien. Réflexe ?",o:["Cliquer vite avant l'expiration","Vérifier l'expéditeur et passer par le site officiel, jamais par le lien","Transférer à tes contacts","Répondre avec ton mot de passe"],a:1,x:"Aucun service sérieux ne demande un mot de passe par e-mail. On vérifie le domaine et on signale."},
- {q:"Que fait la commande grep dans un fichier de logs ?",o:["Elle supprime le fichier","Elle cherche les lignes contenant un mot","Elle chiffre le disque","Elle redémarre le serveur"],a:1,x:"grep ERROR auth.log = ne garder que les lignes utiles. L'allié n°1 de l'analyse de logs."},
- {q:"La double authentification (MFA) sert à…",o:["Rendre le Wi-Fi plus rapide","Ajouter une 2e preuve d'identité en plus du mot de passe","Cacher ton adresse IP","Supprimer les virus"],a:1,x:"Même avec un mot de passe volé, l'attaquant bloque sur le 2e facteur (code, application, clé)."}
+var QBANK=[
+ {c:'secplus',q:"Que signifie l'adresse 192.168.1.10 ?",o:["Un site web","Une adresse IP privée d'un réseau local","Un mot de passe","Un type de virus"],a:1,x:"Les plages 192.168.x.x sont privées : elles identifient une machine sur un réseau local."},
+ {c:'secplus',q:"Quel port est utilisé par HTTPS ?",o:["80","21","443","3389"],a:2,x:"80 = HTTP, 443 = HTTPS, 21 = FTP, 3389 = RDP (bureau à distance Windows)."},
+ {c:'secplus',q:"Un attaquant essaie des milliers de mots de passe jusqu'à trouver le bon. C'est…",o:["Du phishing","Un brute force","Un pare-feu","Une sauvegarde"],a:1,x:"Le brute force teste massivement des combinaisons. D'où l'intérêt des mots de passe longs + MFA + limitation des tentatives."},
+ {c:'soc',q:"Dans un terminal Linux, quelle commande liste les fichiers ?",o:["cd","ls","rm","ping"],a:1,x:"ls = lister, cd = changer de dossier, ping = tester la connectivité."},
+ {c:'soc',q:"Qu'est-ce qu'un SIEM ?",o:["Un antivirus grand public","Un système qui centralise les logs et alerte sur les incidents","Un câble réseau","Un langage de programmation"],a:1,x:"Le SIEM est l'outil central d'un SOC : collecte, corrélation, alertes."},
+ {c:'btl1',q:"Un e-mail urgent te demande ton mot de passe via un lien. Réflexe ?",o:["Cliquer vite avant l'expiration","Vérifier l'expéditeur et passer par le site officiel, jamais par le lien","Transférer à tes contacts","Répondre avec ton mot de passe"],a:1,x:"Aucun service sérieux ne demande un mot de passe par e-mail. On vérifie le domaine et on signale."},
+ {c:'soc',q:"Que fait la commande grep dans un fichier de logs ?",o:["Elle supprime le fichier","Elle cherche les lignes contenant un mot","Elle chiffre le disque","Elle redémarre le serveur"],a:1,x:"grep ERROR auth.log = ne garder que les lignes utiles. L'allié n°1 de l'analyse de logs."},
+ {c:'secplus',q:"La double authentification (MFA) sert à…",o:["Rendre le Wi-Fi plus rapide","Ajouter une 2e preuve d'identité en plus du mot de passe","Cacher ton adresse IP","Supprimer les virus"],a:1,x:"Même avec un mot de passe volé, l'attaquant bloque sur le 2e facteur (code, application, clé)."},
+ {c:'secplus',q:"Que signifie le « C » de la triade CIA ?",o:["Confidentialité","Chiffrement","Conformité","Contrôle"],a:0,x:"CIA = Confidentialité, Intégrité, Disponibilité : les trois piliers de la sécurité de l'information."},
+ {c:'secplus',q:"Quelle attaque consiste à s'interposer entre deux parties qui communiquent ?",o:["L'homme du milieu (MITM)","Le DDoS","Le phishing","Le ransomware"],a:0,x:"L'attaquant intercepte et peut lire ou modifier les échanges. Le chiffrement (TLS, VPN) est la défense."},
+ {c:'secplus',q:"Un ransomware chiffre tes fichiers et demande une rançon. Quelle est la meilleure défense ?",o:["Des sauvegardes régulières, hors ligne","Un antivirus gratuit","Un mot de passe plus long","Éteindre l'ordinateur"],a:0,x:"Avec des sauvegardes hors ligne, on restaure sans payer. Payer ne garantit jamais de récupérer ses fichiers."},
+ {c:'secplus',q:"Que fait un pare-feu (firewall) ?",o:["Il filtre le trafic réseau selon des règles","Il chiffre les disques durs","Il détecte les virus dans les e-mails","Il sauvegarde les données"],a:0,x:"Le pare-feu autorise ou bloque les flux selon des règles (ports, IP, protocoles). C'est la porte d'entrée du réseau."},
+ {c:'secplus',q:"Qu'est-ce que le principe du moindre privilège ?",o:["Donner à chacun uniquement les accès nécessaires à son travail","Donner les droits admin à tout le monde","Changer de mot de passe chaque jour","Ne jamais donner d'accès à personne"],a:0,x:"Moins de droits = moins de dégâts si un compte est compromis. C'est la base du contrôle d'accès."},
+ {c:'secplus',q:"Un certificat TLS/SSL sert à…",o:["Chiffrer la connexion et authentifier le site","Accélérer l'affichage du site","Bloquer les publicités","Sauvegarder les mots de passe"],a:0,x:"TLS chiffre les échanges et prouve que le site est bien celui qu'il prétend être (cadenas du navigateur)."},
+ {c:'secplus',q:"Qu'est-ce qu'une attaque DDoS ?",o:["Submerger un service de requêtes pour le rendre indisponible","Voler des mots de passe","Chiffrer des fichiers","Espionner un clavier"],a:0,x:"Des milliers de machines (botnet) inondent le service : il ne répond plus aux utilisateurs légitimes."},
+ {c:'secplus',q:"Quel protocole sécurise l'accès distant en ligne de commande ?",o:["SSH","Telnet","FTP","HTTP"],a:0,x:"SSH (port 22) chiffre la connexion. Telnet envoie tout en clair : à ne jamais utiliser."},
+ {c:'cysa',q:"Dans un SIEM, qu'est-ce que la corrélation ?",o:["Relier plusieurs événements pour détecter une attaque","Compresser les logs pour gagner de la place","Chiffrer les alertes","Supprimer les faux positifs"],a:0,x:"Un échec de connexion seul n'est rien ; 50 échecs + une connexion réussie depuis une IP inconnue = une alerte."},
+ {c:'cysa',q:"Un IOC, c'est…",o:["Un indicateur de compromission : IP, hash ou domaine malveillant","Un type de pare-feu","Un protocole de chiffrement","Un outil de sauvegarde"],a:0,x:"Les IOC sont les traces connues d'une attaque : on les bloque partout et on cherche s'ils sont déjà présents chez nous."},
+ {c:'cysa',q:"Quelle est la première phase de la réponse à incident (NIST) ?",o:["La préparation","L'éradication","Le confinement","Le retour d'expérience"],a:0,x:"Préparation : procédures, outils, contacts, sauvegardes. Sans elle, on improvise pendant l'incident — et on perd du temps."},
+ {c:'cysa',q:"Un analyste voit 500 échecs de connexion sur un compte en 5 minutes. Que conclure ?",o:["Un brute force probable, à investiguer","L'utilisateur a oublié son mot de passe","Le serveur est en panne","C'est un comportement normal"],a:0,x:"500 échecs en 5 minutes, c'est un robot, pas un humain. On vérifie la source et on bloque si besoin."},
+ {c:'cysa',q:"Qu'est-ce qu'un faux positif dans un SOC ?",o:["Une alerte déclenchée par un événement bénin","Une attaque qui a réussi","Un log supprimé par erreur","Un compte compromis"],a:0,x:"Le faux positif fait perdre du temps : le triage consiste justement à les écarter pour garder les vraies menaces."},
+ {c:'cysa',q:"Quel outil analyse le trafic réseau paquet par paquet ?",o:["Wireshark","Excel","Notepad","PuTTY"],a:0,x:"Wireshark capture et affiche chaque paquet : adresses, ports, protocoles. L'outil n°1 de l'analyse réseau."},
+ {c:'cysa',q:"Dans la kill chain, que vient juste après la livraison (delivery) ?",o:["L'exploitation","La reconnaissance","L'exfiltration","L'installation"],a:0,x:"Reconnaissance, arme, livraison, exploitation, installation, commande & contrôle, action. L'exploitation, c'est le moment où la faille est déclenchée."},
+ {c:'cysa',q:"Que signifie « containment » en réponse à incident ?",o:["Isoler l'élément compromis pour limiter les dégâts","Supprimer toutes les preuves","Éteindre tout le réseau","Prévenir les médias"],a:0,x:"On isole le poste ou on bloque l'IP : l'attaquant ne peut plus avancer, mais le reste de l'entreprise continue de tourner."},
+ {c:'cysa',q:"Une vulnérabilité avec un score CVSS de 9,8, c'est…",o:["Critique : à corriger en priorité absolue","Faible : on peut l'ignorer","Un faux positif","Un problème de performance"],a:0,x:"CVSS va de 0 à 10. Au-dessus de 9, c'est critique : exploitable à distance, impact maximal."},
+ {c:'cysa',q:"À quoi sert un scan Nmap ?",o:["Découvrir les ports ouverts et les services d'une machine","Scanner les virus d'un disque","Cracker des mots de passe","Chiffrer le trafic"],a:0,x:"Nmap cartographie le réseau : ports ouverts, services, systèmes. Les attaquants comme les défenseurs l'utilisent."},
+ {c:'cysa',q:"Pourquoi centraliser les logs dans un SIEM ?",o:["Pour corréler les événements de tout le parc et détecter les attaques","Pour libérer de l'espace disque","Pour accélérer les postes","Pour remplacer l'antivirus"],a:0,x:"Un log seul ne dit pas grand-chose. Croisés entre pare-feu, serveurs et postes, ils racontent l'attaque."},
+ {c:'cysa',q:"Un hash SHA-256 d'un fichier sert à…",o:["Vérifier son intégrité et l'identifier de façon unique","Le chiffrer","Le compresser","Le supprimer définitivement"],a:0,x:"Le hash est l'empreinte du fichier : s'il change d'un seul bit, le hash change. On s'en sert pour repérer les malwares connus."},
+ {c:'btl1',q:"Dans MITRE ATT&CK, la tactique « Initial Access » désigne…",o:["Comment l'attaquant entre dans le réseau (phishing, brute force…)","Comment il vole les données","Comment il se cache","Comment il chiffre les fichiers"],a:0,x:"Initial Access = la porte d'entrée. Les autres tactiques décrivent la suite : persistance, vol d'identifiants, exfiltration…"},
+ {c:'btl1',q:"Un e-mail a SPF=pass, mais le Reply-To pointe vers un autre domaine. Que faire ?",o:["Suspect : vérifier le vrai lien et l'expéditeur","Légitime, SPF passe donc tout va bien","Supprimer sans lire","Transférer à tous tes contacts"],a:0,x:"SPF ne valide que le domaine d'envoi, pas le Reply-To. Une réponse qui part ailleurs, c'est un signal de phishing."},
+ {c:'btl1',q:"Quel en-tête e-mail indique les serveurs par lesquels le message est réellement passé ?",o:["Received","Subject","X-Priority","Content-Type"],a:0,x:"Les en-têtes Received retracent le chemin du mail : on y repère les serveurs suspects ou incohérents."},
+ {c:'btl1',q:"Sur le port 3389, quel service tourne normalement ?",o:["RDP (bureau à distance Windows)","HTTPS","DNS","SMTP"],a:0,x:"3389 = RDP. Un RDP exposé sur Internet sans MFA, c'est une porte grande ouverte pour les ransomwares."},
+ {c:'btl1',q:"Des centaines de requêtes DNS TXT vers un domaine inconnu : que suspecter ?",o:["Un canal de commande et contrôle (C2)","Une mise à jour Windows","Du streaming vidéo","Une sauvegarde cloud"],a:0,x:"Le DNS TXT sert parfois à cacher des ordres : le malware « téléphone » à son serveur en douce, par petites touches."},
+ {c:'btl1',q:"Dans Wireshark, quel filtre n'affiche que le trafic HTTP ?",o:["http","tcp","dns","arp"],a:0,x:"Le filtre « http » ne garde que le web. « tcp » montrerait tout le trafic TCP, y compris le reste."},
+ {c:'btl1',q:"Un PC envoie 2 Go vers une IP externe inconnue à 3h du matin. C'est…",o:["Une exfiltration probable","Une mise à jour planifiée","Une sauvegarde normale","Du streaming"],a:0,x:"Gros volume + destination inconnue + horaire inhabituel = les trois signaux de l'exfiltration. On enquête."},
+ {c:'btl1',q:"Que signifie DMARC ?",o:["Une politique qui dit quoi faire quand SPF ou DKIM échouent","Un antivirus pour e-mails","Un type de phishing","Un protocole de messagerie"],a:0,x:"DMARC = le chef d'orchestre : si SPF ou DKIM échoue, il dit au destinataire de rejeter ou de mettre en quarantaine."},
+ {c:'btl1',q:"Quelle tactique MITRE correspond au vol de mots de passe en mémoire ?",o:["Credential Access","Discovery","Persistence","Impact"],a:0,x:"Credential Access = récupérer les identifiants (Mimikatz, dump mémoire…). C'est souvent l'étape qui ouvre toutes les portes."},
+ {c:'btl1',q:"Pour bloquer une IP malveillante partout dans l'entreprise, où agir en priorité ?",o:["Au pare-feu périmétrique (et dans le SIEM / EDR)","Sur un seul poste","Dans les e-mails","Nulle part, on attend demain"],a:0,x:"Le pare-feu bloque à la porte ; le SIEM et l'EDR propagent le blocage et cherchent si l'IP est déjà passée."},
+ {c:'btl1',q:"Que doit contenir un bon rapport d'incident ?",o:["Chronologie, IOC, actions prises et recommandations","Seulement le nom de l'attaquant","Seulement le montant des dégâts","Rien, on ne documente pas"],a:0,x:"Un rapport sert à comprendre, à prouver et à ne pas répéter : faits, heures, IOC, actions, leçons."},
+ {c:'soc',q:"Il est 2h47, une alerte critique tombe pendant ta garde. Premier réflexe ?",o:["Vérifier les logs et le contexte avant d'escalader","Éteindre le serveur tout de suite","Appeler le directeur","Ignorer jusqu'au matin"],a:0,x:"Une alerte n'est pas une preuve : on vérifie d'abord si c'est un vrai positif, sinon on noie l'équipe sous les faux positifs."},
+ {c:'soc',q:"Un collègue te demande son mot de passe admin « juste pour 5 minutes ». Tu…",o:["Refuser : on ne partage jamais ses identifiants","Lui donner, c'est un collègue","Lui donner puis changer le mot de passe","Lui envoyer par e-mail"],a:0,x:"Un identifiant partagé, c'est une traçabilité détruite : en cas d'incident, on ne saura plus qui a fait quoi."},
+ {c:'soc',q:"Tu trouves une clé USB inconnue dans le parking. Que faire ?",o:["Ne pas la brancher, la remettre à la sécurité","La brancher pour voir ce qu'il y a","La garder pour toi","La jeter à la poubelle"],a:0,x:"La clé USB piégée est un classique : le simple fait de la brancher peut lancer un malware."},
+ {c:'soc',q:"Un utilisateur signale un e-mail bizarre. Ta première question ?",o:["« As-tu cliqué sur le lien ou ouvert la pièce jointe ? »","« Quel est ton mot de passe ? »","« C'est quel fournisseur ? »","« Tu as quel antivirus ? »"],a:0,x:"Savoir s'il a cliqué change tout : s'il a cliqué, on isole le poste et on vérifie ; sinon, on signale et on passe."},
+ {c:'soc',q:"Pourquoi documenter chaque incident, même mineur ?",o:["Pour le suivi, les tendances et les audits","Pour faire joli dans les rapports","Ce n'est pas nécessaire","Seulement pour les gros incidents"],a:0,x:"Les petits incidents d'aujourd'hui sont les tendances de demain. Sans documentation, on ne voit rien venir."},
+ {c:'soc',q:"Un faux positif revient chaque nuit à la même heure. Que faire ?",o:["Affiner la règle de détection après vérification","L'ignorer pour toujours","Supprimer le SIEM","Éteindre l'alerte"],a:0,x:"On vérifie d'abord que c'est bien bénin, puis on ajuste la règle : un SOC qui crie au loup, personne ne l'écoute."},
+ {c:'soc',q:"En fin de garde, que doit contenir ton passage de relais ?",o:["Les alertes en cours, les actions faites, ce qui reste à surveiller","Rien, le suivant verra bien","Seulement ton nom","Seulement les alertes fermées"],a:0,x:"Une garde, c'est une course de relais : sans passage propre, l'alerte en cours tombe dans l'oubli."},
+ {c:'soc',q:"Un manager te presse de fermer une alerte « pour faire baisser les chiffres ». Tu…",o:["Refuser : on ferme une alerte sur des faits, pas sur la pression","Fermer pour faire plaisir","Fermer et ne rien dire","Escalader au directeur"],a:0,x:"Fermer une vraie alerte pour les chiffres, c'est cacher une attaque. L'intégrité de l'analyste n'est pas négociable."},
+ {c:'soc',q:"Quel est le meilleur réflexe face à une pièce jointe .exe inattendue ?",o:["Ne pas l'ouvrir, la signaler au SOC","L'ouvrir dans une machine virtuelle perso","L'ouvrir, l'antivirus protège","La transférer à un collègue"],a:0,x:"Un .exe inattendu, c'est un malware jusqu'à preuve du contraire. On signale, on ne teste pas."},
+ {c:'secplus',q:"Un SOC reçoit des centaines d'alertes par jour. Quelle technologie automatise les réponses répétitives, comme isoler un poste ou bloquer une IP ?",o:["SOAR","SIEM","DLP","VPN"],a:0,x:"SOAR (Security Orchestration, Automation and Response) automatise les playbooks : le SIEM détecte, le SOAR agit."},
+ {c:'secplus',q:"Un poste est infecté. Quel outil permet à l'analyste de voir les processus lancés, de tuer le malware et d'isoler le poste à distance ?",o:["EDR","Antivirus classique","Pare-feu","Nmap"],a:0,x:"L'EDR (Endpoint Detection and Response) surveille chaque poste en continu et permet d'agir à distance, bien au-delà d'un simple antivirus."},
+ {c:'secplus',q:"Après le confinement d'un incident, quelle est l'étape suivante ?",o:["L'éradication","La préparation","Les leçons apprises","La détection"],a:0,x:"NIST : préparation, détection & analyse, confinement, éradication, récupération, leçons apprises. On élimine la cause avant de restaurer."},
+ {c:'secplus',q:"Quelle mesure réduit le plus la surface d'attaque d'un serveur ?",o:["Désactiver les services inutiles et appliquer les correctifs","Ajouter plus de mémoire RAM","Changer le nom du serveur","Installer un antivirus"],a:0,x:"Le durcissement (hardening) : moins de services exposés = moins de portes d'entrée. Les correctifs ferment les failles connues."},
+ {c:'secplus',q:"Pour préserver une preuve numérique après un incident, que faut-il faire en premier ?",o:["Faire une copie bit à bit et documenter la chaîne de possession","Analyser directement le disque d'origine","Éteindre la machine et jeter le disque","Copier les fichiers un par un"],a:0,x:"On ne touche jamais à l'original : on travaille sur une copie exacte, et chaque manipulation est tracée pour que la preuve soit recevable."},
+ {c:'secplus',q:"Une vulnérabilité a 80 % de chances d'être exploitée et coûterait 100 000 €. Quelle est l'exposition annuelle au risque (ALE) ?",o:["80 000 €","100 000 €","20 000 €","180 000 €"],a:0,x:"ALE = probabilité × impact : 0,8 × 100 000 = 80 000 €. C'est le calcul quantitatif du risque, au programme de Security+."},
+ {c:'secplus',q:"Qu'est-ce qu'un RTO ?",o:["Le temps maximal acceptable pour restaurer un service après un incident","Le temps entre deux sauvegardes","Le nombre de sauvegardes à conserver","Le coût d'une heure de panne"],a:0,x:"RTO (Recovery Time Objective) : combien de temps on peut rester en panne. Avec le RPO (données perdues acceptables), il pilote le plan de reprise."},
+ {c:'secplus',q:"Quelle est la meilleure défense contre le phishing ?",o:["La formation des utilisateurs et les simulations de phishing","Un pare-feu plus puissant","Interdire les e-mails externes","Un antivirus à jour"],a:0,x:"La technique bloque beaucoup, mais l'humain reste la cible : des utilisateurs formés et testés régulièrement, c'est la défense la plus efficace."}
 ];
-var qi=0,qScore=0;
+var qi=0,qScore=0,quiz=[],quizTheme=null;
+function quizThemeName(){return quizTheme==='all'?'Tout mélanger':quizTheme==='secplus'?'Security+':quizTheme==='cysa'?'CySA+':quizTheme==='btl1'?'Blue Team L1':'Vie réelle SOC';}
+function startQuiz(theme){
+  quizTheme=theme;
+  var pool=QBANK.map(function(q,i){return {c:q.c,q:q.q,o:q.o,a:q.a,x:q.x,id:i};});
+  if(theme!=='all')pool=pool.filter(function(q){return q.c===theme;});
+  quiz=shuf(pool).slice(0,10);
+  qi=0;qScore=0;renderQuiz();
+}
 function renderQuiz(){
-  document.getElementById('quizDots').innerHTML=quiz.map(function(_,i){return '<i class="'+(i<=qi?'on':'')+'"></i>';}).join('');
-  if(qi>=quiz.length){if(qScore>=6)checkDaily('quiz');document.getElementById('quizMeta').textContent='Quiz terminé';document.getElementById('quizQ').textContent='Score final : '+qScore+' / '+quiz.length;document.getElementById('quizOpts').innerHTML='<button class="mini-btn primary" id="quizReplay">↺ Rejouer le quiz</button>';document.getElementById('quizReplay').onclick=function(){qi=0;qScore=0;renderQuiz();};return;}
+  var dots=document.getElementById('quizDots');
+  if(!quizTheme){
+    dots.innerHTML='';
+    document.getElementById('quizMeta').textContent=QBANK.length+' questions • 4 thèmes • 10 par partie';
+    document.getElementById('quizQ').textContent='Choisis un thème pour t’entraîner';
+    document.getElementById('quizFeedback').classList.remove('show');
+    var box=document.getElementById('quizOpts');box.innerHTML='';
+    var themes=[['all','🎯 Tout mélanger','10 questions au hasard sur les '+QBANK.length],['secplus','🛡 Security+','Bases : réseaux, attaques, chiffrement'],['cysa','🔍 CySA+','Analyse, SIEM, réponse à incident'],['btl1','🔵 Blue Team L1','MITRE, e-mails, analyse réseau'],['soc','🌙 Vie réelle SOC','Gardes, alertes, réflexes de tous les jours']];
+    themes.forEach(function(t){
+      var b=document.createElement('button');b.className='quiz-opt';b.innerHTML='<b>'+t[1]+'</b><br><span style="font-size:11px;color:var(--muted)">'+t[2]+'</span>';
+      b.onclick=function(){startQuiz(t[0]);};
+      box.appendChild(b);
+    });
+    return;
+  }
+  dots.innerHTML=quiz.map(function(_,i){return '<i class="'+(i<=qi?'on':'')+'"></i>';}).join('');
+  if(qi>=quiz.length){renderStats();if(qScore>=6)checkDaily('quiz');document.getElementById('quizMeta').textContent='Quiz terminé';document.getElementById('quizQ').textContent='Score final : '+qScore+' / '+quiz.length;document.getElementById('quizOpts').innerHTML='<button class="mini-btn primary" id="quizReplay">↺ Rejouer ('+quizThemeName()+')</button> <button class="mini-btn" id="quizThemeBtn">Changer de thème</button>';document.getElementById('quizReplay').onclick=function(){startQuiz(quizTheme);};document.getElementById('quizThemeBtn').onclick=function(){quizTheme=null;renderQuiz();};return;}
   var q=quiz[qi];document.getElementById('quizMeta').textContent='Question '+(qi+1)+' / '+quiz.length+' • Score : '+qScore;
   document.getElementById('quizQ').textContent=q.q;
   document.getElementById('quizFeedback').classList.remove('show');
   var box=document.getElementById('quizOpts');box.innerHTML='';
   q.o.forEach(function(opt,i){var b=document.createElement('button');b.className='quiz-opt';b.textContent=opt;b.onclick=function(){
+    stat('quiz',i===q.a);
     var fb=document.getElementById('quizFeedback');
-    if(i===q.a){b.classList.add('correct');qScore++;addXP(10);fb.className='feedback show ok';fb.textContent='✅ Bonne réponse. '+q.x;}
+    if(i===q.a){b.classList.add('correct');qScore++;addXP(10,'quiz-q'+q.id);fb.className='feedback show ok';fb.textContent='✅ Bonne réponse. '+q.x;}
     else{b.classList.add('wrong');fb.className='feedback show bad';fb.textContent='❌ Pas tout à fait. '+q.x;sayBuddy('buddyQuiz','Pas de souci, on retient et on continue. La prochaine sera la bonne.');}
     box.querySelectorAll('button').forEach(function(x){x.disabled=true;});
     setTimeout(function(){qi++;renderQuiz();},1700);
   };box.appendChild(b);});
 }
+
 /* ═══ GLOSSAIRE ═══ */
 var gloss=[
  ["Adresse IP","Adresse qui identifie une machine sur un réseau. Ex : 192.168.1.10 en local."],
@@ -2449,7 +2583,7 @@ var BADGES=[
   {id:'logs',icon:'LOG',name:'Chasseur de logs',desc:'Trouver les 2 suspects',check:function(){return !!state.flags['logs'];}},
   {id:'terminal',icon:'CLI',name:'Premier flag',desc:'Lire flag.txt',check:function(){return !!state.flags['terminal'];}},
   {id:'phish',icon:'PH',name:'Œil de lynx',desc:'Classer les 3 e-mails',check:function(){return !!state.flags['phishing'];}},
-  {id:'quiz',icon:'QZ',name:'Sans faute',desc:'8/8 au quiz',check:function(){return qScore>=8&&qi>=quiz.length;}},
+  {id:'quiz',icon:'QZ',name:'Sans faute',desc:'10/10 au quiz',check:function(){return qScore>=10&&qi>=quiz.length;}},
   {id:'soc',icon:'SOC',name:'Gardien du SOC',desc:'Terminer une Nuit au SOC',check:function(){return state.games>0&&!!state.best.soc;}},
   {id:'nw',icon:'⚔️',name:'Double casquette',desc:'Réussir une mission NIGHTWATCH',check:function(){return !!(nw.completed[1]||nw.completed[2]||nw.completed[3]||nw.completed[4]);}},
   {id:'rank',icon:'MAX',name:'Analyste confirmé',desc:'Atteindre 1500 XP',check:function(){return state.xp>=1500;}}
@@ -2563,6 +2697,7 @@ function initSiem(){
     var b=document.createElement('button');b.className='logline';b.textContent=l.t;
     b.onclick=function(){
       if(b.dataset.done)return;b.dataset.done=1;
+      stat('siem',l.bad);
       var fb=document.getElementById('siemLogFeedback');
       if(l.bad){
         b.classList.add('found');siemFound++;
@@ -2570,6 +2705,7 @@ function initSiem(){
         fb.className='feedback show ok';fb.textContent='✅ Bien vu. '+l.why;
         if(siemFound===3){
           document.getElementById('siemSplWrap').style.display='block';
+          renderSiemSpl();
           sayBuddy('buddySiem','Les 3 signaux sont trouvés. Maintenant, les requêtes SPL — c’est comme ça qu’on interroge un SIEM.');
         }
       }else{
@@ -2591,6 +2727,7 @@ function renderSiemSpl(){
   q.o.forEach(function(opt,i){
     var b=document.createElement('button');b.className='quiz-opt mono';b.textContent=opt;
     b.onclick=function(){
+      stat('siem',i===q.a);
       var fb=document.getElementById('siemSplFeedback');
       if(i===q.a){
         b.classList.add('correct');siemSpl++;
@@ -2702,6 +2839,7 @@ function renderGardeAlert(){
   v.innerHTML='<div class="card"><div style="color:var(--muted);font-size:11px">Alerte '+(garde.i+1)+' sur '+GARDE_ALERTS.length+' • Score triage : '+garde.tri+'</div><h3><span class="tag '+(a.sev==='Élevée'?'red':a.sev==='Moyenne'?'amber':'blue')+'">'+a.sev+'</span> '+a.t+'</h3><pre class="log">'+a.logs+'</pre><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><button class="mini-btn" id="gEsc" style="border-color:var(--red);color:var(--red)">⬆ Escalader</button><button class="mini-btn" id="gClose" style="border-color:var(--blue);color:var(--blue)">✕ Fermer</button><button class="mini-btn" id="gWatch">👁 Surveiller</button></div><div id="gardeFb"></div></div>';
   function answer(act){
     var ok=act===a.act;
+    stat('garde',ok);
     if(ok)garde.tri+=20;
     ['gEsc','gClose','gWatch'].forEach(function(id){document.getElementById(id).disabled=true;});
     document.getElementById('gardeFb').innerHTML='<div class="feedback show '+(ok?'ok':'bad')+'"><b>'+(ok?'Bien trié.':'Raté.')+'</b> '+a.why+'</div><button class="btn btn-primary btn-block" id="gardeNx">'+(garde.i<GARDE_ALERTS.length-1?'Alerte suivante':'Rédiger le rapport')+'</button>';
@@ -2721,6 +2859,7 @@ function renderGardeRepQ(){
   v.querySelectorAll('[data-o]').forEach(function(b){b.onclick=function(){
     var i=+b.getAttribute('data-o');
     var ok=i===q.a;
+    stat('garde',ok);
     if(ok){garde.rep+=20;b.classList.add('correct');}else{b.classList.add('wrong');}
     v.querySelectorAll('[data-o]').forEach(function(x){x.disabled=true;});
     document.getElementById('gardeRepFb').innerHTML='<div class="feedback show '+(ok?'ok':'bad')+'"><b>'+(ok?'Exact.':'Pas tout à fait.')+'</b> '+q.x+'</div><button class="btn btn-primary btn-block" id="gardeRepNx">'+(gardeRepIdx<GARDE_REP.length-1?'Question suivante':'Terminer la garde')+'</button>';
@@ -2774,9 +2913,10 @@ function renderPortsRound(){
   opts.forEach(function(port){
     var b=document.createElement('button');b.className='quiz-opt';b.textContent=port;
     b.onclick=function(){
+      stat('ports',port===p[2]);
       var fb=document.getElementById('portsFeedback');
       if(port===p[2]){
-        b.classList.add('correct');portsScore++;addXP(5);
+        b.classList.add('correct');portsScore++;addXP(5,'port-'+p[0]);
         fb.className='feedback show ok';fb.textContent='✅ '+port+' — c’est bien '+p[0]+'. +5 XP';
       }else{
         b.classList.add('wrong');
@@ -2816,7 +2956,7 @@ function initEmail(){
     var fb=d.querySelector('.feedback');
     function answer(guessBad){
       if(d.dataset.done)return;d.dataset.done=1;
-      var ok=guessBad===m.bad;fb.className='feedback show '+(ok?'ok':'bad');fb.textContent=(ok?'✅ Bien vu. ':'❌ Raté. ')+m.why;
+      var ok=guessBad===m.bad;stat('email',ok);fb.className='feedback show '+(ok?'ok':'bad');fb.textContent=(ok?'✅ Bien vu. ':'❌ Raté. ')+m.why;
       if(ok){emailDone++;if(emailDone===3){addXP(80,'email');sayBuddy('buddyEmail','3 sur 3. Les en-têtes, c’est ta meilleure arme contre le phishing.');}}
       else sayBuddy('buddyEmail','Bien essayé ! Regarde le Reply-To et le vrai lien : c’est souvent là que ça se joue.');
     }
@@ -2826,12 +2966,176 @@ function initEmail(){
   });
 }
 
+/* --- ANALYSE RÉSEAU : 3 captures façon Wireshark --- */
+var RESEAU=[
+ {name:"Exfiltration DNS",packets:[
+  {t:"08:02  10.0.2.14 → 8.8.8.8  DNS  A www.google.com",bad:false,why:"Requête DNS normale vers un domaine connu."},
+  {t:"08:03  10.0.2.14 → 10.0.2.1  TCP  443  intranet.pallas.local",bad:false,why:"Trafic interne HTTPS vers l'intranet : normal."},
+  {t:"02:31  10.0.2.31 → 185.220.101.34  TCP  443  2,3 Go envoyés",bad:true,why:"2,3 Go vers une IP externe inconnue à 2h31 : exfiltration de données."},
+  {t:"08:15  10.0.2.14 → 8.8.8.8  DNS  TXT  cdn-metrics-sync.top (312 req/h)",bad:true,why:"Des centaines de requêtes TXT vers un domaine jamais vu : beacon C2 déguisé en DNS."},
+  {t:"09:40  10.0.2.14 → 93.184.216.34  TCP  443  update.vendor.com",bad:false,why:"Mise à jour depuis le site officiel de l'éditeur : trafic attendu."},
+  {t:"10:22  10.0.2.31 → 10.0.2.1  TCP  445  SMB  \\\\SRV-FIC-01\\partage",bad:false,why:"Partage de fichiers interne, utilisateur connu : normal."},
+  {t:"11:47  10.0.2.14 → 8.8.8.8  DNS  A outlook.office365.com",bad:false,why:"DNS vers un service Microsoft connu : trafic bureautique normal."},
+  {t:"12:10  10.0.2.31 → 10.0.2.1  UDP  53  DNS  intranet.pallas.local",bad:false,why:"DNS interne vers le serveur local : normal."}
+ ],q:{q:"Que faut-il faire en premier face à cette capture ?",o:["Bloquer l'IP 185.220.101.34 et le domaine cdn-metrics-sync.top, puis isoler le poste 10.0.2.31","Éteindre tout le réseau de l'entreprise","Supprimer les logs pour repartir propre","Ne rien faire, attendre demain"],a:0,x:"On bloque les IOC (IP + domaine) partout, on isole le poste source, puis on enquête : c'est le confinement ciblé."}},
+ {name:"Scan de ports",packets:[
+  {t:"14:02  10.0.2.14 → 10.0.2.1  TCP  443  SYN",bad:false,why:"Connexion HTTPS normale vers la passerelle."},
+  {t:"14:02  203.0.113.77 → 10.0.1.20  TCP  22  SYN",bad:true,why:"Premier SYN depuis une IP externe inconnue : le scan commence."},
+  {t:"14:03  10.0.2.14 → 8.8.8.8  DNS  A www.wikipedia.org",bad:false,why:"DNS normal vers un site connu."},
+  {t:"14:03  10.0.2.31 → 10.0.2.1  TCP  445  SMB  \\\\SRV-FIC-01\\partage",bad:false,why:"Partage de fichiers interne : normal."},
+  {t:"14:03  203.0.113.77 → 10.0.1.20  TCP  3389  SYN",bad:true,why:"La même IP sonde le RDP (3389) : elle cherche une porte d'entrée."},
+  {t:"14:04  10.0.2.14 → 93.184.216.34  TCP  443  update.vendor.com",bad:false,why:"Mise à jour depuis le site officiel : trafic attendu."},
+  {t:"14:05  10.0.2.31 → 10.0.2.1  TCP  25  SMTP  mail.pallas.local",bad:false,why:"E-mail interne vers le serveur de messagerie : normal."},
+  {t:"14:06  10.0.2.14 → 10.0.2.1  UDP  123  NTP  time.pallas.local",bad:false,why:"Synchronisation de l'heure en interne : normal."}
+ ],q:{q:"Que révèle ce scan ?",o:["Un attaquant cartographie le réseau : on bloque l'IP au pare-feu et on vérifie les ports exposés","Un utilisateur qui navigue normalement","Une mise à jour Windows","Un problème de DNS"],a:0,x:"Un scan, c'est la reconnaissance : l'attaquant cherche les ports ouverts avant d'attaquer. On bloque la source et on ferme ce qui ne doit pas être exposé."}},
+ {name:"Beacon C2",packets:[
+  {t:"09:00  10.0.2.14 → 8.8.8.8  DNS  A www.google.com",bad:false,why:"Requête DNS normale vers un domaine connu."},
+  {t:"09:01  10.0.2.14 → 10.0.2.1  TCP  443  intranet.pallas.local",bad:false,why:"Trafic interne HTTPS vers l'intranet : normal."},
+  {t:"09:00  10.0.2.31 → 45.155.204.71  TCP  443  POST api-stats-update.net",bad:true,why:"Un POST toutes les 60 secondes exactement vers un domaine inconnu : un beacon régulier, la signature d'un C2."},
+  {t:"09:02  10.0.2.31 → 10.0.2.1  TCP  25  SMTP  mail.pallas.local",bad:false,why:"E-mail interne vers le serveur de messagerie : normal."},
+  {t:"09:03  10.0.2.31 → 185.220.101.34  TCP  80  GET /login",bad:true,why:"Une requête HTTP directe vers une IP, sans nom de domaine : typique d'un serveur de commande et contrôle."},
+  {t:"09:04  10.0.2.14 → 8.8.8.8  DNS  A outlook.office365.com",bad:false,why:"DNS vers un service Microsoft connu : trafic bureautique normal."},
+  {t:"09:05  10.0.2.31 → 10.0.2.1  TCP  445  SMB  \\\\SRV-FIC-01\\partage",bad:false,why:"Partage de fichiers interne : normal."},
+  {t:"09:06  10.0.2.14 → 10.0.2.1  UDP  53  DNS  intranet.pallas.local",bad:false,why:"DNS interne vers le serveur local : normal."}
+ ],q:{q:"Comment s'appelle ce trafic régulier vers le serveur de l'attaquant ?",o:["Un beacon (commande & contrôle)","Un streaming vidéo","Une sauvegarde cloud","Une mise à jour"],a:0,x:"Le beacon, c'est le « téléphone » du malware : il contacte son serveur à intervalles réguliers pour recevoir des ordres."}}
+];
+var reseauIdx=0,reseauFound=0;
+function initReseau(){renderReseauTabs();renderReseau(0);}
+function renderReseauTabs(){
+  var t=document.getElementById('reseauTabs');if(!t)return;
+  t.innerHTML='';
+  RESEAU.forEach(function(c,i){
+    var b=document.createElement('button');b.className='mini-btn'+(i===reseauIdx?' primary':'');b.style.flex='1';b.textContent='Capture '+(i+1);
+    b.onclick=function(){renderReseau(i);};
+    t.appendChild(b);
+  });
+}
+function renderReseau(i){
+  reseauIdx=i;reseauFound=0;
+  renderReseauTabs();
+  var c=RESEAU[i];
+  document.getElementById('reseauCapTag').textContent='Capture '+(i+1)+' / '+RESEAU.length+' • +30 XP';
+  document.getElementById('reseauCapName').textContent=c.name;
+  document.getElementById('reseauScore').textContent='Suspects trouvés : 0 / 2';
+  document.getElementById('reseauFb').classList.remove('show');
+  document.getElementById('reseauQWrap').style.display='none';
+  document.getElementById('reseauEndFb').classList.remove('show');
+  var list=document.getElementById('reseauPackets');list.innerHTML='';
+  c.packets.forEach(function(p){
+    var b=document.createElement('button');b.className='logline';b.textContent=p.t;
+    b.onclick=function(){
+      if(b.dataset.done)return;b.dataset.done=1;
+      stat('reseau',p.bad);
+      var fb=document.getElementById('reseauFb');
+      if(p.bad){
+        b.classList.add('found');reseauFound++;
+        document.getElementById('reseauScore').textContent='Suspects trouvés : '+reseauFound+' / 2';
+        fb.className='feedback show ok';fb.textContent='✅ Bien vu. '+p.why;
+        if(reseauFound===2){renderReseauQ();}
+      }else{
+        b.classList.add('safe');
+        fb.className='feedback show bad';fb.textContent='❌ Celui-ci est normal. '+p.why;
+        setTimeout(function(){fb.classList.remove('show');},2600);
+      }
+    };
+    list.appendChild(b);
+  });
+}
+function renderReseauQ(){
+  var q=RESEAU[reseauIdx].q;
+  document.getElementById('reseauQWrap').style.display='block';
+  document.getElementById('reseauQ').textContent=q.q;
+  document.getElementById('reseauQFb').classList.remove('show');
+  var box=document.getElementById('reseauQOpts');box.innerHTML='';
+  q.o.forEach(function(opt,i){
+    var b=document.createElement('button');b.className='quiz-opt';b.textContent=opt;
+    b.onclick=function(){
+      stat('reseau',i===q.a);
+      var fb=document.getElementById('reseauQFb');
+      if(i===q.a){
+        b.classList.add('correct');
+        var gained=addXP(30,'reseau-'+reseauIdx);
+        fb.className='feedback show ok';fb.textContent='✅ Bonne analyse. '+q.x;
+        box.querySelectorAll('button').forEach(function(x){x.disabled=true;});
+        var end=document.getElementById('reseauEndFb');
+        end.className='feedback show ok';
+        end.textContent=(gained>0?'✅ Capture analysée : +30 XP. ':'✅ Capture déjà validée : pas de nouvel XP, mais l’analyse compte.')+(reseauIdx<RESEAU.length-1?' Passe à la capture suivante.':' Les 3 captures sont analysées. Beau travail d’analyste.');
+        sayBuddy('buddyReseau','Lire une capture, c’est le quotidien d’un analyste : le bruit d’abord, les signaux ensuite.');
+      }else{
+        b.classList.add('wrong');
+        fb.className='feedback show bad';fb.textContent='❌ Pas tout à fait. '+q.x;
+        sayBuddy('buddyReseau','Relis les paquets suspects : qu’est-ce qui ne colle pas avec le trafic normal ?');
+      }
+    };
+    box.appendChild(b);
+  });
+}
+
+/* --- ENQUÊTE OSINT : 5 étapes, retrouver l'attaquant --- */
+var OSINT_STEPS=[
+ {clue:"Étape 1 — Le pseudo. Le compte suspect s'appelle « shadow_fox92 ». Tu le cherches sur un moteur de recherche : il apparaît sur un forum de hacking et sur un site de jeux, toujours avec la même photo de profil.",q:"Que révèle la réutilisation du même pseudo partout ?",o:["Que c'est probablement la même personne : on peut croiser ses traces","Que c'est un faux positif, les pseudos se répètent","Qu'il faut bloquer le forum","Rien, les pseudos ne servent à rien"],a:0,x:"Un pseudo réutilisé, c'est une piste en or : chaque plateforme où il apparaît donne un morceau du puzzle."},
+ {clue:"Étape 2 — L'e-mail. L'adresse associée est « s.fox92@mail-temporaire.net ». Le domaine « mail-temporaire.net » propose des adresses jetables qui s'autodétruisent.",q:"Que conclure de cette adresse jetable ?",o:["Qu'il veut cacher son identité : signal de dissimulation","Que c'est un e-mail professionnel","Que le compte est légitime","Qu'il faut lui écrire"],a:0,x:"Les adresses jetables servent à ne pas être retrouvé : un vrai employé utilise son adresse pro, pas une boîte jetable."},
+ {clue:"Étape 3 — La photo. La photo de profil montre un paysage de montagne. Les métadonnées EXIF de l'image indiquent : prise avec un téléphone, GPS 46.5° N, 9.8° E (Suisse), il y a 3 jours.",q:"Que faire de ces métadonnées ?",o:["Les noter comme indice de localisation, sans en faire une preuve à elles seules","Les ignorer, les métadonnées sont toujours fausses","Publier la localisation sur les réseaux","Bloquer la Suisse entière"],a:0,x:"Les métadonnées donnent des pistes (lieu, appareil, date), mais elles peuvent être modifiées : on les croise avec d'autres indices."},
+ {clue:"Étape 4 — Le domaine. L'attaquant a envoyé un lien « pallas-support.net ». Le domaine a été enregistré il y a 2 jours, chez un registrar bon marché, avec un WHOIS masqué.",q:"Que révèle un domaine vieux de 2 jours avec WHOIS masqué ?",o:["Un domaine probablement créé pour l'attaque (typosquatting)","Un site officiel de l'entreprise","Un domaine ancien et fiable","Rien du tout"],a:0,x:"Domaine récent + nom proche de l'entreprise + WHOIS caché = les trois signaux d'un domaine de phishing."},
+ {clue:"Étape 5 — Le verdict. Tu as : un pseudo réutilisé, une adresse jetable, une localisation en Suisse, un domaine de phishing vieux de 2 jours. Le tout pointe vers une campagne ciblée contre Pallas Corp.",q:"Quelle est la bonne conclusion de l'enquête ?",o:["Escalader avec tous les IOC réunis (pseudo, e-mail, domaine, IP) pour bloquer et surveiller","Fermer l'alerte, ce n'est pas assez","Supprimer toutes les preuves","Attendre que l'attaquant frappe à nouveau"],a:0,x:"Une enquête OSINT se termine par un rapport : tous les IOC réunis, on bloque, on surveille, et on partage avec l'équipe."}
+];
+var osintIdx=0,osintScore=0;
+function startOsint(){osintIdx=0;osintScore=0;renderOsintStep();}
+function renderOsintStep(){
+  var s=OSINT_STEPS[osintIdx];
+  var v=document.getElementById('osintView');
+  v.innerHTML='<div class="card"><span class="tag">Étape '+(osintIdx+1)+' / '+OSINT_STEPS.length+' • Score : '+osintScore+'</span><p style="margin-top:10px">'+s.clue+'</p><h3 style="font-size:14px">'+s.q+'</h3><div>'+s.o.map(function(opt,i){return '<button class="quiz-opt" data-o="'+i+'">'+opt+'</button>';}).join('')+'</div><div id="osintFb"></div></div>';
+  v.querySelectorAll('[data-o]').forEach(function(b){b.onclick=function(){
+    var i=+b.getAttribute('data-o');
+    var ok=i===s.a;
+    stat('osint',ok);
+    if(ok){osintScore+=20;b.classList.add('correct');addXP(20,'osint-s'+osintIdx);}else{b.classList.add('wrong');}
+    v.querySelectorAll('[data-o]').forEach(function(x){x.disabled=true;});
+    document.getElementById('osintFb').innerHTML='<div class="feedback show '+(ok?'ok':'bad')+'"><b>'+(ok?'Bien vu.':'Pas tout à fait.')+'</b> '+s.x+'</div><button class="btn btn-primary btn-block" id="osintNx">'+(osintIdx<OSINT_STEPS.length-1?'Indice suivant':'Voir le verdict')+'</button>';
+    document.getElementById('osintNx').onclick=function(){
+      if(osintIdx<OSINT_STEPS.length-1){osintIdx++;renderOsintStep();}
+      else finishOsint();
+    };
+  };});
+}
+function finishOsint(){
+  var v=document.getElementById('osintView');
+  v.innerHTML='<div class="card"><div style="color:var(--muted);font-size:11px">Verdict de l’enquête</div><h3>'+(osintScore>=80?'Enquêteur confirmé':osintScore>=60?'Bonne enquête':'Enquête à revoir')+'</h3><div class="big">'+osintScore+' / 100</div><p>Tu as réuni les indices : pseudo réutilisé, adresse jetable, métadonnées, domaine récent. C’est exactement comme ça qu’on enquête en OSINT.</p><p style="color:var(--muted);font-size:11px">+20 XP par bonne réponse (une seule fois par étape).</p><button class="btn btn-primary btn-block" id="osintAgain">↺ Rejouer l’enquête</button><button class="btn btn-ghost btn-block" id="osintHomeBtn">Accueil</button></div>';
+  document.getElementById('osintAgain').onclick=function(){startOsint();};
+  document.getElementById('osintHomeBtn').onclick=function(){showScreen('screen-home');};
+}
+
+/* --- STATISTIQUES : précision + XP par activité --- */
+var STATS_MODES=[['quiz','Quiz'],['ports','Devine le port'],['siem','SIEM'],['garde','Garde SOC'],['email','Analyse e-mail'],['phishing','Phishing Lab'],['osint','Enquête OSINT'],['reseau','Analyse réseau']];
+var STATS_XP=[['quiz','Quiz'],['ports','Devine le port'],['siem','SIEM'],['garde','Garde SOC'],['email','Analyse e-mail'],['phishing','Phishing Lab'],['osint','OSINT'],['reseau','Analyse réseau'],['scenario','Mission 02:47'],['logs','Chasse aux logs'],['terminal','Terminal'],['pwd','Mot de passe'],['daily','Défi du jour']];
+function renderStatsScreen(){
+  var el=document.getElementById('statsView');if(!el)return;
+  var st=state.stats||{};
+  var html='<div class="card"><span class="tag">Précision</span><h3 style="margin-top:10px">Précision par activité</h3>';
+  var any=false;
+  STATS_MODES.forEach(function(m){
+    var s=st[m[0]];
+    if(s&&s.total>0){any=true;var pct=Math.round(s.good/s.total*100);
+      html+='<p style="margin:8px 0 2px"><b>'+m[1]+'</b> — '+s.good+' / '+s.total+' ('+pct+' %)</p><div style="height:8px;background:var(--panel2);border-radius:99px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:var(--green)"></div></div>';}
+  });
+  if(!any)html+='<p style="color:var(--muted)">Joue à une activité pour voir ta précision ici.</p>';
+  html+='</div>';
+  html+='<div class="card"><span class="tag">XP par activité</span><h3 style="margin-top:10px">D’où viennent tes XP</h3>';
+  var xb=state.xpBy||{};
+  var rows=STATS_XP.filter(function(m){return (xb[m[0]]||0)>0;}).sort(function(a,b){return xb[b[0]]-xb[a[0]];});
+  if(!rows.length)html+='<p style="color:var(--muted)">Aucun XP gagné pour l’instant.</p>';
+  rows.forEach(function(m){html+='<p style="margin:6px 0"><b>'+m[1]+'</b> — '+xb[m[0]]+' XP</p>';});
+  html+='</div>';
+  html+='<div class="card"><span class="tag">Totaux</span><h3 style="margin-top:10px">En résumé</h3><p>'+state.xp+' XP • '+state.games+' partie(s) jouée(s) • '+Object.keys(state.done).length+' mission(s) terminée(s) • '+Object.keys(state.badges).length+' badge(s) débloqué(s)</p></div>';
+  el.innerHTML=html;
+}
+
 /* ═══ INIT ═══ */
 renderScenario();
 renderQuiz();
 renderGloss('');
 renderStats();
-initSiem();renderMitre();startGarde();initPorts();initEmail();
+initSiem();renderMitre();startGarde();initPorts();initEmail();initReseau();
 updateNwHud();
 updateNwMap();
 showNwMenu();
