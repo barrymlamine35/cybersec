@@ -1,6 +1,7 @@
 <!doctype html>
 <!-- Cybersec — REBUILD (15 nov 2026). Même contenu que cybersec-redesign.html (redesign Figma Make), reconstruit proprement.
-Règles de stabilité : 0 backdrop-filter · 0 couche fixe plein écran (scanlines dans le fond du body, elles défilent avec la page) · 0 confirm()/alert()/prompt() (confirmation en page) · 3D coupée par défaut, boucles rAF gardées (pause si caché / hors écran) · timer NIGHTWATCH uniquement en partie, sur son écran, onglet visible · 100 % hors-ligne, un seul fichier. Mêmes clés localStorage : 'jeu-combine-v1' (progression) et 'jeu-3d-prefs-v2' (3D). -->
+Règles de stabilité : 0 backdrop-filter · 0 couche fixe plein écran (scanlines dans le fond du body, elles défilent avec la page) · 0 confirm()/alert()/prompt() (confirmation en page) · 3D coupée par défaut, boucles rAF gardées (pause si caché / hors écran) · timer NIGHTWATCH uniquement en partie, sur son écran, onglet visible · 100 % hors-ligne, un seul fichier. Mêmes clés localStorage : 'jeu-combine-v1' (progression) et 'jeu-3d-prefs-v2' (3D).
+MAJ 15 nov 11:45 — cause du freeze trouvée par Darkman : overflow-x:hidden sur html,body (déplacé sur .wrap uniquement). Restaurés : voile plein écran de montée de rang (.rankup-overlay) + couche flottante +XP (#fxlayer). Non restaurés (causes connues de plantage Android) : backdrop-filter blur, scanlines fixes plein écran. -->
 <html lang="fr">
 <head>
 <meta charset="utf-8">
@@ -206,12 +207,13 @@ body{background:repeating-linear-gradient(0deg,rgba(255,255,255,.022) 0 1px,tran
 .ns-kicker{color:var(--amber);font-size:11px;font-weight:800}
 .nextrank{font-size:12px;color:var(--muted);margin-top:6px}
 /* ═══ MODALE DE MONTÉE DE RANG ═══ */
-.rankup-overlay{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(92vw,340px);z-index:90}
+.rankup-overlay{position:fixed;inset:0;z-index:90;background:rgba(4,8,6,.82);display:grid;place-items:center;padding:20px}
 .rankup-card{background:var(--panel);border:1px solid var(--amber);border-radius:20px;padding:22px 16px;text-align:center;max-width:340px;width:100%;animation:popIn .3s ease}
 .rankup-emoji{font-size:39px;line-height:1}
 .rankup-title{font-size:18px;margin:8px 0 4px}
 .rankup-text{color:var(--muted);font-size:13px}
-/* ═══ +XP FLOTTANTS (ajoutés directement au body, pas de couche fixe) ═══ */
+/* ═══ +XP FLOTTANTS ═══ */
+#fxlayer{position:fixed;inset:0;pointer-events:none;z-index:80}
 .xpfloat{position:fixed;right:18px;top:64px;color:var(--green);font-weight:900;font-size:15px;pointer-events:none;animation:floatUp 1.2s ease forwards;text-shadow:0 0 12px rgba(47,255,143,.5)}
 @keyframes floatUp{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-44px)}}
 @media(prefers-reduced-motion:reduce){.screen.active{animation:none!important}.xpfloat{animation:none!important}.card{transition:none!important}}
@@ -774,6 +776,7 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
   <button data-nav="screen-quiz" onclick="showScreen('screen-quiz')"><span>?</span>Quiz</button>
 </nav>
 <div class="toast" id="toast"></div>
+<div id="fxlayer" aria-hidden="true"></div>
 <div class="rankup-overlay" id="rankup" style="display:none"><div class="rankup-card"><div class="rankup-emoji"></div><h2 class="rankup-title" id="rankupTitle">Rang supérieur !</h2><p class="rankup-text" id="rankupText">Tu progresses vite, Darkman.</p><button class="btn btn-primary btn-block" id="rankupBtn">Continuer</button></div></div>
 
 <script>
@@ -2210,9 +2213,10 @@ function renderStreakChip(){
 }
 function floatXP(n){
   if(reducedMotion())return;
+  var layer=document.getElementById('fxlayer');if(!layer)return;
   var d=document.createElement('div');d.className='xpfloat';d.textContent='+'+n+' XP';
   d.style.top=(56+Math.random()*48)+'px';
-  document.body.appendChild(d);
+  layer.appendChild(d);
   setTimeout(function(){if(d.parentNode)d.parentNode.removeChild(d);},1300);
 }
 function showRankup(rank){
