@@ -700,7 +700,7 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
       <h3 style="margin-top:10px">Quiz cybersécurité</h3>
       <div class="buddy" id="buddyQuiz"><div class="buddy-avatar" aria-hidden="true"></div><div class="buddy-bubble"><b>Léa · SOC N2</b><span class="buddy-text">Pas de pression, chaque question est un entraînement. Une mauvaise réponse, c’est juste une notion à revoir.</span></div></div>
       <div class="progress-dots" id="quizDots"></div>
-      <p class="mono" style="color:var(--muted);font-size:11px" id="quizMeta">Question 1 / 8</p>
+      <p class="mono" style="color:var(--muted);font-size:11px" id="quizMeta">Choisis un thème</p>
       <h3 id="quizQ" style="font-size:14px"></h3>
       <div id="quizOpts"></div>
       <div class="feedback" id="quizFeedback"></div>
@@ -774,7 +774,7 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
     <div class="mode-grid">
       <button class="mode-tile" onclick="showScreen('screen-terminal')"><span class="tile-ico">CLI</span>Terminal Linux<small>Commandes de base</small></button>
       <button class="mode-tile" onclick="showScreen('screen-phishing')"><span class="tile-ico">PH</span>Phishing Lab<small>Repère les pièges</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-quiz')"><span class="tile-ico">QZ</span>Quiz<small>8 questions</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-quiz')"><span class="tile-ico">QZ</span>Quiz<small>56 questions</small></button>
       <button class="mode-tile" onclick="showScreen('screen-outils')"><span class="tile-ico">DOC</span>Outils &amp; Glossaire<small>Références et mots-clés</small></button>
     </div>
   </div>
@@ -928,7 +928,7 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
       <button class="mode-tile" onclick="showScreen('screen-nightwatch')"><span class="tile-ico">◎</span>NIGHTWATCH<small>Attaque &amp; défense</small></button>
       <button class="mode-tile" onclick="showScreen('screen-terminal')"><span class="tile-ico">CLI</span>Terminal Linux<small>Commandes de base</small></button>
       <button class="mode-tile" onclick="showScreen('screen-phishing')"><span class="tile-ico">PH</span>Phishing Lab<small>Repère les pièges</small></button>
-      <button class="mode-tile" onclick="showScreen('screen-quiz')"><span class="tile-ico">QZ</span>Quiz<small>8 questions</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-quiz')"><span class="tile-ico">QZ</span>Quiz<small>56 questions</small></button>
       <button class="mode-tile" onclick="showScreen('screen-outils')"><span class="tile-ico">DOC</span>Outils &amp; Glossaire<small>Références et mots-clés</small></button>
       <button class="mode-tile" onclick="showScreen('screen-siem')"><span class="tile-ico">SI</span>SIEM — Tri de logs<small>Logs + requêtes SPL</small></button>
       <button class="mode-tile" onclick="renderMitre();showScreen('screen-mitre')"><span class="tile-ico">AT</span>MITRE ATT&CK<small>Carte des techniques</small></button>
@@ -1170,32 +1170,104 @@ document.getElementById('pwdInput').addEventListener('input',function(e){
   if(score===5)addXP(30,'pwd');
 });
 /* ═══ QUIZ 8 QUESTIONS ═══ */
-var quiz=[
- {q:"Que signifie l'adresse 192.168.1.10 ?",o:["Un site web","Une adresse IP privée d'un réseau local","Un mot de passe","Un type de virus"],a:1,x:"Les plages 192.168.x.x sont privées : elles identifient une machine sur un réseau local."},
- {q:"Quel port est utilisé par HTTPS ?",o:["80","21","443","3389"],a:2,x:"80 = HTTP, 443 = HTTPS, 21 = FTP, 3389 = RDP (bureau à distance Windows)."},
- {q:"Un attaquant essaie des milliers de mots de passe jusqu'à trouver le bon. C'est…",o:["Du phishing","Un brute force","Un pare-feu","Une sauvegarde"],a:1,x:"Le brute force teste massivement des combinaisons. D'où l'intérêt des mots de passe longs + MFA + limitation des tentatives."},
- {q:"Dans un terminal Linux, quelle commande liste les fichiers ?",o:["cd","ls","rm","ping"],a:1,x:"ls = lister, cd = changer de dossier, ping = tester la connectivité."},
- {q:"Qu'est-ce qu'un SIEM ?",o:["Un antivirus grand public","Un système qui centralise les logs et alerte sur les incidents","Un câble réseau","Un langage de programmation"],a:1,x:"Le SIEM est l'outil central d'un SOC : collecte, corrélation, alertes."},
- {q:"Un e-mail urgent te demande ton mot de passe via un lien. Réflexe ?",o:["Cliquer vite avant l'expiration","Vérifier l'expéditeur et passer par le site officiel, jamais par le lien","Transférer à tes contacts","Répondre avec ton mot de passe"],a:1,x:"Aucun service sérieux ne demande un mot de passe par e-mail. On vérifie le domaine et on signale."},
- {q:"Que fait la commande grep dans un fichier de logs ?",o:["Elle supprime le fichier","Elle cherche les lignes contenant un mot","Elle chiffre le disque","Elle redémarre le serveur"],a:1,x:"grep ERROR auth.log = ne garder que les lignes utiles. L'allié n°1 de l'analyse de logs."},
- {q:"La double authentification (MFA) sert à…",o:["Rendre le Wi-Fi plus rapide","Ajouter une 2e preuve d'identité en plus du mot de passe","Cacher ton adresse IP","Supprimer les virus"],a:1,x:"Même avec un mot de passe volé, l'attaquant bloque sur le 2e facteur (code, application, clé)."}
+var QBANK=[
+ {c:'secplus',q:"Que signifie l'adresse 192.168.1.10 ?",o:["Un site web","Une adresse IP privée d'un réseau local","Un mot de passe","Un type de virus"],a:1,x:"Les plages 192.168.x.x sont privées : elles identifient une machine sur un réseau local."},
+ {c:'secplus',q:"Quel port est utilisé par HTTPS ?",o:["80","21","443","3389"],a:2,x:"80 = HTTP, 443 = HTTPS, 21 = FTP, 3389 = RDP (bureau à distance Windows)."},
+ {c:'secplus',q:"Un attaquant essaie des milliers de mots de passe jusqu'à trouver le bon. C'est…",o:["Du phishing","Un brute force","Un pare-feu","Une sauvegarde"],a:1,x:"Le brute force teste massivement des combinaisons. D'où l'intérêt des mots de passe longs + MFA + limitation des tentatives."},
+ {c:'soc',q:"Dans un terminal Linux, quelle commande liste les fichiers ?",o:["cd","ls","rm","ping"],a:1,x:"ls = lister, cd = changer de dossier, ping = tester la connectivité."},
+ {c:'soc',q:"Qu'est-ce qu'un SIEM ?",o:["Un antivirus grand public","Un système qui centralise les logs et alerte sur les incidents","Un câble réseau","Un langage de programmation"],a:1,x:"Le SIEM est l'outil central d'un SOC : collecte, corrélation, alertes."},
+ {c:'btl1',q:"Un e-mail urgent te demande ton mot de passe via un lien. Réflexe ?",o:["Cliquer vite avant l'expiration","Vérifier l'expéditeur et passer par le site officiel, jamais par le lien","Transférer à tes contacts","Répondre avec ton mot de passe"],a:1,x:"Aucun service sérieux ne demande un mot de passe par e-mail. On vérifie le domaine et on signale."},
+ {c:'soc',q:"Que fait la commande grep dans un fichier de logs ?",o:["Elle supprime le fichier","Elle cherche les lignes contenant un mot","Elle chiffre le disque","Elle redémarre le serveur"],a:1,x:"grep ERROR auth.log = ne garder que les lignes utiles. L'allié n°1 de l'analyse de logs."},
+ {c:'secplus',q:"La double authentification (MFA) sert à…",o:["Rendre le Wi-Fi plus rapide","Ajouter une 2e preuve d'identité en plus du mot de passe","Cacher ton adresse IP","Supprimer les virus"],a:1,x:"Même avec un mot de passe volé, l'attaquant bloque sur le 2e facteur (code, application, clé)."},
+ {c:'secplus',q:"Que signifie le « C » de la triade CIA ?",o:["Confidentialité","Chiffrement","Conformité","Contrôle"],a:0,x:"CIA = Confidentialité, Intégrité, Disponibilité : les trois piliers de la sécurité de l'information."},
+ {c:'secplus',q:"Quelle attaque consiste à s'interposer entre deux parties qui communiquent ?",o:["L'homme du milieu (MITM)","Le DDoS","Le phishing","Le ransomware"],a:0,x:"L'attaquant intercepte et peut lire ou modifier les échanges. Le chiffrement (TLS, VPN) est la défense."},
+ {c:'secplus',q:"Un ransomware chiffre tes fichiers et demande une rançon. Quelle est la meilleure défense ?",o:["Des sauvegardes régulières, hors ligne","Un antivirus gratuit","Un mot de passe plus long","Éteindre l'ordinateur"],a:0,x:"Avec des sauvegardes hors ligne, on restaure sans payer. Payer ne garantit jamais de récupérer ses fichiers."},
+ {c:'secplus',q:"Que fait un pare-feu (firewall) ?",o:["Il filtre le trafic réseau selon des règles","Il chiffre les disques durs","Il détecte les virus dans les e-mails","Il sauvegarde les données"],a:0,x:"Le pare-feu autorise ou bloque les flux selon des règles (ports, IP, protocoles). C'est la porte d'entrée du réseau."},
+ {c:'secplus',q:"Qu'est-ce que le principe du moindre privilège ?",o:["Donner à chacun uniquement les accès nécessaires à son travail","Donner les droits admin à tout le monde","Changer de mot de passe chaque jour","Ne jamais donner d'accès à personne"],a:0,x:"Moins de droits = moins de dégâts si un compte est compromis. C'est la base du contrôle d'accès."},
+ {c:'secplus',q:"Un certificat TLS/SSL sert à…",o:["Chiffrer la connexion et authentifier le site","Accélérer l'affichage du site","Bloquer les publicités","Sauvegarder les mots de passe"],a:0,x:"TLS chiffre les échanges et prouve que le site est bien celui qu'il prétend être (cadenas du navigateur)."},
+ {c:'secplus',q:"Qu'est-ce qu'une attaque DDoS ?",o:["Submerger un service de requêtes pour le rendre indisponible","Voler des mots de passe","Chiffrer des fichiers","Espionner un clavier"],a:0,x:"Des milliers de machines (botnet) inondent le service : il ne répond plus aux utilisateurs légitimes."},
+ {c:'secplus',q:"Quel protocole sécurise l'accès distant en ligne de commande ?",o:["SSH","Telnet","FTP","HTTP"],a:0,x:"SSH (port 22) chiffre la connexion. Telnet envoie tout en clair : à ne jamais utiliser."},
+ {c:'cysa',q:"Dans un SIEM, qu'est-ce que la corrélation ?",o:["Relier plusieurs événements pour détecter une attaque","Compresser les logs pour gagner de la place","Chiffrer les alertes","Supprimer les faux positifs"],a:0,x:"Un échec de connexion seul n'est rien ; 50 échecs + une connexion réussie depuis une IP inconnue = une alerte."},
+ {c:'cysa',q:"Un IOC, c'est…",o:["Un indicateur de compromission : IP, hash ou domaine malveillant","Un type de pare-feu","Un protocole de chiffrement","Un outil de sauvegarde"],a:0,x:"Les IOC sont les traces connues d'une attaque : on les bloque partout et on cherche s'ils sont déjà présents chez nous."},
+ {c:'cysa',q:"Quelle est la première phase de la réponse à incident (NIST) ?",o:["La préparation","L'éradication","Le confinement","Le retour d'expérience"],a:0,x:"Préparation : procédures, outils, contacts, sauvegardes. Sans elle, on improvise pendant l'incident — et on perd du temps."},
+ {c:'cysa',q:"Un analyste voit 500 échecs de connexion sur un compte en 5 minutes. Que conclure ?",o:["Un brute force probable, à investiguer","L'utilisateur a oublié son mot de passe","Le serveur est en panne","C'est un comportement normal"],a:0,x:"500 échecs en 5 minutes, c'est un robot, pas un humain. On vérifie la source et on bloque si besoin."},
+ {c:'cysa',q:"Qu'est-ce qu'un faux positif dans un SOC ?",o:["Une alerte déclenchée par un événement bénin","Une attaque qui a réussi","Un log supprimé par erreur","Un compte compromis"],a:0,x:"Le faux positif fait perdre du temps : le triage consiste justement à les écarter pour garder les vraies menaces."},
+ {c:'cysa',q:"Quel outil analyse le trafic réseau paquet par paquet ?",o:["Wireshark","Excel","Notepad","PuTTY"],a:0,x:"Wireshark capture et affiche chaque paquet : adresses, ports, protocoles. L'outil n°1 de l'analyse réseau."},
+ {c:'cysa',q:"Dans la kill chain, que vient juste après la livraison (delivery) ?",o:["L'exploitation","La reconnaissance","L'exfiltration","L'installation"],a:0,x:"Reconnaissance, arme, livraison, exploitation, installation, commande & contrôle, action. L'exploitation, c'est le moment où la faille est déclenchée."},
+ {c:'cysa',q:"Que signifie « containment » en réponse à incident ?",o:["Isoler l'élément compromis pour limiter les dégâts","Supprimer toutes les preuves","Éteindre tout le réseau","Prévenir les médias"],a:0,x:"On isole le poste ou on bloque l'IP : l'attaquant ne peut plus avancer, mais le reste de l'entreprise continue de tourner."},
+ {c:'cysa',q:"Une vulnérabilité avec un score CVSS de 9,8, c'est…",o:["Critique : à corriger en priorité absolue","Faible : on peut l'ignorer","Un faux positif","Un problème de performance"],a:0,x:"CVSS va de 0 à 10. Au-dessus de 9, c'est critique : exploitable à distance, impact maximal."},
+ {c:'cysa',q:"À quoi sert un scan Nmap ?",o:["Découvrir les ports ouverts et les services d'une machine","Scanner les virus d'un disque","Cracker des mots de passe","Chiffrer le trafic"],a:0,x:"Nmap cartographie le réseau : ports ouverts, services, systèmes. Les attaquants comme les défenseurs l'utilisent."},
+ {c:'cysa',q:"Pourquoi centraliser les logs dans un SIEM ?",o:["Pour corréler les événements de tout le parc et détecter les attaques","Pour libérer de l'espace disque","Pour accélérer les postes","Pour remplacer l'antivirus"],a:0,x:"Un log seul ne dit pas grand-chose. Croisés entre pare-feu, serveurs et postes, ils racontent l'attaque."},
+ {c:'cysa',q:"Un hash SHA-256 d'un fichier sert à…",o:["Vérifier son intégrité et l'identifier de façon unique","Le chiffrer","Le compresser","Le supprimer définitivement"],a:0,x:"Le hash est l'empreinte du fichier : s'il change d'un seul bit, le hash change. On s'en sert pour repérer les malwares connus."},
+ {c:'btl1',q:"Dans MITRE ATT&CK, la tactique « Initial Access » désigne…",o:["Comment l'attaquant entre dans le réseau (phishing, brute force…)","Comment il vole les données","Comment il se cache","Comment il chiffre les fichiers"],a:0,x:"Initial Access = la porte d'entrée. Les autres tactiques décrivent la suite : persistance, vol d'identifiants, exfiltration…"},
+ {c:'btl1',q:"Un e-mail a SPF=pass, mais le Reply-To pointe vers un autre domaine. Que faire ?",o:["Suspect : vérifier le vrai lien et l'expéditeur","Légitime, SPF passe donc tout va bien","Supprimer sans lire","Transférer à tous tes contacts"],a:0,x:"SPF ne valide que le domaine d'envoi, pas le Reply-To. Une réponse qui part ailleurs, c'est un signal de phishing."},
+ {c:'btl1',q:"Quel en-tête e-mail indique les serveurs par lesquels le message est réellement passé ?",o:["Received","Subject","X-Priority","Content-Type"],a:0,x:"Les en-têtes Received retracent le chemin du mail : on y repère les serveurs suspects ou incohérents."},
+ {c:'btl1',q:"Sur le port 3389, quel service tourne normalement ?",o:["RDP (bureau à distance Windows)","HTTPS","DNS","SMTP"],a:0,x:"3389 = RDP. Un RDP exposé sur Internet sans MFA, c'est une porte grande ouverte pour les ransomwares."},
+ {c:'btl1',q:"Des centaines de requêtes DNS TXT vers un domaine inconnu : que suspecter ?",o:["Un canal de commande et contrôle (C2)","Une mise à jour Windows","Du streaming vidéo","Une sauvegarde cloud"],a:0,x:"Le DNS TXT sert parfois à cacher des ordres : le malware « téléphone » à son serveur en douce, par petites touches."},
+ {c:'btl1',q:"Dans Wireshark, quel filtre n'affiche que le trafic HTTP ?",o:["http","tcp","dns","arp"],a:0,x:"Le filtre « http » ne garde que le web. « tcp » montrerait tout le trafic TCP, y compris le reste."},
+ {c:'btl1',q:"Un PC envoie 2 Go vers une IP externe inconnue à 3h du matin. C'est…",o:["Une exfiltration probable","Une mise à jour planifiée","Une sauvegarde normale","Du streaming"],a:0,x:"Gros volume + destination inconnue + horaire inhabituel = les trois signaux de l'exfiltration. On enquête."},
+ {c:'btl1',q:"Que signifie DMARC ?",o:["Une politique qui dit quoi faire quand SPF ou DKIM échouent","Un antivirus pour e-mails","Un type de phishing","Un protocole de messagerie"],a:0,x:"DMARC = le chef d'orchestre : si SPF ou DKIM échoue, il dit au destinataire de rejeter ou de mettre en quarantaine."},
+ {c:'btl1',q:"Quelle tactique MITRE correspond au vol de mots de passe en mémoire ?",o:["Credential Access","Discovery","Persistence","Impact"],a:0,x:"Credential Access = récupérer les identifiants (Mimikatz, dump mémoire…). C'est souvent l'étape qui ouvre toutes les portes."},
+ {c:'btl1',q:"Pour bloquer une IP malveillante partout dans l'entreprise, où agir en priorité ?",o:["Au pare-feu périmétrique (et dans le SIEM / EDR)","Sur un seul poste","Dans les e-mails","Nulle part, on attend demain"],a:0,x:"Le pare-feu bloque à la porte ; le SIEM et l'EDR propagent le blocage et cherchent si l'IP est déjà passée."},
+ {c:'btl1',q:"Que doit contenir un bon rapport d'incident ?",o:["Chronologie, IOC, actions prises et recommandations","Seulement le nom de l'attaquant","Seulement le montant des dégâts","Rien, on ne documente pas"],a:0,x:"Un rapport sert à comprendre, à prouver et à ne pas répéter : faits, heures, IOC, actions, leçons."},
+ {c:'soc',q:"Il est 2h47, une alerte critique tombe pendant ta garde. Premier réflexe ?",o:["Vérifier les logs et le contexte avant d'escalader","Éteindre le serveur tout de suite","Appeler le directeur","Ignorer jusqu'au matin"],a:0,x:"Une alerte n'est pas une preuve : on vérifie d'abord si c'est un vrai positif, sinon on noie l'équipe sous les faux positifs."},
+ {c:'soc',q:"Un collègue te demande son mot de passe admin « juste pour 5 minutes ». Tu…",o:["Refuser : on ne partage jamais ses identifiants","Lui donner, c'est un collègue","Lui donner puis changer le mot de passe","Lui envoyer par e-mail"],a:0,x:"Un identifiant partagé, c'est une traçabilité détruite : en cas d'incident, on ne saura plus qui a fait quoi."},
+ {c:'soc',q:"Tu trouves une clé USB inconnue dans le parking. Que faire ?",o:["Ne pas la brancher, la remettre à la sécurité","La brancher pour voir ce qu'il y a","La garder pour toi","La jeter à la poubelle"],a:0,x:"La clé USB piégée est un classique : le simple fait de la brancher peut lancer un malware."},
+ {c:'soc',q:"Un utilisateur signale un e-mail bizarre. Ta première question ?",o:["« As-tu cliqué sur le lien ou ouvert la pièce jointe ? »","« Quel est ton mot de passe ? »","« C'est quel fournisseur ? »","« Tu as quel antivirus ? »"],a:0,x:"Savoir s'il a cliqué change tout : s'il a cliqué, on isole le poste et on vérifie ; sinon, on signale et on passe."},
+ {c:'soc',q:"Pourquoi documenter chaque incident, même mineur ?",o:["Pour le suivi, les tendances et les audits","Pour faire joli dans les rapports","Ce n'est pas nécessaire","Seulement pour les gros incidents"],a:0,x:"Les petits incidents d'aujourd'hui sont les tendances de demain. Sans documentation, on ne voit rien venir."},
+ {c:'soc',q:"Un faux positif revient chaque nuit à la même heure. Que faire ?",o:["Affiner la règle de détection après vérification","L'ignorer pour toujours","Supprimer le SIEM","Éteindre l'alerte"],a:0,x:"On vérifie d'abord que c'est bien bénin, puis on ajuste la règle : un SOC qui crie au loup, personne ne l'écoute."},
+ {c:'soc',q:"En fin de garde, que doit contenir ton passage de relais ?",o:["Les alertes en cours, les actions faites, ce qui reste à surveiller","Rien, le suivant verra bien","Seulement ton nom","Seulement les alertes fermées"],a:0,x:"Une garde, c'est une course de relais : sans passage propre, l'alerte en cours tombe dans l'oubli."},
+ {c:'soc',q:"Un manager te presse de fermer une alerte « pour faire baisser les chiffres ». Tu…",o:["Refuser : on ferme une alerte sur des faits, pas sur la pression","Fermer pour faire plaisir","Fermer et ne rien dire","Escalader au directeur"],a:0,x:"Fermer une vraie alerte pour les chiffres, c'est cacher une attaque. L'intégrité de l'analyste n'est pas négociable."},
+ {c:'soc',q:"Quel est le meilleur réflexe face à une pièce jointe .exe inattendue ?",o:["Ne pas l'ouvrir, la signaler au SOC","L'ouvrir dans une machine virtuelle perso","L'ouvrir, l'antivirus protège","La transférer à un collègue"],a:0,x:"Un .exe inattendu, c'est un malware jusqu'à preuve du contraire. On signale, on ne teste pas."},
+ {c:'secplus',q:"Un SOC reçoit des centaines d'alertes par jour. Quelle technologie automatise les réponses répétitives, comme isoler un poste ou bloquer une IP ?",o:["SOAR","SIEM","DLP","VPN"],a:0,x:"SOAR (Security Orchestration, Automation and Response) automatise les playbooks : le SIEM détecte, le SOAR agit."},
+ {c:'secplus',q:"Un poste est infecté. Quel outil permet à l'analyste de voir les processus lancés, de tuer le malware et d'isoler le poste à distance ?",o:["EDR","Antivirus classique","Pare-feu","Nmap"],a:0,x:"L'EDR (Endpoint Detection and Response) surveille chaque poste en continu et permet d'agir à distance, bien au-delà d'un simple antivirus."},
+ {c:'secplus',q:"Après le confinement d'un incident, quelle est l'étape suivante ?",o:["L'éradication","La préparation","Les leçons apprises","La détection"],a:0,x:"NIST : préparation, détection & analyse, confinement, éradication, récupération, leçons apprises. On élimine la cause avant de restaurer."},
+ {c:'secplus',q:"Quelle mesure réduit le plus la surface d'attaque d'un serveur ?",o:["Désactiver les services inutiles et appliquer les correctifs","Ajouter plus de mémoire RAM","Changer le nom du serveur","Installer un antivirus"],a:0,x:"Le durcissement (hardening) : moins de services exposés = moins de portes d'entrée. Les correctifs ferment les failles connues."},
+ {c:'secplus',q:"Pour préserver une preuve numérique après un incident, que faut-il faire en premier ?",o:["Faire une copie bit à bit et documenter la chaîne de possession","Analyser directement le disque d'origine","Éteindre la machine et jeter le disque","Copier les fichiers un par un"],a:0,x:"On ne touche jamais à l'original : on travaille sur une copie exacte, et chaque manipulation est tracée pour que la preuve soit recevable."},
+ {c:'secplus',q:"Une vulnérabilité a 80 % de chances d'être exploitée et coûterait 100 000 €. Quelle est l'exposition annuelle au risque (ALE) ?",o:["80 000 €","100 000 €","20 000 €","180 000 €"],a:0,x:"ALE = probabilité × impact : 0,8 × 100 000 = 80 000 €. C'est le calcul quantitatif du risque, au programme de Security+."},
+ {c:'secplus',q:"Qu'est-ce qu'un RTO ?",o:["Le temps maximal acceptable pour restaurer un service après un incident","Le temps entre deux sauvegardes","Le nombre de sauvegardes à conserver","Le coût d'une heure de panne"],a:0,x:"RTO (Recovery Time Objective) : combien de temps on peut rester en panne. Avec le RPO (données perdues acceptables), il pilote le plan de reprise."},
+ {c:'secplus',q:"Quelle est la meilleure défense contre le phishing ?",o:["La formation des utilisateurs et les simulations de phishing","Un pare-feu plus puissant","Interdire les e-mails externes","Un antivirus à jour"],a:0,x:"La technique bloque beaucoup, mais l'humain reste la cible : des utilisateurs formés et testés régulièrement, c'est la défense la plus efficace."}
 ];
-var qi=0,qScore=0;
+var qi=0,qScore=0,quiz=[],quizTheme=null;
+function quizThemeName(){return quizTheme==='all'?'Tout mélanger':quizTheme==='secplus'?'Security+':quizTheme==='cysa'?'CySA+':quizTheme==='btl1'?'Blue Team L1':'Vie réelle SOC';}
+function startQuiz(theme){
+  quizTheme=theme;
+  var pool=QBANK.map(function(q,i){return {c:q.c,q:q.q,o:q.o,a:q.a,x:q.x,id:i};});
+  if(theme!=='all')pool=pool.filter(function(q){return q.c===theme;});
+  quiz=shuf(pool).slice(0,10);
+  qi=0;qScore=0;renderQuiz();
+}
 function renderQuiz(){
-  document.getElementById('quizDots').innerHTML=quiz.map(function(_,i){return '<i class="'+(i<=qi?'on':'')+'"></i>';}).join('');
-  if(qi>=quiz.length){if(qScore>=6)checkDaily('quiz');document.getElementById('quizMeta').textContent='Quiz terminé';document.getElementById('quizQ').textContent='Score final : '+qScore+' / '+quiz.length;document.getElementById('quizOpts').innerHTML='<button class="mini-btn primary" id="quizReplay">↺ Rejouer le quiz</button>';document.getElementById('quizReplay').onclick=function(){qi=0;qScore=0;renderQuiz();};return;}
+  var dots=document.getElementById('quizDots');
+  if(!quizTheme){
+    dots.innerHTML='';
+    document.getElementById('quizMeta').textContent=QBANK.length+' questions • 4 thèmes • 10 par partie';
+    document.getElementById('quizQ').textContent='Choisis un thème pour t’entraîner';
+    document.getElementById('quizFeedback').classList.remove('show');
+    var box=document.getElementById('quizOpts');box.innerHTML='';
+    var themes=[['all','🎯 Tout mélanger','10 questions au hasard sur les '+QBANK.length],['secplus','🛡 Security+','Bases : réseaux, attaques, chiffrement'],['cysa','🔍 CySA+','Analyse, SIEM, réponse à incident'],['btl1','🔵 Blue Team L1','MITRE, e-mails, analyse réseau'],['soc','🌙 Vie réelle SOC','Gardes, alertes, réflexes de tous les jours']];
+    themes.forEach(function(t){
+      var b=document.createElement('button');b.className='quiz-opt';b.innerHTML='<b>'+t[1]+'</b><br><span style="font-size:11px;color:var(--muted)">'+t[2]+'</span>';
+      b.onclick=function(){startQuiz(t[0]);};
+      box.appendChild(b);
+    });
+    return;
+  }
+  dots.innerHTML=quiz.map(function(_,i){return '<i class="'+(i<=qi?'on':'')+'"></i>';}).join('');
+  if(qi>=quiz.length){renderStats();if(qScore>=6)checkDaily('quiz');document.getElementById('quizMeta').textContent='Quiz terminé';document.getElementById('quizQ').textContent='Score final : '+qScore+' / '+quiz.length;document.getElementById('quizOpts').innerHTML='<button class="mini-btn primary" id="quizReplay">↺ Rejouer ('+quizThemeName()+')</button> <button class="mini-btn" id="quizThemeBtn">Changer de thème</button>';document.getElementById('quizReplay').onclick=function(){startQuiz(quizTheme);};document.getElementById('quizThemeBtn').onclick=function(){quizTheme=null;renderQuiz();};return;}
   var q=quiz[qi];document.getElementById('quizMeta').textContent='Question '+(qi+1)+' / '+quiz.length+' • Score : '+qScore;
   document.getElementById('quizQ').textContent=q.q;
   document.getElementById('quizFeedback').classList.remove('show');
   var box=document.getElementById('quizOpts');box.innerHTML='';
   q.o.forEach(function(opt,i){var b=document.createElement('button');b.className='quiz-opt';b.textContent=opt;b.onclick=function(){
     var fb=document.getElementById('quizFeedback');
-    if(i===q.a){b.classList.add('correct');qScore++;addXP(10,'quiz-q'+qi);fb.className='feedback show ok';fb.textContent='✅ Bonne réponse. '+q.x;}
+    if(i===q.a){b.classList.add('correct');qScore++;addXP(10,'quiz-q'+q.id);fb.className='feedback show ok';fb.textContent='✅ Bonne réponse. '+q.x;}
     else{b.classList.add('wrong');fb.className='feedback show bad';fb.textContent='❌ Pas tout à fait. '+q.x;sayBuddy('buddyQuiz','Pas de souci, on retient et on continue. La prochaine sera la bonne.');}
     box.querySelectorAll('button').forEach(function(x){x.disabled=true;});
     setTimeout(function(){qi++;renderQuiz();},1700);
   };box.appendChild(b);});
 }
+
 /* ═══ GLOSSAIRE ═══ */
 var gloss=[
  ["Adresse IP","Adresse qui identifie une machine sur un réseau. Ex : 192.168.1.10 en local."],
@@ -2323,7 +2395,7 @@ var BADGES=[
   {id:'logs',icon:'LOG',name:'Chasseur de logs',desc:'Trouver les 2 suspects',check:function(){return !!state.flags['logs'];}},
   {id:'terminal',icon:'CLI',name:'Premier flag',desc:'Lire flag.txt',check:function(){return !!state.flags['terminal'];}},
   {id:'phish',icon:'PH',name:'Œil de lynx',desc:'Classer les 3 e-mails',check:function(){return !!state.flags['phishing'];}},
-  {id:'quiz',icon:'QZ',name:'Sans faute',desc:'8/8 au quiz',check:function(){return qScore>=8&&qi>=quiz.length;}},
+  {id:'quiz',icon:'QZ',name:'Sans faute',desc:'10/10 au quiz',check:function(){return qScore>=10&&qi>=quiz.length;}},
   {id:'soc',icon:'SOC',name:'Gardien du SOC',desc:'Terminer une Nuit au SOC',check:function(){return state.games>0&&!!state.best.soc;}},
   {id:'nw',icon:'⚔️',name:'Double casquette',desc:'Réussir une mission NIGHTWATCH',check:function(){return !!(nw.completed[1]||nw.completed[2]||nw.completed[3]||nw.completed[4]);}},
   {id:'rank',icon:'MAX',name:'Analyste confirmé',desc:'Atteindre 1500 XP',check:function(){return state.xp>=1500;}}
