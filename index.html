@@ -100,6 +100,13 @@ input[type=text],input[type=password]{width:100%;padding:10px 12px;border-radius
 .meter{height:10px;border-radius:999px;background:var(--line);overflow:hidden;margin:12px 0}.meter i{display:block;height:100%;width:0;background:var(--red);transition:width .3s ease}
 .search{margin-bottom:12px}
 .glossary dt{font-weight:800;margin-top:14px}.glossary dd{margin:2px 0 0;color:var(--muted)}
+/* ═══ MENU : dossier commentaires & explications ═══ */
+.folder>summary{font-size:14px}
+.menu-quote{margin:10px 0}
+.menu-quote b{color:var(--amber)}
+.menu-quote span{color:var(--muted)}
+.menu-tool{margin:10px 0}
+.menu-tool span{color:var(--muted)}
 details{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:6px 16px;margin:8px 0}
 summary{cursor:pointer;font-weight:800;padding:10px 0;min-height:40px}
 .ethic{display:flex;gap:12px;background:#171207;border:1px solid #4a3810;border-radius:18px;padding:14px;color:#ffe9b0;margin-top:14px}
@@ -765,6 +772,56 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
   </section>
 </div>
 
+<!-- ═══ MENU ═══ -->
+<div class="screen" id="screen-menu">
+  <section>
+    <div class="kicker">Menu</div>
+    <h2>Menu</h2>
+    <p>Tout est réuni ici : tes explications, tes repères, et les raccourcis du jeu.</p>
+    <details class="folder">
+      <summary>📁 Commentaires et explications</summary>
+      <h3 style="margin-top:12px">Les commentaires de Léa</h3>
+      <p class="menu-quote"><b>Accueil</b> — <span>« Salut ! On fait équipe : je te briefe, je te conseille, et on apprend ensemble. Prêt ? »</span></p>
+      <p class="menu-quote"><b>Parcours</b> — <span>« On y va doucement, un niveau à la fois. Chaque niveau débloque le suivant — et te rapproche du rang Analyste. »</span></p>
+      <p class="menu-quote"><b>Mission 02:47</b> — <span>« 02:47, un vendredi soir. Quelqu’un essaie d’entrer pendant que 200 collègues dorment — leurs données sont sur ce serveur. On s’en occupe ensemble, étape par étape. »</span></p>
+      <p class="menu-quote"><b>Nuit au SOC</b> — <span>« Une nuit au SOC, c’est trier le vrai du bruit. Prends ton temps : un faux positif fermé trop vite, c’est une vraie menace qui passe. »</span></p>
+      <p class="menu-quote"><b>NIGHTWATCH</b> — <span>« Deux fronts en même temps, c’est le vrai métier. Attaque d’un côté, défends de l’autre — et respire entre deux alertes. »</span></p>
+      <p class="menu-quote"><b>Briefing NIGHTWATCH</b> — <span>« Lis bien les deux côtés avant de lancer : côté RED, ton objectif ; côté BLUE, ce que VORTEX prépare. On y va ensemble. »</span></p>
+      <p class="menu-quote"><b>Terminal</b> — <span>« Commence par “help”, puis “ls” pour voir où tu es. Le flag est tout près — tu vas y arriver. »</span></p>
+      <p class="menu-quote"><b>Phishing</b> — <span>« Mon réflexe : je regarde l’expéditeur d’abord, le lien ensuite. Si ça presse, c’est souvent un piège. »</span></p>
+      <p class="menu-quote"><b>Quiz</b> — <span>« Pas de pression, chaque question est un entraînement. Une mauvaise réponse, c’est juste une notion à revoir. »</span></p>
+      <p class="menu-quote"><b>Outils</b> — <span>« Ces outils, c’est la vraie vie du métier. TryHackMe, c’est par là que beaucoup d’analystes ont commencé — comme toi. »</span></p>
+      <h3 style="margin-top:16px">Glossaire express</h3>
+      <div class="card"><dl class="glossary" id="glossListMenu"></dl></div>
+      <h3 style="margin-top:16px">Fiches outils</h3>
+      <p class="menu-tool"><b>TryHackMe</b> — <span>Parcours guidés débutant → SOC Analyst, rooms pratiques dans le navigateur. La référence pour débuter.</span></p>
+      <p class="menu-tool"><b>Nmap</b> — <span>Scanner de ports et de services : « qu’est-ce qui est ouvert sur cette machine ? »</span></p>
+      <p class="menu-tool"><b>Wireshark</b> — <span>Capture et analyse le trafic réseau paquet par paquet.</span></p>
+      <p class="menu-tool"><b>Kali Linux</b> — <span>Distribution Linux avec les outils de test d’intrusion préinstallés. Lab / VM uniquement.</span></p>
+      <p class="menu-tool"><b>SIEM (Splunk, Wazuh…)</b> — <span>Centralise les logs, corrèle les événements et déclenche les alertes du SOC.</span></p>
+      <p class="menu-tool"><b>ANSSI &amp; Cybermalveillance</b> — <span>Guides officiels français : hygiène informatique, mots de passe, réponse à incident.</span></p>
+      <h3 style="margin-top:16px">Questions fréquentes</h3>
+      <details><summary>C’est quoi exactement, un analyste SOC ?</summary><p style="color:var(--muted)">SOC = Security Operations Center. L’analyste surveille les alertes d’un SIEM, trie les vrais incidents des faux positifs, enquête (logs, IP, processus) et escalade si besoin. C’est un des métiers d’entrée les plus accessibles en cybersécurité.</p></details>
+      <details><summary>Par quoi commencer dans la vraie vie après ce jeu ?</summary><p style="color:var(--muted)">1) Les bases réseau (IP, DNS, ports, modèle OSI). 2) Linux en machine virtuelle. 3) Un parcours guidé type TryHackMe « Pre Security » puis « SOC Level 1 ». 4) Beaucoup de labs, jamais de tests sur des systèmes sans autorisation.</p></details>
+      <details><summary>Quelle est la différence entre hacker éthique et pirate ?</summary><p style="color:var(--muted)">Les techniques peuvent se ressembler, l’intention et le cadre changent tout : autorisation écrite, périmètre défini, objectif de défense et compte-rendu. Sans autorisation, c’est illégal — en France, l’accès frauduleux à un système est puni par l’article 323-1 du Code pénal.</p></details>
+    </details>
+  </section>
+  <section>
+    <div class="kicker">Raccourcis</div>
+    <h2>Aller vite</h2>
+    <div class="mode-grid">
+      <button class="mode-tile" onclick="showScreen('screen-parcours')"><span class="tile-ico">▤</span>Parcours<small>6 niveaux</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-mission')"><span class="tile-ico">◈</span>Mission SOC<small>Alerte à 02:47</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-nuit')"><span class="tile-ico">☾</span>Nuit au SOC<small>Scénarios kill-chain</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-nightwatch')"><span class="tile-ico">◎</span>NIGHTWATCH<small>Attaque &amp; défense</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-terminal')"><span class="tile-ico">CLI</span>Terminal Linux<small>Commandes de base</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-phishing')"><span class="tile-ico">PH</span>Phishing Lab<small>Repère les pièges</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-quiz')"><span class="tile-ico">QZ</span>Quiz<small>8 questions</small></button>
+      <button class="mode-tile" onclick="showScreen('screen-outils')"><span class="tile-ico">DOC</span>Outils &amp; Glossaire<small>Références et mots-clés</small></button>
+    </div>
+  </section>
+</div>
+
 <footer>Cybersec — Jeu combiné : Parcours SOC + Nuit au SOC + NIGHTWATCH Opération PALLAS. Un seul fichier, hors-ligne, mobile-first. Sources d'inspiration pédagogique : TryHackMe, ANSSI, Cybermalveillance.gouv.fr. Tout est simulé : aucune attaque réelle.</footer>
 </div>
 
@@ -774,6 +831,7 @@ Objectif : trouve le fichier flag.txt et lis son contenu. (+60 XP)
   <button data-nav="screen-nuit" onclick="showScreen('screen-nuit')"><span>☾</span>Nuit SOC</button>
   <button data-nav="screen-nightwatch" onclick="showScreen('screen-nightwatch')"><span>◎</span>NIGHTWATCH</button>
   <button data-nav="screen-quiz" onclick="showScreen('screen-quiz')"><span>?</span>Quiz</button>
+  <button data-nav="screen-menu" onclick="showScreen('screen-menu')"><span>☰</span>Menu</button>
 </nav>
 <div class="toast" id="toast"></div>
 <div id="fxlayer" aria-hidden="true"></div>
@@ -1044,6 +1102,7 @@ var gloss=[
 ];
 function renderGloss(filter){
   document.getElementById('glossList').innerHTML=gloss.filter(function(g){return !filter||(g[0]+g[1]).toLowerCase().indexOf(filter.toLowerCase())>=0;}).map(function(g){return '<dt>'+g[0]+'</dt><dd>'+g[1]+'</dd>';}).join('')||'<dd>Aucun terme trouvé.</dd>';
+  var gm=document.getElementById('glossListMenu');if(gm)gm.innerHTML=gloss.map(function(g){return '<dt>'+g[0]+'</dt><dd>'+g[1]+'</dd>';}).join('');
 }
 document.getElementById('glossSearch').addEventListener('input',function(e){renderGloss(e.target.value);});
 
