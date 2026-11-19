@@ -143,10 +143,16 @@ pre.log{background:#0b121b;border:1px solid var(--line);border-radius:10px;paddi
 ul.rec{padding-left:0;list-style:none;margin:12px 0 0}
 ul.rec li{padding:6px 0;border-top:1px solid var(--line);font-size:12px}
 footer{color:var(--dim);font-size:11px;padding:22px 0 8px;border-top:1px solid var(--line);margin-top:28px}
-.bottomnav{position:fixed;left:10px;right:10px;bottom:10px;z-index:30;background:#141d31;border:1px solid var(--line);border-radius:999px;display:flex;justify-content:space-around;padding:5px}
-.bottomnav button{background:none;border:0;color:var(--muted);font-size:11px;font-weight:800;text-align:center;padding:5px 6px;border-radius:999px;cursor:pointer;min-height:40px;min-width:52px}
-.bottomnav button span{font-size:14px;line-height:1;display:block}
+/* ═══ NAV BAS LIQUID GLASS + LAMPE AMBRE (reprise Nexus Guardian, accent ambre) ═══ */
+.bottomnav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(12px + env(safe-area-inset-bottom));width:calc(100% - 24px);max-width:456px;background:rgba(255,255,255,.10);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%);border:1px solid rgba(255,255,255,.25);border-radius:999px;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -1px 0 rgba(0,0,0,.15),0 10px 30px rgba(0,0,0,.35);display:flex;justify-content:space-around;padding:6px;z-index:30;touch-action:none}
+.bottomnav button{flex:0 1 auto;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:0;color:var(--muted);font-size:11px;font-weight:800;text-align:center;padding:6px 5px;border-radius:10px;cursor:pointer;min-height:52px;text-shadow:0 1px 3px rgba(0,0,0,.6),0 0 8px rgba(0,0,0,.35)}
+.bottomnav button span{font-size:11px;line-height:1.2;display:block}
+.bottomnav button span:first-child{font-size:15px;line-height:1;filter:drop-shadow(0 1px 3px rgba(0,0,0,.65))}
 .bottomnav button.on{color:var(--amber)}
+.bottomnav button.on span:first-child{filter:drop-shadow(0 0 6px rgba(255,176,32,.75))}
+#navlamp{position:absolute;top:-6px;left:0;width:30px;height:5px;border-radius:999px;background:var(--amber);box-shadow:0 0 8px rgba(255,176,32,.9),0 0 18px rgba(255,176,32,.55);transform:translateX(0);transition:transform .18s cubic-bezier(.34,1.45,.64,1);will-change:transform;touch-action:none;cursor:grab}
+#navlamp::before{content:"";position:absolute;left:50%;transform:translateX(-50%);top:-13px;width:64px;height:44px}
+#navlamp .navcone{position:absolute;left:50%;transform:translateX(-50%);top:2px;width:64px;height:44px;background:linear-gradient(to bottom,rgba(255,176,32,.34),rgba(255,176,32,0));clip-path:polygon(38% 0,62% 0,100% 100%,0 100%);pointer-events:none}
 .toast{position:fixed;left:50%;transform:translate(-50%,20px);bottom:88px;background:#102018;color:#d9ffe8;border:1px solid #1e5c38;padding:11px 15px;border-radius:999px;font-weight:800;font-size:12px;opacity:0;pointer-events:none;transition:opacity .3s ease,transform .3s ease;z-index:50;max-width:92vw;text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 /* ═══ 3D LÉGÈRE (Canvas 2D, hors-ligne, sans CDN) ═══ */
@@ -207,7 +213,6 @@ body{background:repeating-linear-gradient(0deg,rgba(255,255,255,.022) 0 1px,tran
 .alert.sev-high{box-shadow:0 4px 20px rgba(255,90,110,.28)}
 .alert.sev-medium{box-shadow:0 4px 20px rgba(255,176,32,.22)}
 .alert.sev-low{box-shadow:0 4px 20px rgba(47,214,122,.18)}
-.bottomnav button.on{background:var(--green);color:#04150b}
 .btn:focus-visible,.mini-btn:focus-visible,.quiz-opt:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
 /* ═══ SALUTATION, SÉRIE, PROCHAINE ÉTAPE, RANG ═══ */
 .hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
@@ -247,7 +252,6 @@ section{width:100%}
 #nwMap3d{height:240px}
 #socRoom{height:200px}
 /* La nav du bas ne recouvre plus rien et ne bouge plus */
-.bottomnav{position:fixed;left:8px;right:8px;bottom:8px}
 .wrap{padding-bottom:96px}
 
 /* ═══ REDESIGN CYBERSEC — MOBILE SOC CONSOLE ═══ */
@@ -416,19 +420,7 @@ section{padding:14px 0 2px}
 #nwMap3d,#socRoom{border-radius:12px;border-color:#2b3d5c}
 #socRoom{height:178px}
 #nwMap3d{height:220px}
-.bottomnav{
-  max-width:464px;
-  margin:auto;
-  bottom:8px;
-  padding:4px;
-  border-radius:14px;
-  background:#101a2e;
-  border-color:#30415f;
-  box-shadow:0 12px 38px rgba(0,0,0,.45);
-}
-.bottomnav button{min-width:0;min-height:42px;padding:4px 5px;font-size:9px;border-radius:10px}
-.bottomnav button span{font-size:12px;margin-bottom:2px}
-.bottomnav button.on{background:var(--amber);color:#211600}
+/* (nav du bas : style Liquid Glass + lampe defini plus haut, ne pas re-ecraser ici) */
 .toast{bottom:67px;border-radius:10px;background:#15253a;border-color:#3c526f;color:var(--text)}
 .xpfloat{color:var(--amber);text-shadow:0 0 12px rgba(255,176,32,.45)}
 .rankup-card{background:#121d32;border-radius:16px}
@@ -442,7 +434,6 @@ footer{font-size:10px}
   .topbar-in{padding-left:8px;padding-right:8px}
   .pill{padding-inline:6px}
   .mutebtn{padding-inline:5px}
-  .bottomnav{left:6px;right:6px}
   .grid-2{grid-template-columns:1fr}
 }
 
@@ -1068,6 +1059,7 @@ footer{font-size:10px}
 </div>
 
 <nav class="bottomnav">
+  <span id="navlamp"><span class="navcone"></span></span>
   <button data-nav="screen-home" class="on" onclick="showScreen('screen-home')"><span>◈</span><span data-i18n="nav.home">Accueil</span></button>
   <button data-nav="screen-parcours" onclick="showScreen('screen-parcours')"><span>▤</span><span data-i18n="nav.path">Parcours</span></button>
   <button data-nav="screen-nuit" onclick="showScreen('screen-nuit')"><span>☾</span><span data-i18n="nav.night">Nuit SOC</span></button>
@@ -2498,6 +2490,7 @@ function showScreen(id){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   var el=document.getElementById(id);if(el)el.classList.add('active');
   document.querySelectorAll('.bottomnav button').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-nav')===id);});
+  navCur=id;moveNavLamp();
   syncTopbar();
   window.scrollTo(0,0);
   /* REBUILD : le timer NIGHTWATCH ne tourne que sur l'écran NIGHTWATCH */
@@ -2508,6 +2501,120 @@ function showScreen(id){
     }
   }catch(e){}
 }
+/* ================= NAV : LAMPE AMBRE (reprise Nexus Guardian) =================
+   Glisse vers l'onglet actif (transform .18s, easing ressort). Drag au doigt
+   depuis n'importe quel point de la pilule : seuil tap/drag ~8 px, lampe suit
+   le doigt 1:1 sans transition, onglet sous la lampe active au passage, snap
+   sur l'onglet le plus proche au relachement. */
+var navCur='screen-home';
+var lampDragActive=false;
+function moveNavLamp(){
+  if(lampDragActive) return;
+  if(document.body.classList.contains('locked')) return;
+  var nav=document.querySelector('.bottomnav'), lamp=document.getElementById('navlamp');
+  if(!nav || !lamp) return;
+  var btn=nav.querySelector('button.on');
+  if(!btn) return;
+  var nr=nav.getBoundingClientRect(), br=btn.getBoundingClientRect();
+  if(!nr.width) return;
+  lamp.style.transform='translateX('+(((br.left-nr.left)+br.width/2)-lamp.offsetWidth/2)+'px)';
+}
+window.addEventListener('resize',moveNavLamp);
+window.addEventListener('orientationchange',moveNavLamp);
+window.addEventListener('load',moveNavLamp);
+(function(){
+  var nav=document.querySelector('.bottomnav'), lamp=document.getElementById('navlamp');
+  if(!nav || !lamp) return;
+  var THRESH=8;
+  var pid=null, startX=0, startTx=0, dragging=false, downOnLamp=false, suppressClick=false, suppressT=null;
+  function armSuppress(){
+    suppressClick=true;
+    clearTimeout(suppressT);
+    suppressT=setTimeout(function(){ suppressClick=false; },350);
+  }
+  function tabCenters(){
+    var nr=nav.getBoundingClientRect(), out=[];
+    nav.querySelectorAll('button').forEach(function(b){
+      var br=b.getBoundingClientRect();
+      out.push({view:b.getAttribute('data-nav'),x:(br.left-nr.left)+br.width/2});
+    });
+    return out;
+  }
+  function lampTx(){
+    var m=/translateX\((-?[\d.]+)px\)/.exec(lamp.style.transform||'');
+    return m ? parseFloat(m[1]) : 0;
+  }
+  function nearestTab(x){
+    var cs=tabCenters();
+    if(!cs.length) return null;
+    var best=cs[0];
+    cs.forEach(function(c){ if(Math.abs(c.x-x)<Math.abs(best.x-x)) best=c; });
+    return best;
+  }
+  nav.addEventListener('pointerdown',function(e){
+    if(pid!==null) return;
+    if(e.button!==undefined && e.button!==0) return;
+    pid=e.pointerId; startX=e.clientX; startTx=lampTx();
+    dragging=false;
+    downOnLamp=(e.target===lamp)||lamp.contains(e.target);
+  });
+  nav.addEventListener('pointermove',function(e){
+    if(pid===null || e.pointerId!==pid) return;
+    var dx=e.clientX-startX;
+    if(!dragging){
+      if(Math.abs(dx)<=THRESH) return;
+      dragging=true;
+      lampDragActive=true;
+      lamp.style.transition='none';
+    }
+    var cs=tabCenters();
+    if(!cs.length) return;
+    var half=lamp.offsetWidth/2;
+    var tx=startTx+dx;
+    var min=cs[0].x-half, max=cs[cs.length-1].x-half;
+    if(tx<min) tx=min;
+    if(tx>max) tx=max;
+    lamp.style.transform='translateX('+tx+'px)';
+    var cx=tx+half, best=cs[0];
+    cs.forEach(function(c){ if(Math.abs(c.x-cx)<Math.abs(best.x-cx)) best=c; });
+    if(best.view!==navCur) showScreen(best.view);
+  });
+  function finishDrag(){
+    pid=null;
+    dragging=false;
+    downOnLamp=false;
+    lampDragActive=false;
+    lamp.style.transition='';
+    armSuppress();
+    moveNavLamp();
+  }
+  function endDrag(e){
+    if(pid===null || (e && e.pointerId!==pid)) return;
+    if(dragging){ finishDrag(); return; }
+    if(downOnLamp){
+      var nr=nav.getBoundingClientRect();
+      var best=nearestTab(e.clientX-nr.left);
+      pid=null; downOnLamp=false;
+      armSuppress();
+      if(best) showScreen(best.view);
+      return;
+    }
+    pid=null; downOnLamp=false;
+  }
+  function cancelDrag(e){
+    if(pid===null || (e && e.pointerId!==pid)) return;
+    if(dragging){ finishDrag(); return; }
+    pid=null; dragging=false; downOnLamp=false;
+  }
+  nav.addEventListener('pointerup',endDrag);
+  nav.addEventListener('pointercancel',cancelDrag);
+  window.addEventListener('pointerup',endDrag);
+  window.addEventListener('pointercancel',cancelDrag);
+  nav.addEventListener('click',function(e){
+    if(suppressClick){ suppressClick=false; e.preventDefault(); e.stopPropagation(); }
+  },true);
+  moveNavLamp();
+})();
 /* REBUILD : le timer ne tourne que si la mission joue, sur l'écran NIGHTWATCH, onglet visible */
 document.addEventListener('visibilitychange',function(){
   if(typeof nw==='undefined')return;
